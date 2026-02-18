@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import '../services/api_service.dart'; // Make sure this exists
+import 'admin_register_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -193,6 +194,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: const Text(
                       'Already have an account? Login',
                       style: TextStyle(color: Colors.tealAccent, fontSize: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => AdminRegisterScreen()),
+                      );
+                    },
+                    child: const Text(
+                      'Register as Admin instead',
+                      style: TextStyle(color: Colors.white54, fontSize: 13, decoration: TextDecoration.underline),
                     ),
                   ),
                 ],

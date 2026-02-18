@@ -5,8 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
-// Import the Chatbot screen
 import 'chatbot_screen.dart';
+import 'melanoma_results_screen.dart';
 
 class MelanomaScreen extends StatefulWidget {
   const MelanomaScreen({Key? key}) : super(key: key);
@@ -527,10 +527,11 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(respStr);
-        Navigator.pushNamed(
+        Navigator.push(
           context,
-          '/melanoma-results',
-          arguments: data,
+          MaterialPageRoute(
+            builder: (context) => MelanomaResultsScreen(results: data),
+          ),
         );
       } else {
         _showError('Server Error', 'Failed to analyze image. Status: ${response.statusCode}');

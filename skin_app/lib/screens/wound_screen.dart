@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'chatbot_screen.dart'; // ✅ Direct navigation to chatbot
+import 'dart:math';
+import 'dart:async';
+import 'chatbot_screen.dart';
+import 'wound_faq_screen.dart';
+
 
 class WoundScreen extends StatefulWidget {
   const WoundScreen({Key? key}) : super(key: key);
@@ -11,205 +15,165 @@ class WoundScreen extends StatefulWidget {
   State<WoundScreen> createState() => _WoundScreenState();
 }
 
-class _WoundScreenState extends State<WoundScreen>
-    with SingleTickerProviderStateMixin {
+class _WoundScreenState extends State<WoundScreen> {
   final ImagePicker _picker = ImagePicker();
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _setupAnimations();
-  }
-
-  void _setupAnimations() {
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 100,
-        preferredCameraDevice: CameraDevice.rear,
-      );
-
-      if (pickedFile != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => _WoundImagePreviewScreen(
-              imageFile: File(pickedFile.path),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-    }
-  }
-
+  
+  // Animation variables could be added here for entrance effects
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF0F4F8), // Soft Gray-Blue like Melanoma Screen
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
+          child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Color(0xFFE74C3C),
-              size: 20,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Color(0xFFC0392B), size: 20),
+              onPressed: () => Navigator.pop(context),
             ),
           ),
-          onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Wound Analysis',
           style: TextStyle(
-            color: Color(0xFF1F2937),
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
+            color: Color(0xFF2C3E50),
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+            letterSpacing: 0.5,
           ),
         ),
         centerTitle: true,
       ),
       body: Stack(
         children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildDisclaimerCard(),
-                    const SizedBox(height: 24),
-                    _buildInfoCard(),
-                    const SizedBox(height: 24),
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Column(
-                        children: [
-                          _buildOptionCard(
-                            icon: Icons.camera_alt_rounded,
-                            title: 'Capture Wound',
-                            subtitle: 'Take a clear photo of the affected area',
-                            gradientColors: [
-                              const Color(0xFFE74C3C),
-                              const Color(0xFFC0392B),
-                            ],
-                            onTap: () => _pickImage(ImageSource.camera),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildOptionCard(
-                            icon: Icons.photo_library_rounded,
-                            title: 'Choose from Gallery',
-                            subtitle: 'Select an existing photo',
-                            gradientColors: [
-                              const Color(0xFFE67E22),
-                              const Color(0xFFD35400),
-                            ],
-                            onTap: () => _pickImage(ImageSource.gallery),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+          // Background Decorative Circles (Red/Amber for Wound Theme)
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE74C3C).withValues(alpha: 0.1), // Soft Red
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -50,
+            left: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF39C12).withValues(alpha: 0.1), // Soft Amber
+                shape: BoxShape.circle,
               ),
             ),
           ),
 
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 20,
-                    offset: const Offset(0, -4),
+          // Main Content
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 10),
+                  
+                  // 1. Emergency Disclaimer Card
+                  _buildEmergencyCard(),
+                  
+                  const SizedBox(height: 30),
+                  
+                  // 2. Camera/Gallery Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildInputCard(
+                          icon: Icons.camera_alt_outlined,
+                          title: 'Camera',
+                          color: const Color(0xFFE74C3C), // Red
+                          onTap: () => _pickImage(ImageSource.camera),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildInputCard(
+                          icon: Icons.photo_library_outlined,
+                          title: 'Gallery',
+                          color: const Color(0xFFE67E22), // Orange
+                          onTap: () => _pickImage(ImageSource.gallery),
+                        ),
+                      ),
+                    ],
                   ),
+
+                  const SizedBox(height: 32),
+                  
+                  const Text(
+                    'Quick Actions',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // 3. Real Action Buttons (Chat & Appointment)
+                  _buildRealActionButton(
+                    icon: Icons.calendar_month_rounded,
+                    title: 'Book Appointment',
+                    subtitle: 'Schedule a visit with a specialist',
+                    color: const Color(0xFF8E44AD), // Purple
+                    onTap: () => Navigator.pushNamed(context, '/appointment'),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildRealActionButton(
+                    icon: Icons.smart_toy_rounded,
+                    title: 'Chat with AI Assistant',
+                    subtitle: 'Get instant answers to your doubts',
+                    color: const Color(0xFF16A085), // Teal
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ChatbotScreen()),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildRealActionButton(
+                    icon: Icons.auto_stories_rounded,
+                    title: 'Wound Care Guide',
+                    subtitle: '20+ Essential FAQs & Tips',
+                    color: const Color(0xFFF39C12), // Amber/Orange
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const WoundFaqScreen()),
+                    ),
+                  ),
+
+                  
+                  const SizedBox(height: 40),
                 ],
-              ),
-              child: SafeArea(
-                top: false,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildBottomButton(
-                        icon: Icons.calendar_today_rounded,
-                        label: 'Book Appointment',
-                        color: const Color(0xFF8B5CF6),
-                        onTap: () {
-                          Navigator.pushNamed(context, '/appointment');
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildBottomButton(
-                        icon: Icons.chat_bubble_rounded,
-                        label: 'Chat with AI',
-                        color: const Color(0xFF10B981),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ChatbotScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -218,56 +182,56 @@ class _WoundScreenState extends State<WoundScreen>
     );
   }
 
-  Widget _buildDisclaimerCard() {
+  // --- Components ---
+
+  Widget _buildEmergencyCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.red.shade50,
-            Colors.pink.shade50,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.red.shade200,
-          width: 1.5,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE74C3C).withValues(alpha: 0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE74C3C).withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.shade100,
-              borderRadius: BorderRadius.circular(10),
+              color: const Color(0xFFFDEDEC), // Light Red Bg
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              Icons.emergency_rounded,
-              color: Colors.red.shade700,
-              size: 24,
+            child: const Icon(
+              Icons.warning_amber_rounded,
+              color: Color(0xFFE74C3C),
+              size: 28,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Emergency Notice',
                   style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.red.shade900,
+                    color: Color(0xFFC0392B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'For severe wounds, bleeding, or signs of infection, seek immediate medical attention. This tool is for assessment only, not treatment.',
+                  'For severe bleeding or deep wounds, call emergency services immediately.',
                   style: TextStyle(
+                    color: Colors.grey[700],
                     fontSize: 13,
-                    color: Colors.red.shade800,
                     height: 1.4,
                   ),
                 ),
@@ -279,92 +243,62 @@ class _WoundScreenState extends State<WoundScreen>
     );
   }
 
-  Widget _buildInfoCard() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
+  Widget _buildInputCard({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          height: 150,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE74C3C).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.lightbulb_outline_rounded,
-                  color: Color(0xFFE74C3C),
-                  size: 22,
-                ),
+                child: Icon(icon, color: color, size: 32),
               ),
-              const SizedBox(width: 12),
-              const Text(
-                'Photo Guidelines',
-                style: TextStyle(
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1F2937),
+                  color: Color(0xFF2C3E50),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          _buildTip('Ensure good lighting'),
-          _buildTip('Keep wound in focus'),
-          _buildTip('Include surrounding area'),
-          _buildTip('Take photo from appropriate distance'),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildTip(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE74C3C),
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[700],
-                height: 1.3,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOptionCard({
+  Widget _buildRealActionButton({
     required IconData icon,
     required String title,
     required String subtitle,
-    required List<Color> gradientColors,
+    required Color color,
     required VoidCallback onTap,
   }) {
     return Container(
@@ -373,9 +307,9 @@ class _WoundScreenState extends State<WoundScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: gradientColors[0].withOpacity(0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -389,19 +323,12 @@ class _WoundScreenState extends State<WoundScreen>
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: gradientColors),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: gradientColors[0].withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(icon, color: Colors.white, size: 28),
+                  child: Icon(icon, color: color, size: 26),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -411,9 +338,9 @@ class _WoundScreenState extends State<WoundScreen>
                       Text(
                         title,
                         style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1F2937),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2C3E50),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -428,9 +355,9 @@ class _WoundScreenState extends State<WoundScreen>
                   ),
                 ),
                 Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.grey[400],
+                  Icons.arrow_forward_ios_rounded,
                   size: 18,
+                  color: Colors.grey[400],
                 ),
               ],
             ),
@@ -440,93 +367,73 @@ class _WoundScreenState extends State<WoundScreen>
     );
   }
 
-  Widget _buildBottomButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1.5,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-            ],
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+        imageQuality: 100,
+      );
+
+      if (pickedFile != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => _WoundImagePreviewScreen(
+              imageFile: File(pickedFile.path),
+            ),
           ),
-        ),
-      ),
-    );
+        );
+      }
+    } catch (e) {
+      // Handle error
+    }
   }
 }
 
 // ============================================
-// PREVIEW SCREEN (INSIDE SAME FILE)
+// PREVIEW SCREEN WITH BIO-METRIC SCANNER
 // ============================================
 
 class _WoundImagePreviewScreen extends StatefulWidget {
   final File imageFile;
 
-  const _WoundImagePreviewScreen({
-    required this.imageFile,
-  });
+  const _WoundImagePreviewScreen({required this.imageFile});
 
   @override
   State<_WoundImagePreviewScreen> createState() =>
       _WoundImagePreviewScreenState();
 }
 
-class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen> {
+class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen>
+    with TickerProviderStateMixin {
   bool _isAnalyzing = false;
-  final TransformationController _transformationController =
-      TransformationController();
+  late AnimationController _scanController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scanController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4), // Slow, detailed scan
+    );
+  }
 
   @override
   void dispose() {
-    _transformationController.dispose();
+    _scanController.dispose();
     super.dispose();
   }
 
-  void _resetZoom() {
-    _transformationController.value = Matrix4.identity();
-  }
-
   Future<void> _analyzeImage() async {
-    setState(() {
-      _isAnalyzing = true;
-    });
+    setState(() => _isAnalyzing = true);
+    _scanController.repeat(); // Start animation loop
 
     try {
       final bytes = await widget.imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
 
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        _isAnalyzing = false;
-      });
+      // Simulate network request
+      await Future.delayed(const Duration(seconds: 4));
 
       if (mounted) {
         Navigator.pushNamed(
@@ -540,18 +447,17 @@ class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen> {
         );
       }
     } catch (e) {
-      setState(() {
-        _isAnalyzing = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Analysis failed: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Analysis failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+        _scanController.stop();
+        _scanController.reset();
+      }
     }
   }
 
@@ -559,121 +465,132 @@ class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Preview & Analyze',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: const Icon(
-                Icons.refresh,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            onPressed: _resetZoom,
-            tooltip: 'Reset Zoom',
-          ),
-        ],
-      ),
-      body: Column(
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              color: Colors.black,
-              child: InteractiveViewer(
-                transformationController: _transformationController,
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: Image.file(
-                  widget.imageFile,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+          // 1. Image
+          Image.file(
+            widget.imageFile,
+            fit: BoxFit.cover,
+          ),
+
+          // 2. Overlay Gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.6),
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.8),
+                ],
               ),
             ),
           ),
-          Container(
-            color: Colors.black,
-            padding: const EdgeInsets.all(20),
-            child: SafeArea(
-              top: false,
+
+          // 3. Scanner Animation Overlay (Only when analyzing)
+          if (_isAnalyzing)
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _scanController,
+                builder: (context, child) {
+                   return CustomPaint(
+                    painter: WoundScannerPainter(
+                      progress: _scanController.value,
+                    ),
+                  );
+                },
+              ),
+            ),
+
+          // 4. Header
+          Positioned(
+            top: 50,
+            left: 20,
+            right: 20,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: _isAnalyzing ? null : () => Navigator.pop(context),
+                ),
+                const Spacer(),
+                const Text(
+                  'Analysis Preview',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                const SizedBox(width: 48),
+              ],
+            ),
+          ),
+
+          // 5. Bottom Controls
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(30),
+              decoration: const BoxDecoration(
+                color: Colors.transparent,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
-                        width: 1,
+                   if (_isAnalyzing) ...[
+                     const Text(
+                       "ANALYZING TISSUE STRUCTURE...",
+                       style: TextStyle(
+                         color: Colors.cyanAccent,
+                         fontSize: 14,
+                         letterSpacing: 2.0,
+                         fontWeight: FontWeight.bold,
+                       ),
+                     ),
+                     const SizedBox(height: 20),
+                   ],
+                   
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isAnalyzing ? null : _analyzeImage,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _isAnalyzing
+                            ? Colors.grey[800]
+                            : const Color(0xFFE74C3C), // Red
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: _isAnalyzing ? 0 : 10,
+                        shadowColor: const Color(0xFFE74C3C).withValues(alpha: 0.5),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.zoom_in,
-                          color: Colors.white.withOpacity(0.8),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Pinch to zoom • Double tap to fit',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                      child: _isAnalyzing
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'START SCAN',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  _buildAnalyzeButton(),
                 ],
               ),
             ),
@@ -682,74 +599,91 @@ class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen> {
       ),
     );
   }
+}
 
-  Widget _buildAnalyzeButton() {
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFE74C3C).withOpacity(0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: _isAnalyzing ? null : _analyzeImage,
-          child: Center(
-            child: _isAnalyzing
-                ? const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'ANALYZING...',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ],
-                  )
-                : const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.analytics_outlined,
-                          color: Colors.white, size: 22),
-                      SizedBox(width: 10),
-                      Text(
-                        'ANALYZE WOUND',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
-      ),
-    );
+// ============================================
+// BIO-METRIC SCANNER PAINTER (Custom for Wound)
+// ============================================
+
+class WoundScannerPainter extends CustomPainter {
+  final double progress; // 0.0 to 1.0
+
+  WoundScannerPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint linePaint = Paint()
+      ..color = Colors.cyanAccent.withValues(alpha: 0.8)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+
+
+    // 1. Moving Scan Line
+    double yPos = size.height * sin(progress * pi); // Oscillates up and down
+    // Map -1..1 to 0..height
+    yPos = (size.height * progress) % size.height;
+    
+    // Scan Beam Effect
+    Rect beamRect = Rect.fromLTWH(0, yPos - 30, size.width, 60);
+    final Shader beamShader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+         Colors.transparent,
+         Colors.cyanAccent.withValues(alpha: 0.6),
+         Colors.transparent,
+      ],
+    ).createShader(beamRect);
+    
+    Paint beamPaint = Paint()..shader = beamShader;
+    canvas.drawRect(beamRect, beamPaint);
+    
+    canvas.drawLine(Offset(0, yPos), Offset(size.width, yPos), linePaint);
+    
+    // 2. Corner Brackets (HUD style)
+    double bracketLen = 40;
+    double padding = 20;
+    
+    Path corners = Path();
+    // Top Left
+    corners.moveTo(padding, padding + bracketLen);
+    corners.lineTo(padding, padding);
+    corners.lineTo(padding + bracketLen, padding);
+    
+    // Top Right
+    corners.moveTo(size.width - padding - bracketLen, padding);
+    corners.lineTo(size.width - padding, padding);
+    corners.lineTo(size.width - padding, padding + bracketLen);
+    
+    // Bottom Left
+    corners.moveTo(padding, size.height - padding - bracketLen);
+    corners.lineTo(padding, size.height - padding);
+    corners.lineTo(padding + bracketLen, size.height - padding);
+    
+    // Bottom Right
+    corners.moveTo(size.width - padding - bracketLen, size.height - padding);
+    corners.lineTo(size.width - padding, size.height - padding);
+    corners.lineTo(size.width - padding, size.height - padding - bracketLen);
+    
+    canvas.drawPath(corners, linePaint..strokeWidth = 4);
+    
+    // 3. Grid Lines (Faint)
+    Paint gridPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.1)
+      ..strokeWidth = 1;
+      
+    double step = 80;
+    for(double x = 0; x < size.width; x+=step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+    for(double y = 0; y < size.height; y+=step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant WoundScannerPainter oldDelegate) {
+    return oldDelegate.progress != progress;
   }
 }

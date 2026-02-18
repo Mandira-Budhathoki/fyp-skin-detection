@@ -103,78 +103,49 @@ class _ScanTipsScreenState extends State<ScanTipsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHero(height * 0.30),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    _buildHeader(),
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: tips.length,
-                        physics: const BouncingScrollPhysics(),
-                        itemBuilder: (context, i) => _buildTipCard(tips[i], i),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildButtons(),
-                  ],
-                ),
+      backgroundColor: const Color(0xFFF4F7F9),
+      body: Stack(
+        children: [
+          // Background Decorative Elements
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3498DB).withOpacity(0.05),
+                shape: BoxShape.circle,
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ================= HERO =================
-  Widget _buildHero(double height) {
-    return Container(
-      height: height,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/logo4.png',
-              fit: BoxFit.cover,
-              color: Colors.black.withOpacity(0.35),
-              colorBlendMode: BlendMode.darken,
-            ),
           ),
-          Positioned(
-            bottom: 20,
-            left: 20,
+          
+          SafeArea(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Scan Guidelines',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+              children: [
+                _buildAdvancedHero(),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 24),
+                        _buildGlassHeader(),
+                        const SizedBox(height: 24),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: tips.length,
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.only(bottom: 20),
+                            itemBuilder: (context, i) => _buildAdvancedTipCard(tips[i], i),
+                          ),
+                        ),
+                        _buildRefinedButtons(),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'Follow these tips for accurate results',
-                  style: TextStyle(color: Colors.white70),
                 ),
               ],
             ),
@@ -184,132 +155,278 @@ class _ScanTipsScreenState extends State<ScanTipsScreen>
     );
   }
 
-  // ================= HEADER =================
-  Widget _buildHeader() {
+  Widget _buildAdvancedHero() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF667EEA).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(30),
+      height: 240,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Color(0xFF2C3E50),
       ),
-      child: const Text(
-        'Essential Tips for Best Results',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF2D3748),
-        ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/logo4.png',
+              fit: BoxFit.cover,
+              opacity: const AlwaysStoppedAnimation(0.2),
+            ),
+          ),
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    const Color(0xFFF4F7F9),
+                    const Color(0xFFF4F7F9).withOpacity(0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 30,
+            left: 24,
+            right: 24,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'SCAN PROTOCOL',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 3.0,
+                    color: Color(0xFF3498DB),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Follow these guidelines\nfor precise analysis',
+                  style: TextStyle(
+                    fontSize: 24,
+                    height: 1.2,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 20,
+            left: 24,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Image.asset('assets/images/logo4.png', height: 24),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // ================= TIP CARD =================
-  Widget _buildTipCard(TipItem tip, int index) {
+  Widget _buildGlassHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.verified_user_outlined, color: Color(0xFF1ABC9C), size: 20),
+          const SizedBox(width: 12),
+          const Text(
+            'Protocol for Best Accuracy',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: Color(0xFF34495E),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdvancedTipCard(TipItem tip, int index) {
     return AnimatedBuilder(
       animation: _cardAnimations[index],
       builder: (_, child) {
         final opacity = _cardAnimations[index].value.clamp(0.0, 1.0);
-        final offsetY = 40 * (1 - opacity);
+        final translateY = 30 * (1 - opacity);
 
-        return Transform.translate(
-          offset: Offset(0, offsetY),
-          child: Opacity(
-            opacity: opacity,
+        return Opacity(
+          opacity: opacity,
+          child: Transform.translate(
+            offset: Offset(0, translateY),
             child: child,
           ),
         );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: _currentTipIndex == index
-                ? tip.color.withOpacity(0.4)
-                : Colors.transparent,
-            width: 2,
-          ),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: tip.color.withOpacity(0.15),
-              blurRadius: 20,
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 15,
               offset: const Offset(0, 8),
             ),
           ],
+          border: Border.all(
+            color: _currentTipIndex == index
+                ? const Color(0xFF3498DB).withOpacity(0.3)
+                : Colors.transparent,
+            width: 2,
+          ),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: tip.color,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              alignment: Alignment.center,
-              child: Text(tip.emoji, style: const TextStyle(fontSize: 28)),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tip.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  width: 6,
+                  color: _currentTipIndex == index ? const Color(0xFF3498DB) : Colors.transparent,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0F4F8),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(tip.emoji, style: const TextStyle(fontSize: 24)),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                tip.title.toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.8,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                tip.description,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    tip.description,
-                    style: const TextStyle(color: Colors.black54),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  // ================= BUTTONS =================
-  Widget _buildButtons() {
+  Widget _buildRefinedButtons() {
     return AnimatedBuilder(
       animation: _buttonAnimation,
       builder: (_, child) {
         final opacity = _buttonAnimation.value.clamp(0.0, 1.0);
-        final scale = _buttonAnimation.value.clamp(0.0, 1.0);
-        return Transform.scale(
-          scale: scale,
-          child: Opacity(
-            opacity: opacity,
-            child: child,
-          ),
-        );
+        return Opacity(opacity: opacity, child: child);
       },
       child: Row(
         children: [
           Expanded(
-            child: OutlinedButton(
+            child: TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('BACK'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text(
+                'BACK',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  letterSpacing: 1.5,
+                  color: Color(0xFF7F8C8D),
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 20),
           Expanded(
             flex: 2,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => DashboardScreen()),
-                );
-              },
-              child: const Text('CONTINUE'),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF3498DB).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3498DB),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'CONTINUE',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
             ),
           ),
         ],

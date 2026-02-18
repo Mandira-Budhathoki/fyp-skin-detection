@@ -33,11 +33,65 @@ const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      role: req.body.role || 'user', // Use role from body or default to user
     });
 
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ---------------- REGISTER ADMIN ----------------
+const registerAdmin = async (req, res) => {
+  try {
+    const { name, email, password, adminSecret } = req.body;
+
+    // 1. Verify Admin Secret
+    if (adminSecret !== process.env.ADMIN_SECRET) {
+      return res.status(403).json({
+        success: false,
+        message: 'Invalid Admin Secret Key',
+      });
+    }
+
+    // 2. Limit Admin Count (Max 3)
+    const adminCount = await User.countDocuments({ role: 'admin' });
+    if (adminCount >= 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Admin limit reached (Maximum 3 admins allowed)',
+      });
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'User already exists',
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const admin = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: 'admin',
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Admin registered successfully',
     });
 
   } catch (error) {
@@ -81,7 +135,7 @@ const loginUser = async (req, res) => {
 
     // 🎟 GENERATE JWT TOKEN (LIFETIME TOKEN, no expiry)
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: user.role },
       JWT_SECRET
       // no expiresIn => token never expires
     );
@@ -94,6 +148,7 @@ const loginUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     });
 
@@ -181,6 +236,7 @@ const resetPassword = async (req, res) => {
 
 module.exports = {
   registerUser,
+  registerAdmin,
   loginUser,
   forgotPassword,
   resetPassword,

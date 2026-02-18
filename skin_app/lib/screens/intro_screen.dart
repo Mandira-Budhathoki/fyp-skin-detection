@@ -1,203 +1,266 @@
 import 'package:flutter/material.dart';
-import 'scan_tips_screen.dart'; // ✅ ADD THIS
+import 'scan_tips_screen.dart';
 
 class IntroScreen extends StatefulWidget {
-  const IntroScreen({Key? key}) : super(key: key);
+  const IntroScreen({super.key});
 
   @override
   State<IntroScreen> createState() => _IntroScreenState();
 }
 
-class _IntroScreenState extends State<IntroScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fade;
+class _IntroScreenState extends State<IntroScreen> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-    _fade = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-    _controller.forward();
+  final List<OnboardingData> _pages = [
+    OnboardingData(
+      title: "Melanoma Detection",
+      description:
+          "Early detection is key. Our AI analyzes moles and lesions to identify potential risks of melanoma instantly.",
+      // Using a color placeholder. Replace 'assets/images/melanoma_real.png' with your real image.
+      imagePath: 'assets/images/intro_melanoma.png', 
+      themeColor: const Color(0xFFE91E63), // Pink/Red
+      icon: Icons.health_and_safety_outlined,
+    ),
+    OnboardingData(
+      title: "Wound Analysis",
+      description:
+          "Monitor wound healing progress and detect signs of infection early with advanced visual analysis.",
+      imagePath: 'assets/images/intro_wound.png',
+      themeColor: const Color(0xFFFF9800), // Orange/Amber
+      icon: Icons.healing_outlined,
+    ),
+    OnboardingData(
+      title: "Skin Condition Check",
+      description:
+          "Identify various skin conditions like acne, eczema, and more to get personalized care recommendations.",
+      imagePath: 'assets/images/intro_skin.png',
+      themeColor: const Color(0xFF2196F3), // Blue
+      icon: Icons.face_retouching_natural_outlined,
+    ),
+    OnboardingData(
+      title: "Track Your Health",
+      description:
+          "Keep a secure history of your scans to monitor changes over time and share reports with your doctor.",
+      imagePath: 'assets/images/intro_track.png',
+      themeColor: const Color(0xFF009688), // Teal/Green
+      icon: Icons.insights_outlined,
+    ),
+  ];
+
+  void _onNext() {
+    if (_currentPage < _pages.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _onGetStarted();
+    }
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void _onGetStarted() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ScanTipsScreen()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    // Current theme color based on page
+    final Color currentColor = _pages[_currentPage].themeColor;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 🔹 TOP HERO IMAGE — 40%
-            SizedBox(
-              height: screenHeight * 0.40,
-              width: double.infinity,
-              child: const AnimatedLogo(),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Background Gradient Transition
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 500),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white,
+                  currentColor.withValues(alpha: 0.05), // Very subtle tint
+                ],
+              ),
             ),
+          ),
 
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: FadeTransition(
-                opacity: _fade,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _header(),
-                    const SizedBox(height: 28),
-
-                    _featureCard(
-                      icon: Icons.biotech,
-                      title: 'Melanoma Detection',
-                      bullets: [
-                        'Deep learning–based lesion analysis',
-                        'Visual pattern recognition of skin abnormalities',
-                        'Region-focused analytical cues for assessment',
-                      ],
-                      color: const Color(0xFFE11D48),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    _featureCard(
-                      icon: Icons.healing,
-                      title: 'Wound Detection',
-                      bullets: [
-                        'Automated wound area identification',
-                        'Visual indicators related to infection risk',
-                        'Monitoring changes over time',
-                      ],
-                      color: const Color(0xFFF59E0B),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    _featureCard(
-                      icon: Icons.auto_awesome,
-                      title: 'Skin Condition Analysis',
-                      bullets: [
-                        'Multi-condition skin assessment',
-                        'Texture, tone, and surface evaluation',
-                        'Decision-support insights for users',
-                      ],
-                      color: const Color(0xFF2563EB),
-                    ),
-
-                    const SizedBox(height: 36),
-                    _ctaSection(),
-                    const SizedBox(height: 30),
-
-                    _nextButton(), // ✅ CONNECTED
-                  ],
+          Column(
+            children: [
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentPage = index;
+                    });
+                  },
+                  itemCount: _pages.length,
+                  itemBuilder: (context, index) {
+                    return _buildPage(_pages[index]);
+                  },
+                ),
+              ),
+              
+              _buildBottomControls(currentColor),
+            ],
+          ),
+          
+          // Skip Button
+          Positioned(
+            top: 50,
+            right: 20,
+            child: TextButton(
+              onPressed: _onGetStarted,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey[600],
+              ),
+              child: const Text(
+                "Skip",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ================= HEADER =================
-
-  Widget _header() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        Text(
-          'Core Analysis Capabilities',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF111827),
-          ),
-        ),
-        SizedBox(height: 6),
-        Text(
-          'Designed for AI-supported skin assessment',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.black54,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ================= FEATURE CARD =================
-
-  Widget _featureCard({
-    required IconData icon,
-    required String title,
-    required List<String> bullets,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPage(OnboardingData data) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // IMAGE PLACEHOLDER area
+          // You said "not image by yourself", so I'm putting a placeholder structure here.
+          // You can uncomment the Image.asset part when you have the files.
           Container(
-            padding: const EdgeInsets.all(14),
+            height: 280, 
+            width: double.infinity,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(14),
+              color: data.themeColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(30),
             ),
-            child: Icon(icon, color: color, size: 30),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Icon as placeholder for the "Real Image"
+                Icon(
+                  data.icon, 
+                  size: 100, 
+                  color: data.themeColor.withValues(alpha: 0.5),
+                ),
+                // Uncomment this when you add your real images to assets:
+                // ClipRRect(
+                //   borderRadius: BorderRadius.circular(30),
+                //   child: Image.asset(
+                //     data.imagePath,
+                //     fit: BoxFit.cover,
+                //     width: double.infinity,
+                //     height: double.infinity,
+                //     errorBuilder: (c, e, s) => const SizedBox(), // Hide if missing
+                //   ),
+                // ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
+          
+          const SizedBox(height: 50),
+          
           Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1F2937),
+            data.title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2D3436),
+              shadows: [
+                Shadow(
+                  color: data.themeColor.withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ]
             ),
           ),
-          const SizedBox(height: 12),
-          ...bullets.map(
-            (b) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.check_circle, size: 18, color: color),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      b,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        height: 1.4,
-                      ),
-                    ),
+          
+          const SizedBox(height: 20),
+          
+          Text(
+            data.description,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              height: 1.6,
+              color: Colors.grey[700],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomControls(Color themeColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 50, left: 30, right: 30),
+      child: Column(
+        children: [
+          // Dots Indicator
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              _pages.length,
+              (index) => AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                height: 8,
+                width: _currentPage == index ? 32 : 8,
+                decoration: BoxDecoration(
+                  color: _currentPage == index
+                      ? themeColor
+                      : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 40),
+          
+          // Button
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _onNext,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 8,
+                shadowColor: themeColor.withValues(alpha: 0.4),
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  _currentPage == _pages.length - 1 ? "Get Started" : "Next",
+                  key: ValueKey<String>(_currentPage == _pages.length - 1 ? "start" : "next"),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -205,125 +268,20 @@ class _IntroScreenState extends State<IntroScreen>
       ),
     );
   }
-
-  // ================= CTA =================
-
-  Widget _ctaSection() {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black12),
-      ),
-      child: const Text(
-        'This application supports skin analysis and awareness. It is not intended to replace professional medical advice.',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 14,
-          height: 1.6,
-          color: Colors.black87,
-        ),
-      ),
-    );
-  }
-
-  // ================= NEXT BUTTON =================
-
-  Widget _nextButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const ScanTipsScreen(),
-            ),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          backgroundColor: const Color(0xFF4F46E5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        child: const Text(
-          'NEXT',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
-// ================= DYNAMIC IMAGE =================
+class OnboardingData {
+  final String title;
+  final String description;
+  final String imagePath;
+  final Color themeColor;
+  final IconData icon;
 
-class AnimatedLogo extends StatefulWidget {
-  const AnimatedLogo({super.key});
-
-  @override
-  State<AnimatedLogo> createState() => _AnimatedLogoState();
-}
-
-class _AnimatedLogoState extends State<AnimatedLogo>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (_, __) {
-        return Transform.scale(
-          scale: 1 + (_controller.value * 0.06),
-          child: ShaderMask(
-            shaderCallback: (bounds) {
-              return LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: [
-                  _controller.value - 0.3,
-                  _controller.value,
-                  _controller.value + 0.3,
-                ],
-                colors: [
-                  Colors.transparent,
-                  Colors.white.withOpacity(0.6),
-                  Colors.transparent,
-                ],
-              ).createShader(bounds);
-            },
-            blendMode: BlendMode.srcATop,
-            child: Image.asset(
-              'assets/images/logo3.png',
-              fit: BoxFit.cover,
-              width: double.infinity,
-            ),
-          ),
-        );
-      },
-    );
-  }
+  OnboardingData({
+    required this.title,
+    required this.description,
+    required this.imagePath,
+    required this.themeColor,
+    required this.icon,
+  });
 }

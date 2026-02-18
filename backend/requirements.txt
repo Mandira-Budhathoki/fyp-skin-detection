@@ -3,3 +3,8 @@ Flask-Cors
 numpy
 Pillow
 werkzeug
+opencv-python
+mongoengine
+flask-bcrypt
+PyJWT
+python-dotenv

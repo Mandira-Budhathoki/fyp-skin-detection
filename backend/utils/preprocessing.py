@@ -35,4 +35,7 @@ def preprocess_melanoma_image(image_path):
     # Resize to 224x224
     img_resized = cv2.resize(img_cropped, (224, 224))
     
-    return img_resized
+    # Convert BGR (OpenCV default) to RGB (Model default)
+    img_rgb = cv2.cvtColor(img_resized, cv2.COLOR_BGR2RGB)
+    
+    return img_rgb

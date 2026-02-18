@@ -2,9 +2,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
+import '../services/api_service.dart'; // Make sure this exists
+import 'admin_register_screen.dart';
 import 'intro_screen.dart';
 import 'forgot_password_screen.dart';
+import 'admin_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -53,12 +55,20 @@ class _LoginScreenState extends State<LoginScreen> {
     String? token = prefs.getString('userToken');
 
     if (token != null && token.isNotEmpty) {
-      // User already logged in → go to IntroScreen
+      String? role = prefs.getString('userRole');
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const IntroScreen()),
-      );
+      
+      if (role == 'admin') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const IntroScreen()),
+        );
+      }
     }
   }
 
@@ -100,8 +110,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result['success'] == true) {
         // ========== SAVE TOKEN ==========
         String token = result['token'];
+        String role = result['user']['role'] ?? 'user';
+        
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('userToken', token);
+        await prefs.setString('userRole', role);
 
         _showSnack(
           result['message'] ?? 'Logged in successfully!',
@@ -110,10 +123,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const IntroScreen()),
-        );
+        if (role == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const IntroScreen()),
+          );
+        }
       } else {
         _showSnack(result['message'] ?? 'Invalid email or password');
       }
@@ -282,16 +302,27 @@ class _LoginScreenState extends State<LoginScreen> {
 
               GestureDetector(
                 onTap: () {
-                  Navigator.pushReplacement(
+                  Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const RegisterScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
                   );
                 },
                 child: const Text(
                   'Create new account',
                   style: TextStyle(color: Colors.tealAccent),
+                ),
+              ),
+              const SizedBox(height: 14),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AdminRegisterScreen()),
+                  );
+                },
+                child: const Text(
+                  'Register as Admin',
+                  style: TextStyle(color: Colors.white54, fontSize: 13, decoration: TextDecoration.underline),
                 ),
               ),
             ],

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'melanoma_screen.dart';
 import 'wound_screen.dart';
 import 'skin_screen.dart';
+import 'appointment_screen.dart';
+import 'my_appointments_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -22,6 +27,8 @@ class _DashboardScreenState extends State<DashboardScreen>
     _animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1200));
 
+    _checkNextAppointment(); // Check for upcoming appointment
+
     _fadeAnimation = CurvedAnimation(
         parent: _animationController, curve: Curves.easeInOut);
 
@@ -34,6 +41,26 @@ class _DashboardScreenState extends State<DashboardScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _animationController.forward();
     });
+  }
+
+  Map<String, dynamic>? _nextAppointment;
+
+  Future<void> _checkNextAppointment() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('userToken');
+
+    if (token != null) {
+      final appointments = await ApiService.getUserAppointments(token);
+      if (appointments.isNotEmpty) {
+        // Filter for upcoming
+        final upcoming = appointments.where((a) => a['status'] == 'upcoming').toList();
+        if (upcoming.isNotEmpty) {
+           setState(() {
+             _nextAppointment = upcoming[0]; // Assuming sorted by backend
+           });
+        }
+      }
+    }
   }
 
   @override
@@ -84,6 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     children: [
                       const SizedBox(height: 20),
                       _buildHeader(),
+                      if (_nextAppointment != null) _buildNextAppointmentCard(),
                       const SizedBox(height: 32),
                       const Text(
                         "AI Analysis Tools",
@@ -99,6 +127,17 @@ class _DashboardScreenState extends State<DashboardScreen>
                         child: ListView(
                           physics: const BouncingScrollPhysics(),
                           children: [
+                            _buildFeatureCard(
+                              title: 'Book Appointment',
+                              subtitle: 'Schedule a visit with experts',
+                              icon: Icons.calendar_month_outlined,
+                              color: const Color(0xFF6A4C93), // Purple
+                              onTap: () async {
+                                await Navigator.push(context, MaterialPageRoute(builder: (_) => const AppointmentScreen()));
+                                _checkNextAppointment(); // Refresh on return
+                              },
+                            ),
+                            const SizedBox(height: 16),
                             _buildFeatureCard(
                               title: 'Melanoma Detection',
                               subtitle: 'Early skin cancer screening',
@@ -282,8 +321,10 @@ class _DashboardScreenState extends State<DashboardScreen>
             Expanded(
               child: _buildSmallActionCard(
                 icon: Icons.history_rounded,
-                label: "History",
-                onTap: () {},
+                label: "My Appointments", // Changed label
+                onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MyAppointmentsScreen()));
+                },
               ),
             ),
             const SizedBox(width: 16),
@@ -329,6 +370,40 @@ class _DashboardScreenState extends State<DashboardScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildNextAppointmentCard() {
+    if (_nextAppointment == null) return const SizedBox.shrink();
+
+    final date = _nextAppointment!['date'];
+    final time = _nextAppointment!['time'];
+    final doctor = _nextAppointment!['dermatologistId'];
+    final docName = doctor != null ? doctor['name'] : 'Doctor';
+
+    return Container(
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFF6A4C93), Color(0xFF8D5FBF)]),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: const Color(0xFF6A4C93).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.alarm, color: Colors.white, size: 30),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Upcoming Appointment", style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              const SizedBox(height: 4),
+              Text("$docName", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text("$date at $time", style: const TextStyle(color: Colors.white, fontSize: 14)),
+            ],
+          )
+        ],
       ),
     );
   }
