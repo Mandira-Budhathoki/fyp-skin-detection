@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/api_service.dart';
 import 'chatbot_screen.dart';
 import 'melanoma_results_screen.dart';
 
@@ -123,7 +125,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: const Color(0xFFE9C46A).withOpacity(0.1),
+                color: const Color(0xFF2A9D8F).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
             ),
@@ -382,10 +384,10 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
               const SizedBox(height: 16),
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF264653),
+                  color: Color(0xFF264653),
                 ),
               ),
             ],
@@ -415,7 +417,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const ChatbotScreen(),
+                builder: (context) => const ChatbotScreen(category: 'melanoma'),
               ),
             );
           },
@@ -510,8 +512,15 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
   Future<void> _analyzeImage() async {
     setState(() => _isAnalyzing = true);
 
-    final uri = Uri.parse('http://192.168.1.81:3000/analyze'); // Your Flask IP
+    final uri = Uri.parse(ApiService.analyzeUrl);
     final request = http.MultipartRequest('POST', uri);
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('userToken');
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    request.headers['Bypass-Tunnel-Reminder'] = 'true';
 
     final mimeType = widget.imageFile.path.toLowerCase().endsWith('.png') ? 'png' : 'jpeg';
 
@@ -527,12 +536,14 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(respStr);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MelanomaResultsScreen(results: data),
-          ),
-        );
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MelanomaResultsScreen(results: data),
+            ),
+          );
+        }
       } else {
         _showError('Server Error', 'Failed to analyze image. Status: ${response.statusCode}');
       }

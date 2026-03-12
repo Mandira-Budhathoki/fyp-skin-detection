@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 // Use SAME secret everywhere
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// ---------------- REGISTER USER ----------------
+//  REGISTER USER 
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -25,7 +25,7 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // 🔐 HASH PASSWORD
+    //  HASH PASSWORD
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -49,7 +49,7 @@ const registerUser = async (req, res) => {
   }
 };
 
-// ---------------- REGISTER ADMIN ----------------
+//  REGISTER ADMIN 
 const registerAdmin = async (req, res) => {
   try {
     const { name, email, password, adminSecret } = req.body;
@@ -102,7 +102,7 @@ const registerAdmin = async (req, res) => {
   }
 };
 
-// ---------------- LOGIN USER ----------------
+//  LOGIN USER
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -123,7 +123,7 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // 🔐 COMPARE HASHED PASSWORD
+    //  COMPARE HASHED PASSWORD
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -160,7 +160,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-// ---------------- FORGOT PASSWORD ----------------
+//  FORGOT PASSWORD
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -194,7 +194,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// ---------------- RESET PASSWORD ----------------
+// RESET PASSWORD 
 const resetPassword = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
@@ -215,7 +215,7 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // 🔐 HASH NEW PASSWORD
+    //  HASH NEW PASSWORD
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 

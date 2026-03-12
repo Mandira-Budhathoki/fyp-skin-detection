@@ -4,6 +4,8 @@ import 'wound_screen.dart';
 import 'skin_screen.dart';
 import 'appointment_screen.dart';
 import 'my_appointments_screen.dart';
+import 'scan_history_screen.dart';
+import 'profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'package:intl/intl.dart';
@@ -124,49 +126,53 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ),
                       const SizedBox(height: 16),
                       Expanded(
-                        child: ListView(
+                        child: SingleChildScrollView(
                           physics: const BouncingScrollPhysics(),
-                          children: [
-                            _buildFeatureCard(
-                              title: 'Book Appointment',
-                              subtitle: 'Schedule a visit with experts',
-                              icon: Icons.calendar_month_outlined,
-                              color: const Color(0xFF6A4C93), // Purple
-                              onTap: () async {
-                                await Navigator.push(context, MaterialPageRoute(builder: (_) => const AppointmentScreen()));
-                                _checkNextAppointment(); // Refresh on return
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            _buildFeatureCard(
-                              title: 'Melanoma Detection',
-                              subtitle: 'Early skin cancer screening',
-                              icon: Icons.health_and_safety_outlined,
-                              color: const Color(0xFF2A9D8F), // Teal
-                              onTap: () => Navigator.push(context,
-                                  MaterialPageRoute(builder: (_) => const MelanomaScreen())),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildFeatureCard(
-                              title: 'Wound Analysis',
-                              subtitle: 'Infection & healing tracker',
-                              icon: Icons.healing_outlined,
-                              color: const Color(0xFFE76F51), // Burnt Orange
-                              onTap: () => Navigator.push(context,
-                                  MaterialPageRoute(builder: (_) => const WoundScreen())),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildFeatureCard(
-                              title: 'Skin Health',
-                              subtitle: 'General dermatological check',
-                              icon: Icons.face_retouching_natural_outlined,
-                              color: const Color(0xFFE9C46A), // Sandy Yellow
-                              onTap: () => Navigator.push(context,
-                                  MaterialPageRoute(builder: (_) => const SkinScreen())),
-                            ),
-                            const SizedBox(height: 24),
-                            _buildQuickActions(),
-                          ],
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              GridView.count(
+                                crossAxisCount: 2,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 1.1,
+                                children: [
+                                  _buildFeatureGridItem(
+                                    title: 'Book\nAppointment',
+                                    icon: Icons.calendar_month_rounded,
+                                    color: const Color(0xFF6A4C93),
+                                    onTap: () async {
+                                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const AppointmentScreen()));
+                                      _checkNextAppointment();
+                                    },
+                                  ),
+                                  _buildFeatureGridItem(
+                                    title: 'Melanoma\nDetection',
+                                    icon: Icons.health_and_safety_rounded,
+                                    color: const Color(0xFF2A9D8F),
+                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MelanomaScreen())),
+                                  ),
+                                  _buildFeatureGridItem(
+                                    title: 'Wound\nAnalysis',
+                                    icon: Icons.healing_rounded,
+                                    color: const Color(0xFFE76F51),
+                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WoundScreen())),
+                                  ),
+                                  _buildFeatureGridItem(
+                                    title: 'Skin\nHealth',
+                                    icon: Icons.face_retouching_natural_rounded,
+                                    color: const Color(0xFFE9C46A),
+                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SkinScreen())),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 32),
+                              _buildQuickActions(),
+                              const SizedBox(height: 20),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -232,71 +238,55 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildFeatureCard({
+  Widget _buildFeatureGridItem({
     required String title,
-    required String subtitle,
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      elevation: 0,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.withOpacity(0.1)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 32),
                 ),
-                child: Icon(icon, color: color, size: 28),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF264653),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF264653),
+                    height: 1.2,
+                  ),
                 ),
-              ),
-              Icon(Icons.arrow_forward_ios_rounded,
-                  size: 18, color: Colors.grey[400]),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -321,53 +311,77 @@ class _DashboardScreenState extends State<DashboardScreen>
             Expanded(
               child: _buildSmallActionCard(
                 icon: Icons.history_rounded,
-                label: "My Appointments", // Changed label
+                label: "Visits",
+                color: const Color(0xFF264653),
                 onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const MyAppointmentsScreen()));
                 },
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSmallActionCard(
+                icon: Icons.analytics_outlined,
+                label: "Reports",
+                color: const Color(0xFF264653),
+                onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ScanHistoryScreen()));
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: _buildSmallActionCard(
                 icon: Icons.person_outline_rounded,
                 label: "Profile",
-                onTap: () {},
+                color: const Color(0xFF264653),
+                onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
+                },
               ),
             ),
           ],
-        )
+        ),
       ],
     );
   }
 
   Widget _buildSmallActionCard(
-      {required IconData icon, required String label, required VoidCallback onTap}) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
+      {required IconData icon, required String label, required Color color, required VoidCallback onTap}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        border: Border.all(color: Colors.grey.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Column(
-            children: [
-              Icon(icon, color: const Color(0xFF264653), size: 24),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF264653),
-                  fontSize: 14,
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              children: [
+                Icon(icon, color: color, size: 24),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: color.withOpacity(0.8),
+                    fontSize: 12,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

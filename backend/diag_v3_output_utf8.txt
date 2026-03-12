@@ -1,0 +1,1312 @@
+﻿venv\Scripts\python : 
+2026-02-25 21:05:43.373930: 
+I tensorflow/core/util/port.
+cc:153] oneDNN custom 
+operations are on. You may 
+see slightly different 
+numerical results due to 
+floating-point round-off 
+errors from different 
+computation orders. To turn 
+them off, set the 
+environment variable 
+`TF_ENABLE_ONEDNN_OPTS=0`.
+At line:1 char:1
++ venv\Scripts\python 
+diagnose_acne_v3.py > 
+diag_v3_output.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (2026-  
+  02-25 21:0...ONEDNN_OPT   
+ S=0`.:String) [], Remot    
+eException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+2026-02-25 21:05:46.383539: 
+I tensorflow/core/util/port.
+cc:153] oneDNN custom 
+operations are on. You may 
+see slightly different 
+numerical results due to 
+floating-point round-off 
+errors from different 
+computation orders. To turn 
+them off, set the 
+environment variable 
+`TF_ENABLE_ONEDNN_OPTS=0`.
+2026-02-25 21:05:47.169597: 
+I tensorflow/core/platform/c
+pu_feature_guard.cc:210] 
+This TensorFlow binary is 
+optimized to use available 
+CPU instructions in 
+performance-critical 
+operations.
+To enable the following 
+instructions: SSE3 SSE4.1 
+SSE4.2 AVX AVX2 AVX_VNNI 
+FMA, in other operations, 
+rebuild TensorFlow with the 
+appropriate compiler flags.
+2026-02-25 21:05:50.878069: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'tf_op_layer_Mul/Par
+titionedCall' has 1 outputs 
+but the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.878175: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'tf_op_layer_Sub/Par
+titionedCall' has 1 outputs 
+but the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.878213: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'tf_op_layer_RealDiv
+/PartitionedCall' has 1 
+outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.878265: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stem_activation/Par
+titionedCall' has 1 outputs 
+but the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.878321: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_0/block_0/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.878343: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_0/block_0/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.878361: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_0/block_0/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.878401: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_0/block_0/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.878441: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_0/block_0/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.878461: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_0/block_0/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.878554: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_0/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.878656: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_0/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.878687: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_0/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.878708: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_0/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.878747: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_0/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.878789: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_0/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.878813: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_0/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.878923: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_1/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.878984: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_1/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.879008: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_1/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.879035: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_1/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.879081: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_1/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.879122: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_1/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.879218: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_1/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.879322: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_1/block_1/add
+/PartitionedCall' has 1 
+outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.879392: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_0/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.879527: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_0/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.879579: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_0/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.879611: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_0/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.879667: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_0/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.879834: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_0/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.879871: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_0/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.879989: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_1/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.880053: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_1/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.880077: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_1/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.880103: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_1/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.880150: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_1/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.880195: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_1/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.880220: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_1/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.880313: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_2/block_1/add
+/PartitionedCall' has 1 
+outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.880382: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_0/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.880557: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_0/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.880593: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_0/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.880660: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_0/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.880711: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_0/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.880758: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_0/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.880787: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_0/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.880905: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_1/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.880977: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_1/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.881009: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_1/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881037: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_1/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881084: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_1/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.881129: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_1/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.881157: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_1/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881251: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_1/add
+/PartitionedCall' has 1 
+outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881322: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_2/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881387: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_2/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.881417: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_2/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881439: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_2/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881475: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_2/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.881595: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_2/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.881658: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_2/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881741: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_3/block_2/add
+/PartitionedCall' has 1 
+outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881817: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_0/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881861: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_0/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.881876: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_0/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881891: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_0/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.881915: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_0/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.881939: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_0/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.881958: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_0/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882030: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_1/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882070: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_1/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.882085: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_1/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882098: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_1/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882139: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_1/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.882178: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_1/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.882238: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_1/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882302: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_1/add
+/PartitionedCall' has 1 
+outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882342: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_2/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882397: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_2/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.882414: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_2/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882427: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_2/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882452: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_2/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.882476: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_2/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.882490: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_2/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882594: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_4/block_2/add
+/PartitionedCall' has 1 
+outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882737: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_0/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882789: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_0/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.882803: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_0/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882816: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_0/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882841: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_0/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.882864: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_0/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.882878: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_0/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882952: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_1/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.882989: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_1/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.883005: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_1/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.883017: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_1/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.883041: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_1/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.883065: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_1/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.883079: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_1/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.883133: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_1/add
+/PartitionedCall' has 1 
+outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.883167: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_2/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.883201: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_2/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.893369: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_2/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.893424: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_2/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.893480: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_2/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.893533: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_2/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.893568: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_2/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.893697: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_2/add
+/PartitionedCall' has 1 
+outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.893772: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_3/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.893845: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_3/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.893883: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_3/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.893913: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_3/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.893963: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_3/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.894027: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_3/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.894060: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_3/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.894165: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_5/block_3/add
+/PartitionedCall' has 1 
+outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.894237: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_6/block_0/exp
+and_activation/PartitionedCa
+ll' has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.894307: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_6/block_0/dep
+thwise_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.894339: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_6/block_0/se_
+squeeze/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.894368: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_6/block_0/se_
+reshape/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 2 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.894417: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_6/block_0/se_
+reduce_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.894464: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_6/block_0/se_
+expand_activation/Partitione
+dCall' has 1 outputs but 
+the _output_shapes 
+attribute specifies shapes 
+for 2 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.894502: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'stack_6/block_0/se_
+excite/PartitionedCall' has 
+1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 3 
+outputs. Output shapes may 
+be inaccurate.
+2026-02-25 21:05:50.894633: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 'top_activation/Part
+itionedCall' has 1 outputs 
+but the _output_shapes 
+attribute specifies shapes 
+for 3 outputs. Output 
+shapes may be inaccurate.
+2026-02-25 21:05:50.894672: 
+W tensorflow/core/common_run
+time/graph_constructor.cc:84
+6] Node 
+'top_pool/PartitionedCall' 
+has 1 outputs but the 
+_output_shapes attribute 
+specifies shapes for 4 
+outputs. Output shapes may 
+be inaccurate.
+Attempting tf.saved_model.load with tags...
+tf.saved_model.load failed: '_UserObject' object has no attribute 'add_slot'

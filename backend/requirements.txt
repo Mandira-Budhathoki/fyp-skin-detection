@@ -8,3 +8,5 @@ mongoengine
 flask-bcrypt
 PyJWT
 python-dotenv
+groq
+tensorflow

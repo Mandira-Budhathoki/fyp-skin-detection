@@ -6,6 +6,9 @@ import 'dart:math';
 import 'dart:async';
 import 'chatbot_screen.dart';
 import 'faq_screen.dart';
+import 'skin_results_screen.dart';
+import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SkinScreen extends StatefulWidget {
   const SkinScreen({Key? key}) : super(key: key);
@@ -161,10 +164,10 @@ class _SkinScreenState extends State<SkinScreen> {
                     icon: Icons.smart_toy_outlined,
                     title: 'Consult AI Chatbot',
                     color: const Color(0xFF16A085),
-                    onTap: () => Navigator.push(
+                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const ChatbotScreen()),
+                          builder: (context) => const ChatbotScreen(category: 'acne')),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -415,9 +418,9 @@ class _SkinScreenState extends State<SkinScreen> {
   }
 }
 
-// ============================================
+
 // PREVIEW SCREEN
-// ============================================
+
 
 class _SkinImagePreviewScreen extends StatefulWidget {
   final File imageFile;
@@ -453,30 +456,36 @@ class _SkinImagePreviewScreenState extends State<_SkinImagePreviewScreen>
 
   Future<void> _analyzeImage() async {
     setState(() => _isAnalyzing = true);
-    _scanController.repeat(); // Start animation loop
+    _scanController.repeat();
 
     try {
-      final bytes = await widget.imageFile.readAsBytes();
-      final base64Image = base64Encode(bytes);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('userToken');
 
-      // Simulate network request
-      await Future.delayed(const Duration(seconds: 4));
+      // Call the actual Backend API we just created
+      final result = await ApiService.analyzeSkinAcne(widget.imageFile.path, token);
 
       if (mounted) {
-        Navigator.pushNamed(
-          context,
-          '/skin-results',
-          arguments: {
-            'image': widget.imageFile,
-            'imagePath': widget.imageFile.path,
-            'base64Image': base64Image,
-          },
-        );
+        if (result['status'] == 'success' || result['prediction'] != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SkinResultsScreen(
+                results: result,
+                image: widget.imageFile,
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${result['error'] ?? 'Analysis failed'}')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Analysis failed: $e')),
+          SnackBar(content: Text('Connection failed: $e')),
         );
       }
     } finally {
@@ -633,9 +642,7 @@ class _SkinImagePreviewScreenState extends State<_SkinImagePreviewScreen>
   }
 }
 
-// ============================================
 // BIO-METRIC SCANNER PAINTER (Custom for Skin)
-// ============================================
 
 class SkinScannerPainter extends CustomPainter {
   final double progress; // 0.0 to 1.0

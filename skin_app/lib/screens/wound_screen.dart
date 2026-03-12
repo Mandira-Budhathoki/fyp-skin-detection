@@ -152,10 +152,10 @@ class _WoundScreenState extends State<WoundScreen> {
                     title: 'Chat with AI Assistant',
                     subtitle: 'Get instant answers to your doubts',
                     color: const Color(0xFF16A085), // Teal
-                    onTap: () => Navigator.push(
+                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const ChatbotScreen()),
+                          builder: (context) => const ChatbotScreen(category: 'wound')),
                     ),
                   ),
                   const SizedBox(height: 16),

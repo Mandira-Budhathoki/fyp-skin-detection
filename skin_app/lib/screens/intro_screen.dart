@@ -159,7 +159,7 @@ class _IntroScreenState extends State<IntroScreen> {
                   size: 100, 
                   color: data.themeColor.withValues(alpha: 0.5),
                 ),
-                // Uncomment this when you add your real images to assets:
+                // i need to uncomment this if i add real images to assets:
                 // ClipRRect(
                 //   borderRadius: BorderRadius.circular(30),
                 //   child: Image.asset(

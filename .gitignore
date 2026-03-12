@@ -11,3 +11,5 @@ node_modules/
 build/ 
 dist/ 
 backend/ai_models/*.keras
+*.env
+backend/.env.chatbot

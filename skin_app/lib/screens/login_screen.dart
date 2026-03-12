@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart'; // Make sure this exists
+import '../services/api_service.dart'; 
 import 'admin_register_screen.dart';
 import 'intro_screen.dart';
 import 'forgot_password_screen.dart';
@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ================= CHECK LOGIN =================
+  // CHECK LOGIN 
   Future<void> _checkIfLoggedIn() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('userToken');
@@ -72,14 +72,14 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ================= LOGIN =================
+  // LOGIN
   Future<void> _login() async {
     if (_isLoading) return;
 
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    // ---------- Validation ----------
+    //  Validation 
     if (email.isEmpty) {
       _showSnack('Email is required');
       return;
@@ -108,13 +108,18 @@ class _LoginScreenState extends State<LoginScreen> {
       debugPrint('LOGIN RESPONSE: $result');
 
       if (result['success'] == true) {
-        // ========== SAVE TOKEN ==========
         String token = result['token'];
         String role = result['user']['role'] ?? 'user';
+        String userId = result['user']['id'].toString();
+        String name = result['user']['name'] ?? 'User';
+        String emailRes = result['user']['email'] ?? email;
         
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('userToken', token);
         await prefs.setString('userRole', role);
+        await prefs.setString('userId', userId);
+        await prefs.setString('userName', name);
+        await prefs.setString('userEmail', emailRes);
 
         _showSnack(
           result['message'] ?? 'Logged in successfully!',
@@ -144,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ================= UI =================
+  //  UI 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ================= CARD =================
+  // CARD
   Widget _loginCard(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
@@ -332,7 +337,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ================= INPUT =================
+  //  INPUT
   Widget _inputField({
     required TextEditingController controller,
     required String hint,

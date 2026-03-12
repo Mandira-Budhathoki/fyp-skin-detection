@@ -18,6 +18,7 @@ class User(mongoengine.DynamicDocument):
     email = mongoengine.StringField(unique=True, required=True)
     password = mongoengine.StringField(required=True)
     role = mongoengine.StringField(default='user')
+    isFrozen = mongoengine.BooleanField(default=False)
     
     meta = {'collection': 'users', 'strict': False}
 
@@ -27,12 +28,14 @@ class User(mongoengine.DynamicDocument):
             '_id': str(self.id),
             'name': getattr(self, 'name', ''),
             'email': getattr(self, 'email', ''),
-            'role': getattr(self, 'role', 'user')
+            'role': getattr(self, 'role', 'user'),
+            'isFrozen': getattr(self, 'isFrozen', False)
         })
 
 class Dermatologist(mongoengine.DynamicDocument):
     name = mongoengine.StringField(required=True)
     specialization = mongoengine.StringField(required=True)
+    isActive = mongoengine.BooleanField(default=True)
     
     meta = {'collection': 'dermatologists', 'strict': False}
 
@@ -49,7 +52,8 @@ class Dermatologist(mongoengine.DynamicDocument):
             'rating': getattr(self, 'rating', 5.0),
             'reviewsCount': getattr(self, 'reviewsCount', 0),
             'hourlyRate': getattr(self, 'hourlyRate', 0),
-            'availability': getattr(self, 'availability', [])
+            'availability': getattr(self, 'availability', []),
+            'isActive': getattr(self, 'isActive', True)
         })
 
 class Appointment(mongoengine.DynamicDocument):
@@ -93,4 +97,40 @@ class Appointment(mongoengine.DynamicDocument):
             'adminNote': getattr(self, 'adminNote', ''),
             'patientName': getattr(self, 'patientName', ''),
             'phoneNumber': getattr(self, 'phoneNumber', '')
+        })
+
+class ChatHistory(mongoengine.DynamicDocument):
+    userId = mongoengine.StringField(required=True) # Storing as String for easy lookup
+    message = mongoengine.StringField(required=True)
+    sender = mongoengine.StringField(required=True) # 'user' or 'bot'
+    timestamp = mongoengine.DateTimeField(default=datetime.utcnow)
+
+    meta = {'collection': 'chat_history', 'ordering': ['timestamp']}
+
+    def to_dict(self):
+        return clean_data({
+            'id': str(self.id),
+            'userId': self.userId,
+            'message': self.message,
+            'sender': self.sender,
+            'timestamp': self.timestamp
+        })
+
+class ScanHistory(mongoengine.DynamicDocument):
+    userId = mongoengine.StringField(required=True)
+    prediction = mongoengine.StringField(required=True)
+    confidence = mongoengine.FloatField(required=True)
+    imagePath = mongoengine.StringField() # URL or path to the stored image
+    timestamp = mongoengine.DateTimeField(default=datetime.utcnow)
+    
+    meta = {'collection': 'scan_history', 'ordering': ['-timestamp']}
+
+    def to_dict(self):
+        return clean_data({
+            'id': str(self.id),
+            'userId': self.userId,
+            'prediction': self.prediction,
+            'confidence': self.confidence,
+            'imagePath': self.imagePath,
+            'timestamp': self.timestamp
         })

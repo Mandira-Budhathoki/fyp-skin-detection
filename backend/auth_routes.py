@@ -70,10 +70,14 @@ def login():
 
         print(f"Login attempt for: [{email}]")
         user = User.objects(email=email).first()
-        
         if not user:
             print(f"User not found for email: [{email}]")
             return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+        
+        # Check if user is frozen/blocked
+        if getattr(user, 'isFrozen', False):
+            print(f"Blocked login attempt for frozen user: [{email}]")
+            return jsonify({'success': False, 'message': 'Your account is frozen by admin. Please contact support.'}), 403
             
         if not bcrypt.check_password_hash(user.password, password):
             print(f"Password mismatch for user: [{email}]")

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'register_screen.dart';
 import 'intro_screen.dart';
+import 'admin_dashboard_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -93,18 +94,31 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   void _navigateToNext() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('userToken');
+    String? role = prefs.getString('userRole');
 
     if (!mounted) return;
 
     if (token != null && token.isNotEmpty) {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const IntroScreen(),
-          transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
-          transitionDuration: const Duration(milliseconds: 800),
-        ),
-      );
+      // ✅ ALWAYS check role - admin ALWAYS goes to admin dashboard
+      if (role == 'admin') {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const AdminDashboardScreen(),
+            transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
+            transitionDuration: const Duration(milliseconds: 800),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const IntroScreen(),
+            transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
+            transitionDuration: const Duration(milliseconds: 800),
+          ),
+        );
+      }
     } else {
       Navigator.pushReplacement(
         context,

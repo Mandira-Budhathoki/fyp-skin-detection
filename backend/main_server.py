@@ -17,19 +17,19 @@ if current_dir not in sys.path:
 from app import image_bp
 from chatbot_server import chatbot_bp
 from appointment_routes import appointment_bp
-from auth_routes import auth_bp
 
 app = Flask(__name__)
 CORS(app)
+app.url_map.strict_slashes = False # Handles trailing slashes gracefully
 
 # Database Config
 mongoengine.connect(host=os.getenv('MONGO_URI'))
 
 # Register Blueprints
-app.register_blueprint(image_bp) # Keep as is for now
-app.register_blueprint(chatbot_bp)
+app.register_blueprint(image_bp, url_prefix='/api') 
+app.register_blueprint(chatbot_bp, url_prefix='/api')
 app.register_blueprint(appointment_bp, url_prefix='/api/appointments')
-app.register_blueprint(auth_bp, url_prefix='/api/auth')
+
 
 @app.route('/')
 def home():

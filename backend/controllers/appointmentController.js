@@ -1,9 +1,9 @@
 const Appointment = require('../models/Appointment');
 const Dermatologist = require('../models/Dermatologist');
 
-// ------------------------------------------------------------------
+
 // Get All Doctors
-// ------------------------------------------------------------------
+
 exports.getDermatologists = async (req, res) => {
     try {
         const doctors = await Dermatologist.find({}).sort({ name: 1 });
@@ -13,9 +13,8 @@ exports.getDermatologists = async (req, res) => {
     }
 };
 
-// ------------------------------------------------------------------
 // Get Available Slots for Doctor on Specific Date
-// ------------------------------------------------------------------
+
 exports.getAvailableSlots = async (req, res) => {
     const { doctorId } = req.params;
     const { date } = req.query; // Expecting "YYYY-MM-DD"
@@ -60,9 +59,9 @@ exports.getAvailableSlots = async (req, res) => {
     }
 };
 
-// ------------------------------------------------------------------
+
 // Book Appointment
-// ------------------------------------------------------------------
+
 exports.bookAppointment = async (req, res) => {
     const { dermatologistId, date, time, notes } = req.body;
     const userId = req.user.id;
@@ -98,9 +97,9 @@ exports.bookAppointment = async (req, res) => {
     }
 };
 
-// ------------------------------------------------------------------
+
 // Get User Appointments (Patient/User View)
-// ------------------------------------------------------------------
+
 exports.getUserAppointments = async (req, res) => {
     const userId = req.user.id;
     try {
@@ -113,9 +112,9 @@ exports.getUserAppointments = async (req, res) => {
     }
 };
 
-// ------------------------------------------------------------------
+
 // Cancel Appointment (2-hour "Real Life" Rule)
-// ------------------------------------------------------------------
+
 exports.cancelAppointment = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
@@ -157,9 +156,8 @@ exports.cancelAppointment = async (req, res) => {
     }
 };
 
-// ------------------------------------------------------------------
 // ADMIN: Get Pending Appointments
-// ------------------------------------------------------------------
+
 exports.getPendingAppointments = async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ success: false, message: "Admin access required" });
@@ -176,9 +174,9 @@ exports.getPendingAppointments = async (req, res) => {
     }
 };
 
-// ------------------------------------------------------------------
+
 // ADMIN: Update Appointment Status (Approve/Reject)
-// ------------------------------------------------------------------
+
 exports.updateAppointmentStatus = async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ success: false, message: "Admin access required" });
@@ -206,9 +204,9 @@ exports.updateAppointmentStatus = async (req, res) => {
     }
 };
 
-// ------------------------------------------------------------------
+
 // Seed Doctors (8 Representative Doctors)
-// ------------------------------------------------------------------
+
 exports.seedDermatologists = async (req, res) => {
     try {
         await Dermatologist.deleteMany({});
