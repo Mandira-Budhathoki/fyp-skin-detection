@@ -4,6 +4,9 @@ import 'screens/welcome_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/intro_screen.dart';
+import 'screens/dashboard_screen.dart';
+import 'screens/appointment_screen.dart';
+import 'screens/chatbot_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,6 +22,13 @@ class MyApp extends StatelessWidget {
       title: 'SkinCare AI',
       theme: ThemeData(primarySwatch: Colors.pink),
       home: const WelcomeWrapper(),
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
+        '/dashboard': (context) => const DashboardScreen(),
+        '/appointment': (context) => const AppointmentScreen(),
+        '/chatbot': (context) => const ChatbotScreen(),
+      },
     );
   }
 }

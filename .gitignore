@@ -7,9 +7,11 @@ node_modules/
 *.pt 
 *.pkl 
 *.h5 
+*.keras
 *.onnx 
 build/ 
 dist/ 
 backend/ai_models/*.keras
 *.env
 backend/.env.chatbot
+hf_models/ 

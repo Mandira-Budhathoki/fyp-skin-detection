@@ -369,4 +369,43 @@ class ApiService {
       return {"status": "error", "message": "Connection to analyzer failed."};
     }
   }
+  static Future<Map<String, dynamic>> analyzeVitality(Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('$serviceBase/vitality/analyze'),
+      headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
+      body: json.encode(data),
+    );
+    return json.decode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> addJournalEntry(String userId, String content, String mood) async {
+    final response = await http.post(
+      Uri.parse('$serviceBase/journal'),
+      headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
+      body: json.encode({'userId': userId, 'content': content, 'mood': mood}),
+    );
+    return json.decode(response.body);
+  }
+
+  static Future<List<dynamic>> getJournalHistory(String userId) async {
+    final response = await http.get(Uri.parse('$serviceBase/journal/$userId'), headers: {'Bypass-Tunnel-Reminder': 'true'});
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> deleteJournalEntry(String entryId) async {
+    final response = await http.delete(Uri.parse('$serviceBase/journal/entry/$entryId'), headers: {'Bypass-Tunnel-Reminder': 'true'});
+    return json.decode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> updateJournalEntry(String entryId, String content, String mood) async {
+    final response = await http.put(
+      Uri.parse('$serviceBase/journal/entry/$entryId'),
+      headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
+      body: json.encode({'content': content, 'mood': mood}),
+    );
+    return json.decode(response.body);
+  }
 }

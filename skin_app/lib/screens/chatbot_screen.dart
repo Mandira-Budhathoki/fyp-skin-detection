@@ -49,8 +49,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
   Future<void> _loadSuggestions() async {
     try {
       String urlStr = "${ApiService.chatbotUrl}/suggestions";
+      List<String> params = [];
       if (widget.category != null) {
-        urlStr += "?category=${widget.category}";
+        params.add("category=${widget.category}");
+      }
+      if (_userId != null && _userId != 'guest') {
+        params.add("userId=$_userId");
+      }
+      if (params.isNotEmpty) {
+        urlStr += "?${params.join("&")}";
       }
       final url = Uri.parse(urlStr);
       final response = await http.get(url, headers: {"Bypass-Tunnel-Reminder": "true"});
@@ -64,6 +71,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
       debugPrint("Error loading suggestions: $e");
     }
   }
+
 
   Future<void> _loadHistory() async {
     if (_userId == null || _userId == 'guest') {

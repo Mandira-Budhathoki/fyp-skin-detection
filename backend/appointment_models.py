@@ -134,3 +134,43 @@ class ScanHistory(mongoengine.DynamicDocument):
             'imagePath': self.imagePath,
             'timestamp': self.timestamp
         })
+
+class JournalEntry(mongoengine.DynamicDocument):
+    userId = mongoengine.StringField(required=True)
+    content = mongoengine.StringField(required=True)
+    mood = mongoengine.StringField() # Optional: happy, sad, stressed, etc.
+    timestamp = mongoengine.DateTimeField(default=datetime.utcnow)
+
+    meta = {'collection': 'journal_entries', 'ordering': ['-timestamp']}
+
+    def to_dict(self):
+        return clean_data({
+            'id': str(self.id),
+            'userId': self.userId,
+            'content': self.content,
+            'mood': self.mood,
+            'timestamp': self.timestamp
+        })
+
+class VitalityData(mongoengine.DynamicDocument):
+    userId = mongoengine.StringField(required=True)
+    height = mongoengine.FloatField() # in cm
+    weight = mongoengine.FloatField() # in kg
+    sleepHours = mongoengine.FloatField()
+    waterIntake = mongoengine.FloatField() # in liters
+    stressLevel = mongoengine.IntField() # 1-10
+    timestamp = mongoengine.DateTimeField(default=datetime.utcnow)
+
+    meta = {'collection': 'vitality_data', 'ordering': ['-timestamp']}
+
+    def to_dict(self):
+        return clean_data({
+            'id': str(self.id),
+            'userId': self.userId,
+            'height': self.height,
+            'weight': self.weight,
+            'sleepHours': self.sleepHours,
+            'waterIntake': self.waterIntake,
+            'stressLevel': self.stressLevel,
+            'timestamp': self.timestamp
+        })

@@ -30,7 +30,7 @@ MEDICAL_KNOWLEDGE = {
         ]
     },
     "acne": {
-        "definition": "Acne is a skin condition that occurs when your hair follicles become plugged with oil and dead skin cells.",
+        "definition": "Acne (Breakout/Pimples) is a skin condition that occurs when your hair follicles become plugged with oil and dead skin cells.",
         "symptoms": [
             "Whiteheads (closed plugged pores)",
             "Blackheads (open plugged pores)",
@@ -56,6 +56,80 @@ MEDICAL_KNOWLEDGE = {
             {"q": "Can diet help clear acne?", "a": "Reducing high-glycemic foods (sugar, white bread) and dairy has helped some people, but it varies between individuals."},
             {"q": "How do I deal with acne scars?", "a": "Red or dark marks usually fade. Deep pits may need professional treatments like microneedling, laser therapy, or chemical peels."},
             {"q": "Should I moisturize oily skin?", "a": "Yes! If you skip moisturizer, your skin may produce even more oil to compensate for dryness. Use a lightweight, oil-free moisturizer."}
+        ]
+    },
+    "carcinoma": {
+        "definition": "Carcinoma (Skin Cancer) is a malignant tumor that starts in the epithelial cells. The most common types are Basal Cell and Squamous Cell Carcinoma.",
+        "symptoms": [
+            "A pearly or waxy bump",
+            "A flat, flesh-colored or brown-like scar-like lesion",
+            "A firm, red nodule",
+            "A flat lesion with a scaly, crusted surface"
+        ],
+        "causes": "Most cases are caused by cumulative exposure to UV radiation from the sun or tanning beds.",
+        "treatment": "Surgical excision, Mohs surgery, radiation therapy, and topical treatments for early-stage cases.",
+        "faq": [
+            {"q": "Is carcinoma the same as melanoma?", "a": "No, they are different types of skin cancer. Carcinomas (like BCC) are much more common and less likely to spread than melanoma, but still need professional treatment."},
+            {"q": "Can skin cancer be cured?", "a": "Yes, if caught early, most carcinomas have a very high cure rate through simple surgical procedures."}
+        ]
+    },
+    "eczema": {
+        "definition": "Eczema (Itchy/Inflamed Skin) is a condition that makes your skin red, itchy, and irritated. It's common in children but can occur at any age.",
+        "symptoms": [
+            "Dry, scaly skin",
+            "Redness",
+            "Itching, which may be severe, especially at night",
+            "Small, raised bumps, which may leak fluid and crust over when scratched"
+        ],
+        "causes": "A combination of genetics and environmental triggers like soaps, detergents, stress, and weather changes.",
+        "treatment": "Moisturizers, topical corticosteroids, and lifestyle changes to avoid triggers.",
+        "faq": [
+            {"q": "Is eczema contagious?", "a": "No, you cannot catch eczema from someone else. It is an internal inflammatory response of the skin."},
+            {"q": "What triggers an eczema flare-up?", "a": "Common triggers include dry skin, stress, sweat, harsh soaps, and allergens like dust or pollen."}
+        ]
+    },
+    "keratosis": {
+        "definition": "Keratosis (Rough/Scaly Patches) often refers to Actinic Keratosis, a rough, scaly patch on the skin that develops from years of sun exposure.",
+        "symptoms": [
+            "Rough, dry or scaly patch of skin",
+            "Flat to slightly raised patch or bump",
+            "In some cases, a hard, wart-like surface",
+            "Color variations: pink, red, or brown"
+        ],
+        "causes": "Frequent or intense exposure to UV rays from the sun or tanning beds.",
+        "treatment": "Cryotherapy (freezing), topical creams, or minor surgical removal.",
+        "faq": [
+            {"q": "Is keratosis dangerous?", "a": "Actinic keratosis is considered pre-cancerous. If left untreated, a small percentage can develop into squamous cell carcinoma."},
+            {"q": "How can I prevent keratosis?", "a": "Wearing daily sunscreen (SPF 30+), protective clothing, and avoiding peak sun hours are the best preventative measures."}
+        ]
+    },
+    "milia": {
+        "definition": "Milia (Small White Bumps) are tiny white bumps that appear on the skin. They're most common on the face and occur when keratin becomes trapped beneath the surface.",
+        "symptoms": [
+            "Small, firm white or yellowish bumps",
+            "Usually painless and not itchy",
+            "Often found in clusters around the eyes, cheeks, and nose"
+        ],
+        "causes": "Dead skin flakes becoming trapped in small pockets near the surface of the skin. They can also follow skin trauma or use of heavy creams.",
+        "treatment": "They usually clear on their own, but can be removed by a dermatologist using a sterile needle or laser.",
+        "faq": [
+            {"q": "Can I squeeze milia like a pimple?", "a": "No! Milia are not pores and do not have an opening. Squeezing them will only damage your skin and cause scarring without removing the bump."},
+            {"q": "Do milia go away by themselves?", "a": "In infants, yes. In adults, they can be more persistent but are harmless. Proper exfoliation can help prevent them."}
+        ]
+    },
+    "rosacea": {
+        "definition": "Rosacea (Chronic Facial Redness) is a common skin condition that causes blushing or flushing and visible blood vessels in your face.",
+        "symptoms": [
+            "Facial redness and flushing",
+            "Visible small blood vessels",
+            "Swollen, red bumps that may resemble acne",
+            "Eye problems like dryness or irritation"
+        ],
+        "causes": "The cause is unknown, but it could be due to an overactive immune system, heredity, environmental factors or a combination.",
+        "treatment": "Topical and oral medications to control redness and bumps, and identifying and avoiding triggers.",
+        "faq": [
+            {"q": "What triggers rosacea flushing?", "a": "Common triggers include spicy foods, alcohol (especially red wine), extreme temperatures, sunlight, and stress."},
+            {"q": "Is rosacea the same as acne?", "a": "No, although it can look like acne. Rosacea typically doesn't have blackheads and is characterized by persistent redness and visible blood vessels."}
         ]
     },
     "wound": {

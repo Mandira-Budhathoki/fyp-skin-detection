@@ -51,10 +51,10 @@ def get_ai_response(question, history=[]):
     try:
         system_prompt = (
             "You are 'Skin AI', a friendly medical assistant for a skin health app. "
-            "You are an expert in THREE main areas:\n"
-            "1. MELANOMA - skin cancer detection, moles, ABCDE rule, sun damage, biopsy, stages.\n"
-            "2. ACNE / SKIN - pimples, blackheads, oily skin, skincare routines, skin tips, dark spots.\n"
-            "3. WOUNDS - cuts, bleeding, infections, first aid, bandaging, healing.\n"
+            "You are an expert in these areas:\n"
+            "1. SKIN CONDITIONS - Acne (pimples), Eczema (itchy rashes), Rosacea (redness), Milia (white bumps), and Keratosis.\n"
+            "2. SKIN CANCER - Melanoma and Carcinoma detection, moles, ABCDE rule, sun damage, and biopsy.\n"
+            "3. WOUNDS - cuts, bleeding, infections, first aid, and healing.\n"
             "Answer any question on these topics in a clear, friendly, and helpful way. "
             "Keep responses short (3-5 sentences). Do NOT use ** or # or any markdown. "
             "Always end with: Consult a doctor for personal advice."
@@ -106,11 +106,11 @@ def get_expert_response(question, user_id="guest"):
     # 1. Greetings
     if q in ["hi", "hello", "hey", "hola", "help"]:
         return ("Hello! I am Skin AI, your personal skin health assistant. "
-                "I can help you with Melanoma, Acne, Wounds, and general skin care tips. "
+                "I can help you with Acne, Eczema, Rosacea, Milia, Skin Cancer, and Wounds. "
                 "Ask me anything or tap a question below!")
 
     # 2. Check for Scan Context (Personalized)
-    if any(k in q for k in ["my scan", "my result", "what do i have", "my report", "latest scan"]):
+    if any(k in q for k in ["my scan", "what do i have", "my report", "latest scan"]):
         try:
             latest_scan = ScanHistory.objects(userId=user_id).order_by('-timestamp').first()
             if latest_scan:
@@ -118,12 +118,15 @@ def get_expert_response(question, user_id="guest"):
                 conf = latest_scan.confidence
 
                 category = None
-                if "acne" in pred or "clear" in pred:
-                    category = "acne"
-                elif "mela" in pred or "nevus" in pred or "carcinoma" in pred or "keratosis" in pred:
-                    category = "melanoma"
+                if "acne" in pred: category = "acne"
+                elif "carcinoma" in pred: category = "carcinoma"
+                elif "eczema" in pred: category = "eczema"
+                elif "keratosis" in pred: category = "keratosis"
+                elif "milia" in pred: category = "milia"
+                elif "rosacea" in pred: category = "rosacea"
+                elif "mela" in pred or "nevus" in pred: category = "melanoma"
 
-                response = f"Your latest scan result is {latest_scan.prediction} with {conf}% confidence. "
+                response = f"Your latest scan analysis is {latest_scan.prediction} with {conf}% confidence. "
 
                 if category and category in MEDICAL_KNOWLEDGE:
                     kb = MEDICAL_KNOWLEDGE[category]
@@ -132,7 +135,7 @@ def get_expert_response(question, user_id="guest"):
                     response += DISCLAIMER
                 return response
             else:
-                return "You haven't performed any scans yet. Please use the Acne Scanner or Melanoma Scanner to get your personalized results!"
+                return "You haven't performed any scans yet. Please use the Acne Scanner or Melanoma Scanner to get your personalized analysis!"
         except Exception as e:
             print(f"Scan lookup error: {e}")
 
@@ -299,6 +302,7 @@ def get_chat_history(userId):
 def get_suggestions():
     """Returns top questions based on category"""
     category = request.args.get('category', '').lower()
+    user_id = request.args.get('userId', 'guest')
     suggestions = []
 
     if category in MEDICAL_KNOWLEDGE:
@@ -309,5 +313,14 @@ def get_suggestions():
             for faq in MEDICAL_KNOWLEDGE[key]['faq'][:2]:
                 suggestions.append(faq['q'])
 
-    suggestions.insert(0, "What are my latest scan results?")
+    if user_id != "guest":
+        try:
+            # Only suggest scan results if they actually have scans
+            has_scans = ScanHistory.objects(userId=user_id).count() > 0
+            if has_scans:
+                suggestions.insert(0, "What are my latest scan results?")
+        except Exception as e:
+            print(f"Suggestion scan lookup error: {e}")
+
     return jsonify({"suggestions": suggestions[:10]})
+
