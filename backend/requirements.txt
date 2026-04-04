@@ -10,3 +10,7 @@ PyJWT
 python-dotenv
 groq
 tensorflow
+transformers
+torch
+torchvision
+safetensors

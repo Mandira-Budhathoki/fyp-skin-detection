@@ -98,11 +98,19 @@ class AcneAnalyzer:
             # Let's try RAW [0-255] first as it's the standard for V2 with internal rescaling.
             preds = self.model.predict(np.expand_dims(img_raw, axis=0), verbose=0)[0]
             
-            print(f"[DEBUG] Raw Predictions (Raw): {preds}")
+            # --- 🌟 STRICT Invalid/Random Image Handling (Noise Filter) ---
+            # If the best guess is less than 50% sure, it's likely a random object or a blurry photo
+            target_idx = int(np.argmax(preds))
+            top_conf = float(preds[target_idx])
             
-            # If predictions were still extremely low or static, we could try others.
-            # But let's assume raw is correct.
-            
+            if top_conf < 0.50:
+                return {
+                    'prediction': 'Unclear Image / Try Again',
+                    'message': 'We could not detect a valid skin condition in this photo. Please ensure the skin is centered, focused, and well-lit.',
+                    'confidence': float(round(top_conf * 100, 2)),
+                    'status': 'warning'
+                }
+
             # 3. ACNE-FIRST ANALYSIS
             # Class index 0 = Acne. Always report acne status first.
             acne_conf = float(round(preds[0] * 100, 2))

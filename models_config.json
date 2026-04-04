@@ -1,0 +1,24 @@
+{
+  "Model_0": {
+    "url": "https://huggingface.co/ahishamm/vit-base-binary-isic-patch-16/raw/main/config.json",
+    "labels": {
+      "0": "benign",
+      "1": "malignant"
+    }
+  },
+  "Model_1": {
+    "url": "https://huggingface.co/ahishamm/vit-base-16-thesis-demo-ISIC-multi-class/raw/main/config.json",
+    "labels": {
+      "0": "benign",
+      "1": "keratosis",
+      "2": "melanoma"
+    }
+  },
+  "Model_2": {
+    "url": "https://huggingface.co/oscar2525mv/isic2018-melanoma-vit-baseline/raw/main/config.json",
+    "labels": {
+      "0": "benign",
+      "1": "melanoma"
+    }
+  }
+}

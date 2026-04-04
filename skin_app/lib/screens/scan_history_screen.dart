@@ -118,26 +118,58 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
     await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
   }
 
+  // ── Color helpers ──
+  Color _confidenceColor(double c) {
+    if (c >= 85) return const Color(0xFF00B894);
+    if (c >= 60) return const Color(0xFFFFAB2E);
+    return const Color(0xFFFF6B6B);
+  }
+
+  String _confidenceLabel(double c) {
+    if (c >= 85) return 'High';
+    if (c >= 60) return 'Medium';
+    return 'Low';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f2027),
+      backgroundColor: const Color(0xFFF4F6FB),
       appBar: AppBar(
-        title: const Text("Scan History", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 1,
+        surfaceTintColor: Colors.transparent,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded, size: 18, color: Color(0xFF1A2340)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          "My Reports",
+          style: TextStyle(
+            color: Color(0xFF1A2340),
+            fontWeight: FontWeight.w800,
+            fontSize: 17,
+            letterSpacing: -0.3,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFE5EAF4)),
+        ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.tealAccent))
+          ? const Center(child: CircularProgressIndicator(
+              color: Color(0xFF7C6FF7), strokeWidth: 2.5))
           : _scans.isEmpty
               ? _buildEmptyState()
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   itemCount: _scans.length,
                   itemBuilder: (context, index) {
                     final scan = _scans[index];
-                    return _buildScanCard(scan);
+                    return _buildScanCard(scan, index);
                   },
                 ),
     );
@@ -148,69 +180,146 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history_rounded, size: 80, color: Colors.white.withOpacity(0.1)),
+          Container(
+            width: 80, height: 80,
+            decoration: BoxDecoration(
+              color: const Color(0xFF7C6FF7).withOpacity(0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.insert_chart_outlined_rounded,
+                size: 36, color: const Color(0xFF7C6FF7).withOpacity(0.4)),
+          ),
           const SizedBox(height: 20),
-          const Text("No history found", style: TextStyle(color: Colors.white70, fontSize: 18)),
-          const SizedBox(height: 10),
-          const Text("Your AI analysis results will appear here.", style: TextStyle(color: Colors.white38, fontSize: 14)),
+          const Text(
+            "No reports yet",
+            style: TextStyle(
+              color: Color(0xFF1A2340),
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Your AI scan results will show up here\nonce you complete your first analysis.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF6B7A99),
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildScanCard(dynamic scan) {
+  Widget _buildScanCard(dynamic scan, int index) {
     final date = DateTime.parse(scan['timestamp']);
-    final formattedDate = DateFormat('MMM dd, yyyy - hh:mm a').format(date);
-    final confidence = scan['confidence'] ?? 0.0;
-    
+    final formattedDate = DateFormat('MMM dd, yyyy').format(date);
+    final formattedTime = DateFormat('hh:mm a').format(date);
+    final confidence = (scan['confidence'] ?? 0.0).toDouble();
+    final prediction = scan['prediction'] ?? "Unknown";
+    final confColor = _confidenceColor(confidence);
+    final confLabel = _confidenceLabel(confidence);
+
+    // Alternate icon colors for visual variety
+    final iconColors = [
+      const Color(0xFF7C6FF7),
+      const Color(0xFF00B894),
+      const Color(0xFFFF6FA8),
+      const Color(0xFFFFAB2E),
+      const Color(0xFFFF6B6B),
+    ];
+    final cardColor = iconColors[index % iconColors.length];
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white.withOpacity(0.05), Colors.white.withOpacity(0.02)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white10),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5EAF4)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(14),
         child: Row(
           children: [
+            // Left icon
             Container(
-              width: 60,
-              height: 60,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
-                color: Colors.tealAccent.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(15),
+                color: cardColor.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(13),
               ),
-              child: const Icon(Icons.analytics_rounded, color: Colors.tealAccent, size: 30),
+              child: Icon(Icons.analytics_rounded, color: cardColor, size: 22),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
+
+            // Middle info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    scan['prediction'] ?? "Unknown",
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    prediction,
+                    style: const TextStyle(
+                      color: Color(0xFF1A2340),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    formattedDate,
-                    style: const TextStyle(color: Colors.white38, fontSize: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today_rounded,
+                          size: 11, color: const Color(0xFF6B7A99).withOpacity(0.6)),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$formattedDate  ·  $formattedTime',
+                        style: TextStyle(
+                          color: const Color(0xFF6B7A99).withOpacity(0.8),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
+                  // Confidence badge
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.tealAccent.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(5),
+                          color: confColor.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          "${confidence.toStringAsFixed(1)}% Confidence",
-                          style: const TextStyle(color: Colors.tealAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5, height: 5,
+                              decoration: BoxDecoration(
+                                color: confColor,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${confidence.toStringAsFixed(1)}%  $confLabel',
+                              style: TextStyle(
+                                color: confColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -218,9 +327,19 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
                 ],
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.picture_as_pdf, color: Colors.tealAccent),
-              onPressed: () => _generatePdf(scan),
+
+            // PDF button
+            GestureDetector(
+              onTap: () => _generatePdf(scan),
+              child: Container(
+                width: 38, height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF6B6B).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.picture_as_pdf_rounded,
+                    color: Color(0xFFFF6B6B), size: 18),
+              ),
             ),
           ],
         ),

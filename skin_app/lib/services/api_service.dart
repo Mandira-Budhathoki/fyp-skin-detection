@@ -32,6 +32,8 @@ class ApiService {
   // Specific Endpoints
   static const String analyzeUrl = '$serviceBase/analyze';
   static const String analyzeAcneUrl = '$serviceBase/analyze/acne';
+  static const String analyzeFaceHealthUrl = '$serviceBase/analyze/face-health';
+  static const String analyzeWoundUrl = '$serviceBase/analyze/wound';
   static const String chatbotUrl = '$serviceBase/chatbot';
   static const String appointmentUrl = '$serviceBase/appointments';
 
@@ -367,6 +369,68 @@ class ApiService {
       return jsonDecode(response.body);
     } catch (e) {
       return {"status": "error", "message": "Connection to analyzer failed."};
+    }
+  }
+
+  static Future<Map<String, dynamic>> analyzeFaceHealth(String imagePath, String? token) async {
+    final url = Uri.parse(analyzeFaceHealthUrl);
+    try {
+      var request = http.MultipartRequest('POST', url);
+      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      request.headers['Bypass-Tunnel-Reminder'] = 'true';
+
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 45));
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": "error", "message": "Face health analysis request failed."};
+    }
+  }
+
+  static Future<Map<String, dynamic>> analyzeWound(String imagePath, String? token) async {
+    final url = Uri.parse(analyzeWoundUrl);
+    try {
+      var request = http.MultipartRequest('POST', url);
+      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      request.headers['Bypass-Tunnel-Reminder'] = 'true';
+
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 45));
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": "error", "message": "Wound analysis request failed."};
+    }
+  }
+
+  static const String analyzeFaceHealthStreamUrl = '$serviceBase/analyze/face-health-stream';
+
+  static Stream<Map<String, dynamic>> analyzeFaceHealthStream(String imagePath, String? token) async* {
+    final url = Uri.parse(analyzeFaceHealthStreamUrl);
+    var request = http.MultipartRequest('POST', url);
+    request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+    
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    request.headers['Bypass-Tunnel-Reminder'] = 'true';
+
+    final streamedResponse = await request.send();
+    
+    // We use line splitter because Flask yields NDJSON (Newline Delimited JSON)
+    await for (final chunk in streamedResponse.stream.transform(utf8.decoder).transform(const LineSplitter())) {
+      if (chunk.trim().isNotEmpty) {
+        yield jsonDecode(chunk);
+      }
     }
   }
   static Future<Map<String, dynamic>> analyzeVitality(Map<String, dynamic> data) async {

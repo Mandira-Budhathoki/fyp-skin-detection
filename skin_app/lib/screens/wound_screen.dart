@@ -6,6 +6,8 @@ import 'dart:math';
 import 'dart:async';
 import 'chatbot_screen.dart';
 import 'wound_faq_screen.dart';
+import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class WoundScreen extends StatefulWidget {
@@ -407,6 +409,7 @@ class _WoundImagePreviewScreen extends StatefulWidget {
 class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen>
     with TickerProviderStateMixin {
   bool _isAnalyzing = false;
+  String _currentStatus = 'INITIALIZING SCAN...';
   late AnimationController _scanController;
 
   @override
@@ -414,7 +417,7 @@ class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen>
     super.initState();
     _scanController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4), // Slow, detailed scan
+      duration: const Duration(seconds: 2), // Faster, consistent scan
     );
   }
 
@@ -426,25 +429,52 @@ class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen>
 
   Future<void> _analyzeImage() async {
     setState(() => _isAnalyzing = true);
-    _scanController.repeat(); // Start animation loop
+    _scanController.repeat();
+
+    // Update status based on scan progress
+    _scanController.addListener(() {
+      if (!mounted) return;
+      double val = _scanController.value;
+      String newStatus;
+      if (val < 0.20) {
+        newStatus = "DETECTING WOUND AREA...";
+      } else if (val < 0.40) {
+        newStatus = "ANALYZING TISSUE TYPE...";
+      } else if (val < 0.60) {
+        newStatus = "CHECKING INFLAMMATION...";
+      } else if (val < 0.80) {
+        newStatus = "EVALUATING RECOVERY RATE...";
+      } else {
+        newStatus = "OPTIMIZING REPORT...";
+      }
+      
+      if (_currentStatus != newStatus) {
+        setState(() => _currentStatus = newStatus);
+      }
+    });
 
     try {
-      final bytes = await widget.imageFile.readAsBytes();
-      final base64Image = base64Encode(bytes);
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('userToken');
 
-      // Simulate network request
-      await Future.delayed(const Duration(seconds: 4));
+      // Call the REAL backend
+      final result = await ApiService.analyzeWound(widget.imageFile.path, token);
 
       if (mounted) {
-        Navigator.pushNamed(
-          context,
-          '/wound-results',
-          arguments: {
-            'image': widget.imageFile,
-            'imagePath': widget.imageFile.path,
-            'base64Image': base64Image,
-          },
-        );
+        if (result['status'] == 'success') {
+          // Add the local image file to the result map so the results screen can display it
+          result['imageFile'] = widget.imageFile;
+          
+          Navigator.pushReplacementNamed(
+            context,
+            '/wound-results',
+            arguments: result,
+          );
+        } else {
+           ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Analysis Error: ${result['message'] ?? result['error'] ?? 'Unknown error'}')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -544,9 +574,9 @@ class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                    if (_isAnalyzing) ...[
-                     const Text(
-                       "ANALYZING TISSUE STRUCTURE...",
-                       style: TextStyle(
+                     Text(
+                       _currentStatus,
+                       style: const TextStyle(
                          color: Colors.cyanAccent,
                          fontSize: 14,
                          letterSpacing: 2.0,

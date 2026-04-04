@@ -4,6 +4,9 @@ import 'dart:io';
 import 'dart:math';
 import 'chatbot_screen.dart';
 import 'appointment_screen.dart';
+import 'face_health_results_screen.dart';
+import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FaceHealthScreen extends StatefulWidget {
   const FaceHealthScreen({Key? key}) : super(key: key);
@@ -45,7 +48,7 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1923),
+      backgroundColor: const Color(0xFFF8FAFB),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -54,8 +57,9 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
           padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1A2832),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -65,11 +69,11 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
           ),
         ),
         title: const Text(
-          'Face Health',
+          'Face Health Hub',
           style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
+            color: Color(0xFF1B263B),
+            fontWeight: FontWeight.w900,
+            fontSize: 22,
           ),
         ),
         centerTitle: true,
@@ -84,26 +88,27 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
               width: 280,
               height: 280,
               decoration: BoxDecoration(
-                color: const Color(0xFFE87EA1).withOpacity(0.06),
+                color: const Color(0xFF2A9D8F).withOpacity(0.05),
                 shape: BoxShape.circle,
               ),
             ),
           ),
           Positioned(
-            bottom: -60,
-            left: -60,
+            top: 200,
+            left: -100,
             child: Container(
-              width: 200,
-              height: 200,
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
-                color: const Color(0xFF7C5CBF).withOpacity(0.06),
+                color: const Color(0xFFE87EA1).withOpacity(0.05),
                 shape: BoxShape.circle,
               ),
             ),
           ),
 
           SafeArea(
-            child: Padding(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -112,11 +117,11 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
 
                   // Subtitle
                   const Text(
-                    'Detect skin type, acne, inflammation\n& more with multi-model AI analysis.',
+                    'Analyze your skin type, acne, spots &\noverall vitality with our AI ensemble.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF8AABB8),
+                      fontSize: 14,
+                      color: Color(0xFF57606F),
                       fontWeight: FontWeight.w500,
                       height: 1.5,
                     ),
@@ -156,19 +161,16 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Tips
-                  _buildTipsCard(),
-
-                  const Spacer(),
+                  const SizedBox(height: 30),
 
                   // Action buttons
                   const Text(
-                    'RESOURCES',
+                    'GET PROFESSIONAL HELP',
                     style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
                       letterSpacing: 1.5,
-                      color: Color(0xFF4A90A4),
+                      color: Color(0xFF1B263B),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -222,20 +224,23 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
       {'label': 'Acne', 'icon': '🫛'},
       {'label': 'Spots', 'icon': '🎯'},
       {'label': 'Inflammation', 'icon': '🔥'},
-      {'label': 'Conditions', 'icon': '🔬'},
+      {'label': 'Face Shape', 'icon': '📐'},
+      {'label': 'Expression', 'icon': '😊'},
+      {'label': 'Health Info', 'icon': '🔬'},
     ];
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A2832),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE87EA1).withOpacity(0.15)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15)],
+        border: Border.all(color: const Color(0xFFE87EA1).withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'ANALYZES WITH 5 AI MODELS',
+            'ANALYZES WITH 7 AI MODELS',
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w800,
@@ -248,22 +253,22 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
             spacing: 8,
             runSpacing: 8,
             children: models
-                .map((m) => Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0F1923),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: const Color(0xFFE87EA1).withOpacity(0.2)),
-                      ),
-                      child: Text(
-                        '${m['icon']}  ${m['label']}',
-                        style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600),
-                      ),
+                .map<Widget>((m) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: const Color(0xFFE87EA1).withOpacity(0.1)),
+                        ),
+                        child: Text(
+                          '${m['icon']}  ${m['label']}',
+                          style: const TextStyle(
+                              color: Color(0xFF1B263B),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700),
+                        ),
                     ))
                 .toList(),
           ),
@@ -274,10 +279,11 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
 
   Widget _buildTipsCard() {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A2832),
-        borderRadius: BorderRadius.circular(18),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,9 +319,9 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
         const SizedBox(height: 4),
         Text(label,
             style: const TextStyle(
-                fontSize: 9,
-                color: Color(0xFF8AABB8),
-                fontWeight: FontWeight.w600)),
+                fontSize: 10,
+                color: Color(0xFF1B263B),
+                fontWeight: FontWeight.w700)),
       ],
     );
   }
@@ -328,16 +334,18 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: const Color(0xFF1A2832),
-      borderRadius: BorderRadius.circular(20),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(24),
+      elevation: 2,
+      shadowColor: color.withOpacity(0.2),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 22),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: color.withOpacity(0.1)),
           ),
           child: Column(
             children: [
@@ -352,13 +360,13 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
               const SizedBox(height: 12),
               Text(title,
                   style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white)),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1B263B))),
               const SizedBox(height: 4),
               Text(subtitle,
                   style: const TextStyle(
-                      fontSize: 11, color: Color(0xFF8AABB8))),
+                      fontSize: 12, color: Color(0xFF57606F))),
             ],
           ),
         ),
@@ -373,8 +381,10 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: const Color(0xFF1A2832),
-      borderRadius: BorderRadius.circular(16),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.05),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -393,9 +403,9 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
               const SizedBox(width: 14),
               Text(title,
                   style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF1B263B))),
               const Spacer(),
               const Icon(Icons.arrow_forward_ios_rounded,
                   size: 12, color: Color(0xFF4A5568)),
@@ -421,13 +431,14 @@ class _FaceHealthPreviewScreen extends StatefulWidget {
 class _FaceHealthPreviewScreenState extends State<_FaceHealthPreviewScreen>
     with TickerProviderStateMixin {
   bool _isAnalyzing = false;
+  String _currentStatus = 'INITIALIZING SCAN...';
   late AnimationController _scanController;
 
   @override
   void initState() {
     super.initState();
     _scanController = AnimationController(
-        vsync: this, duration: const Duration(seconds: 3));
+        vsync: this, duration: const Duration(seconds: 2));
   }
 
   @override
@@ -437,22 +448,65 @@ class _FaceHealthPreviewScreenState extends State<_FaceHealthPreviewScreen>
   }
 
   Future<void> _analyzeImage() async {
-    setState(() => _isAnalyzing = true);
+    setState(() {
+      _isAnalyzing = true;
+      _currentStatus = "CONNECTING TO ENGINE...";
+    });
     _scanController.repeat();
 
-    // TODO: Call FaceHealthAnalyzer API once backend is ready
-    await Future.delayed(const Duration(seconds: 3));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      
+      Map<String, dynamic>? finalResult;
 
-    if (mounted) {
-      setState(() => _isAnalyzing = false);
-      _scanController.stop();
-      _scanController.reset();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Face Health models integrating soon! 🚀'),
-          backgroundColor: Color(0xFFE87EA1),
-        ),
-      );
+      // Stream updates from the backend generator
+      await for (final chunk in ApiService.analyzeFaceHealthStream(widget.imageFile.path, token)) {
+        if (!mounted) break;
+        
+        if (chunk.containsKey('progress')) {
+          setState(() => _currentStatus = chunk['progress']);
+        } else if (chunk.containsKey('result')) {
+          finalResult = chunk['result'];
+        } else if (chunk.containsKey('error')) {
+          finalResult = chunk;
+        }
+      }
+
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+        _scanController.stop();
+
+        if (finalResult != null && (finalResult['status'] == 'success' || finalResult['acne'] != null)) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => FaceHealthResultsScreen(
+                imageFile: widget.imageFile,
+                results: finalResult!,
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(finalResult?['message'] ?? finalResult?['error'] ?? 'Analysis failed'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+          _currentStatus = 'INITIALIZING SCAN...';
+        });
+        _scanController.stop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
     }
   }
 
@@ -526,9 +580,9 @@ class _FaceHealthPreviewScreenState extends State<_FaceHealthPreviewScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_isAnalyzing) ...[
-                    const Text(
-                      'RUNNING 5 AI MODELS...',
-                      style: TextStyle(
+                    Text(
+                      _currentStatus,
+                      style: const TextStyle(
                           color: Color(0xFFE87EA1),
                           fontSize: 13,
                           letterSpacing: 2,

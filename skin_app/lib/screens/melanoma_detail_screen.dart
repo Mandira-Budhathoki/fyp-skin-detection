@@ -1,6 +1,24 @@
 import 'package:flutter/material.dart';
 import 'melanoma_info_provider.dart';
 
+// ─────────────────────────────────────────────
+//  DESIGN TOKENS (Clinical Pro - Melanoma)
+// ─────────────────────────────────────────────
+class _T {
+  static const bg        = Color(0xFFF8FAFC);
+  static const surface   = Colors.white;
+  static const cardBorder= Color(0xFFE2E8F0);
+
+  static const textPrim  = Color(0xFF0F172A);
+  static const textSub   = Color(0xFF475569);
+  static const textMuted = Color(0xFF94A3B8);
+
+  static const primary   = Color(0xFF0066FF);
+  static const highRisk  = Color(0xFFE11D48);
+  static const warning   = Color(0xFFF59E0B);
+  static const accent    = Color(0xFF7C3AED);
+}
+
 class MelanomaDetailScreen extends StatelessWidget {
   final String conditionName;
   final bool isHighRisk;
@@ -14,218 +32,189 @@ class MelanomaDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final info = MelanomaInfoProvider.getInfoForClass(conditionName);
-    final Color primaryColor = isHighRisk ? const Color(0xFFE63946) : const Color(0xFF2A9D8F);
+    final Color themeColor = isHighRisk ? _T.highRisk : _T.primary;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 200.0,
-            floating: false,
-            pinned: true,
-            backgroundColor: primaryColor,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                conditionName.split(' (').first,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  shadows: [Shadow(color: Colors.black26, blurRadius: 10)],
-                ),
-              ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      primaryColor,
-                      primaryColor.withOpacity(0.7),
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    isHighRisk ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
-                    size: 80,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (isHighRisk)
-                    _buildUrgentWarning(),
-                  
-                  const SizedBox(height: 24),
-                  
-                  if (info != null) ...[
-                    _buildDetailSection('Medical Type', info['Type']!, Icons.biotech_rounded),
-                    _buildDetailSection('Common Causes', info['Cause']!, Icons.wb_sunny_rounded),
-                    _buildDetailSection('Common Symptoms', info['Symptoms']!, Icons.search_rounded),
-                    _buildDetailSection('Melanoma Risk & Association', info['Prone to Melanoma?']!, Icons.warning_rounded, isWarning: true),
-                    _buildDetailSection('Standard Treatment Options', info['Treatment']!, Icons.medical_services_rounded),
-                  ] else
-                    const Center(child: Text('No detailed information available for this condition.')),
-                  
-                  const SizedBox(height: 40),
-                  _buildFinalRecommendation(isHighRisk),
-                  const SizedBox(height: 60),
-                ],
-              ),
-            ),
-          ),
-        ],
+      backgroundColor: _T.bg,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text("PATHOLOGY GUIDE", style: TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.5)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _T.textPrim, size: 18),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
-    );
-  }
-
-  Widget _buildUrgentWarning() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFEBEB),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE63946).withOpacity(0.3)),
-      ),
-      child: const Column(
-        children: [
-          Row(
+      body: ScrollConfiguration(
+        behavior: _NoGlowBehavior(),
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(), // NO BOUNCE
+          child: Column(
             children: [
-              Icon(Icons.notification_important_rounded, color: Color(0xFFE63946)),
-              SizedBox(width: 12),
-              Text(
-                'URGENT MEDICAL NOTICE',
-                style: TextStyle(
-                  color: Color(0xFFE63946),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              // 🧪 HEADER DOSSIER
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))],
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(color: themeColor.withOpacity(0.1), shape: BoxShape.circle),
+                      child: Icon(isHighRisk ? Icons.warning_amber_rounded : Icons.info_outline_rounded, color: themeColor, size: 48),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      conditionName.split(' (').first.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: _T.textPrim, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    _StatusTag(label: isHighRisk ? "URGENT PROTOCOL" : "CARE PROTOCOL", color: themeColor),
+                  ],
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (isHighRisk) ...[
+                      _AlertCard(message: "The parameters detect high-risk features. Immediate board-certified dermatological biopsy is required."),
+                      const SizedBox(height: 32),
+                    ],
+
+                    _SectionTitle("CLINICAL DETAILS"),
+                    const SizedBox(height: 16),
+                    if (info != null) ...[
+                      _DetailTile(title: 'Medical Type', content: info['Type']!, icon: Icons.biotech_rounded, color: _T.accent),
+                      _DetailTile(title: 'Common Causes', content: info['Cause']!, icon: Icons.wb_sunny_rounded, color: _T.warning),
+                      _DetailTile(title: 'Symptoms', content: info['Symptoms']!, icon: Icons.search_rounded, color: Colors.blue),
+                      _DetailTile(title: 'Treatment', content: info['Treatment']!, icon: Icons.medical_services_rounded, color: Colors.green),
+                    ] else
+                      const Center(child: Text('No dossier data available.', style: TextStyle(color: _T.textMuted))),
+
+                    const SizedBox(height: 40),
+
+                    // COMPACT ACTION
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pushNamed(context, '/appointment'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _T.textPrim,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.location_on_rounded, size: 18),
+                            SizedBox(width: 12),
+                            Text("FIND SPECIALIST CLINIC", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("RETURN TO REPORT", style: TextStyle(color: _T.textMuted, fontWeight: FontWeight.bold, fontSize: 11)),
+                      ),
+                    ),
+                    const SizedBox(height: 60),
+                  ],
                 ),
               ),
             ],
           ),
-          SizedBox(height: 12),
-          Text(
-            'The parameters for this lesion indicate a serious risk. While this AI analysis is NOT a medical diagnosis, we strongly advise you to contact a board-certified dermatologist immediately. DO NOT PANIC, but take immediate action to ensure your safety.',
-            style: TextStyle(
-              color: Color(0xFF333333),
-              fontSize: 14,
-              height: 1.5,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildDetailSection(String title, String content, IconData icon, {bool isWarning = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0),
+  Widget _SectionTitle(String text) => Text(
+    text,
+    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: _T.textMuted, letterSpacing: 2),
+  );
+}
+
+class _StatusTag extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _StatusTag({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
+      child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1)),
+    );
+  }
+}
+
+class _DetailTile extends StatelessWidget {
+  final String title, content;
+  final IconData icon;
+  final Color color;
+  const _DetailTile({required this.title, required this.content, required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: _T.cardBorder)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: isWarning ? const Color(0xFFE63946) : const Color(0xFF457B9D)),
-              const SizedBox(width: 12),
-              Text(
-                title.toUpperCase(),
-                style: TextStyle(
-                  color: isWarning ? const Color(0xFFE63946) : const Color(0xFF1D3557),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  letterSpacing: 1.2,
-                ),
-              ),
+              Icon(icon, color: color, size: 18),
+              const SizedBox(width: 10),
+              Text(title.toUpperCase(), style: TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1)),
             ],
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Text(
-              content,
-              style: const TextStyle(
-                color: Color(0xFF333333),
-                fontSize: 15,
-                height: 1.6,
-              ),
-            ),
-          ),
+          const SizedBox(height: 16),
+          Text(content, style: const TextStyle(color: _T.textSub, fontSize: 14, height: 1.5, fontWeight: FontWeight.w500)),
         ],
       ),
     );
   }
+}
 
-  Widget _buildFinalRecommendation(bool isHighRisk) {
+class _AlertCard extends StatelessWidget {
+  final String message;
+  const _AlertCard({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1D3557),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
+      decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(24), border: Border.all(color: _T.highRisk.withOpacity(0.2))),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Final Recommendation',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            isHighRisk
-                ? 'Your skin health is the priority. Please schedule a biopsy or physical examination with a professional dermatologist as soon as possible.'
-                : 'While this lesion appears benign according to the AI, you should continue to monitor it. If you notice any itching, bleeding, or rapid growth, consult a doctor.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              height: 1.6,
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              // Action to find a doctor or save report
-            },
-            icon: const Icon(Icons.location_on_rounded),
-            label: const Text('Find Near Dermatologists'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF457B9D),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
+          const Icon(Icons.error_rounded, color: _T.highRisk, size: 24),
+          const SizedBox(width: 16),
+          Expanded(child: Text(message, style: const TextStyle(color: Color(0xFF9F1239), fontSize: 14, height: 1.5, fontWeight: FontWeight.w600))),
         ],
       ),
     );
   }
+}
+
+class _NoGlowBehavior extends ScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) => child;
 }

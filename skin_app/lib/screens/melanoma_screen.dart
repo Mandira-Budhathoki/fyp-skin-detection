@@ -506,13 +506,53 @@ class ImagePreviewScreen extends StatefulWidget {
   State<ImagePreviewScreen> createState() => _ImagePreviewScreenState();
 }
 
-class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
+class _ImagePreviewScreenState extends State<ImagePreviewScreen>
+    with TickerProviderStateMixin {
   bool _isAnalyzing = false;
+  String _currentStatus = 'INITIALIZING SCAN...';
+  late AnimationController _scanController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scanController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scanController.dispose();
+    super.dispose();
+  }
 
   Future<void> _analyzeImage() async {
     setState(() => _isAnalyzing = true);
+    _scanController.repeat();
 
-    final uri = Uri.parse(ApiService.analyzeUrl);
+    // Update status based on real backend processing stages
+    final List<String> stages = [
+      "LOADING ENSEMBLE ENGINE...",
+      "PREPROCESSING IMAGE (224×224)...",
+      "RUNNING BINARY CLASSIFIER...",
+      "RUNNING MULTI-CLASS ENGINE...",
+      "CROSS-CHECKING PREDICTIONS...",
+      "GENERATING MEDICAL REPORT...",
+    ];
+    int stageIndex = 0;
+    _scanController.addStatusListener((status) {});
+    _scanController.addListener(() {
+      if (!mounted) return;
+      double val = _scanController.value;
+      int newIdx = (val * stages.length).floor().clamp(0, stages.length - 1);
+      if (stageIndex != newIdx) {
+        stageIndex = newIdx;
+        setState(() => _currentStatus = stages[stageIndex]);
+      }
+    });
+
+    final uri = Uri.parse('${ApiService.serviceBase}/analyze/melanoma');
     final request = http.MultipartRequest('POST', uri);
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -551,7 +591,10 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
       _showError('Network Error', 'Failed to connect to server.');
     }
 
-    if (mounted) setState(() => _isAnalyzing = false);
+    if (mounted) {
+      setState(() => _isAnalyzing = false);
+      _scanController.stop();
+    }
   }
 
   void _showError(String title, String msg) {
@@ -580,6 +623,21 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
             maxScale: 4.0,
             child: Image.file(widget.imageFile, fit: BoxFit.contain),
           ),
+
+          // Scanner Animation Overlay
+          if (_isAnalyzing)
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _scanController,
+                builder: (context, child) {
+                  return CustomPaint(
+                    painter: MelanomaScannerPainter(
+                      progress: _scanController.value,
+                    ),
+                  );
+                },
+              ),
+            ),
           
           // Helper overlay
           Positioned(
@@ -646,12 +704,17 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
                   children: [
                     if (_isAnalyzing)
                       Column(
-                        children: const [
-                          CircularProgressIndicator(color: Color(0xFF2A9D8F)),
-                          SizedBox(height: 16),
+                        children: [
+                          const CircularProgressIndicator(color: Color(0xFF2A9D8F), strokeWidth: 2),
+                          const SizedBox(height: 16),
                           Text(
-                            'Analyzing image...',
-                            style: TextStyle(color: Colors.white70, fontSize: 16),
+                            _currentStatus,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                            ),
                           ),
                         ],
                       )
@@ -711,4 +774,50 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
       ),
     );
   }
+}
+
+class MelanomaScannerPainter extends CustomPainter {
+  final double progress; 
+
+  MelanomaScannerPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint linePaint = Paint()
+      ..color = const Color(0xFF2A9D8F).withOpacity(0.8)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    double yPos = (size.height * progress) % size.height;
+    
+    Rect beamRect = Rect.fromLTWH(0, yPos - 40, size.width, 80);
+    final Shader beamShader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+         Colors.transparent,
+         const Color(0xFF2A9D8F).withOpacity(0.4),
+         const Color(0xFFE9C46A).withOpacity(0.3), 
+         Colors.transparent,
+      ],
+    ).createShader(beamRect);
+    
+    Paint beamPaint = Paint()..shader = beamShader;
+    canvas.drawRect(beamRect, beamPaint);
+    canvas.drawLine(Offset(0, yPos), Offset(size.width, yPos), linePaint);
+    
+    // HUD Brackets
+    double bracketLen = 30;
+    double padding = 30;
+    Path corners = Path();
+    corners.moveTo(padding, padding + bracketLen); corners.lineTo(padding, padding); corners.lineTo(padding + bracketLen, padding);
+    corners.moveTo(size.width - padding - bracketLen, padding); corners.lineTo(size.width - padding, padding); corners.lineTo(size.width - padding, padding + bracketLen);
+    corners.moveTo(padding, size.height - padding - bracketLen); corners.lineTo(padding, size.height - padding); corners.lineTo(padding + bracketLen, size.height - padding);
+    corners.moveTo(size.width - padding - bracketLen, size.height - padding); corners.lineTo(size.width - padding, size.height - padding); corners.lineTo(size.width - padding, size.height - padding - bracketLen);
+    
+    canvas.drawPath(corners, linePaint..strokeWidth = 3);
+  }
+
+  @override
+  bool shouldRepaint(covariant MelanomaScannerPainter oldDelegate) => oldDelegate.progress != progress;
 }

@@ -7,6 +7,7 @@ import 'screens/intro_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/appointment_screen.dart';
 import 'screens/chatbot_screen.dart';
+import 'screens/wound_results_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,6 +29,10 @@ class MyApp extends StatelessWidget {
         '/dashboard': (context) => const DashboardScreen(),
         '/appointment': (context) => const AppointmentScreen(),
         '/chatbot': (context) => const ChatbotScreen(),
+        '/wound-results': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return WoundResultsScreen(results: args);
+        },
       },
     );
   }

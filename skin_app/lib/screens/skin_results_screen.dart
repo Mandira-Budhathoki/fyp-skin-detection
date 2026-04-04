@@ -1,12 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import '../services/api_service.dart';
 
-class SkinResultsScreen extends StatelessWidget {
+// ─────────────────────────────────────────────
+//  DESIGN TOKENS (Clinical Pro - General Skin)
+// ─────────────────────────────────────────────
+class _T {
+  static const bg        = Color(0xFFF8FAFC);
+  static const surface   = Colors.white;
+  static const cardBorder= Color(0xFFE2E8F0);
+
+  static const textPrim  = Color(0xFF0F172A);
+  static const textSub   = Color(0xFF475569);
+  static const textMuted = Color(0xFF94A3B8);
+
+  static const primary   = Color(0xFF0066FF); // Clear/Mild
+  static const warning   = Color(0xFFF59E0B); // Moderate/Other
+  static const highRisk  = Color(0xFFE11D48); // Severe
+  static const accent    = Color(0xFF7C3AED);
+}
+
+class SkinResultsScreen extends StatefulWidget {
   final Map<String, dynamic> results;
   final File? image;
 
   const SkinResultsScreen({super.key, required this.results, this.image});
+
+  @override
+  State<SkinResultsScreen> createState() => _SkinResultsScreenState();
+}
+
+class _SkinResultsScreenState extends State<SkinResultsScreen> with TickerProviderStateMixin {
+  late final AnimationController _heroCtrl;
+  late final AnimationController _contentCtrl;
+  late final Animation<double> _heroScale;
+  late final Animation<double> _contentSlide;
+  late final Animation<double> _contentFade;
+
+  late final String _acneStatus;
+  late final double _acneConf;
+  late final String? _processedUrl;
+  late final List<dynamic> _otherConditions;
+  late final Color _themeColor;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _acneStatus = widget.results['acne_status'] ?? widget.results['prediction'] ?? 'Analysis Complete';
+    _acneConf = (widget.results['acne_confidence'] ?? widget.results['confidence'] ?? 0.0).toDouble();
+    _processedUrl = widget.results['processed_url'] != null ? _buildFullUrl(widget.results['processed_url']) : null;
+    _otherConditions = widget.results['other_conditions'] ?? [];
+
+    if (_acneStatus.contains('Moderate') || _otherConditions.isNotEmpty) {
+      _themeColor = _T.warning;
+    } else if (_acneStatus.contains('Severe')) {
+      _themeColor = _T.highRisk;
+    } else {
+      _themeColor = _T.primary;
+    }
+
+    _heroCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
+    _heroScale = Tween<double>(begin: 1.05, end: 1.0).animate(CurvedAnimation(parent: _heroCtrl, curve: Curves.easeOutCubic));
+
+    _contentCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _contentSlide = Tween<double>(begin: 30, end: 0).animate(CurvedAnimation(parent: _contentCtrl, curve: Curves.easeOutCubic));
+    _contentFade = Tween<double>(begin: 0, end: 1).animate(_contentCtrl);
+
+    _heroCtrl.forward();
+    Future.delayed(const Duration(milliseconds: 200), () => _contentCtrl.forward());
+  }
+
+  @override
+  void dispose() {
+    _heroCtrl.dispose();
+    _contentCtrl.dispose();
+    super.dispose();
+  }
 
   String _buildFullUrl(String? path) {
     if (path == null) return '';
@@ -21,319 +92,333 @@ class SkinResultsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String acneStatus = results['acne_status'] ?? results['prediction'] ?? 'Analysis Complete';
-    final double acneConf = (results['acne_confidence'] ?? results['confidence'] ?? 0.0).toDouble();
-    final String? processedUrl = results['processed_url'] != null ? _buildFullUrl(results['processed_url']) : null;
-    final List<dynamic> otherConditions = results['other_conditions'] ?? [];
-
+    final mq = MediaQuery.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text('Skin Analysis Report', style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w800)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1E293B), size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Image with Heatmap
-            _buildImageDisplay(processedUrl, image),
-            const SizedBox(height: 20),
-
-            // 2. ACNE STATUS — Always shown first
-            _buildAcneCard(acneStatus, acneConf),
-            const SizedBox(height: 20),
-
-            // 3. Heatmap explanation
-            if (processedUrl != null) ...[
-              _buildExplainabilityInfo(),
-              const SizedBox(height: 20),
-            ],
-
-            // 4. Other Conditions — Only if genuinely detected
-            if (otherConditions.isNotEmpty) ...[
-              _buildOtherConditions(otherConditions),
-              const SizedBox(height: 20),
-            ],
-
-            // 5. Action Buttons
-            _buildActionButtons(context),
-            const SizedBox(height: 32),
+      backgroundColor: _T.bg,
+      extendBodyBehindAppBar: true,
+      appBar: _buildAppBar(),
+      body: ScrollConfiguration(
+        behavior: _NoGlowBehavior(),
+        child: CustomScrollView(
+          physics: const ClampingScrollPhysics(), // NO BOUNCE
+          slivers: [
+            SliverToBoxAdapter(child: _buildHero(mq)),
+            SliverToBoxAdapter(child: _buildContent()),
+            const SliverToBoxAdapter(child: SizedBox(height: 60)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildImageDisplay(String? processedUrl, File? originalFile) {
-    return Container(
-      height: 250,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 8))
-        ],
+  PreferredSizeWidget _buildAppBar() => AppBar(
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    leading: Padding(
+      padding: const EdgeInsets.all(10),
+      child: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Container(
+          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          child: const Icon(Icons.arrow_back_ios_new_rounded, color: _T.textPrim, size: 14),
+        ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (processedUrl != null)
-              Image.network(processedUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) =>
-                originalFile != null ? Image.file(originalFile, fit: BoxFit.cover) : Container(color: Colors.grey[200]))
-            else if (originalFile != null)
-              Image.file(originalFile, fit: BoxFit.cover)
-            else
-              Container(color: Colors.grey[200]),
-            if (processedUrl != null)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.auto_awesome, color: Colors.cyanAccent, size: 12),
-                      SizedBox(width: 4),
-                      Text('XAI HEATMAP', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                    ],
-                  ),
+    ),
+  );
+
+  Widget _buildHero(MediaQueryData mq) {
+    return SizedBox(
+      height: mq.size.height * 0.4,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          AnimatedBuilder(
+            animation: _heroCtrl,
+            builder: (_, child) => Transform.scale(scale: _heroScale.value, child: child),
+            child: _buildHeroImage(),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                colors: [Colors.black.withOpacity(0.2), Colors.transparent, _T.bg],
+                stops: const [0, 0.4, 1],
+              ),
+            ),
+          ),
+          if (_processedUrl != null)
+            Positioned(
+              top: 50, right: 24,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome, color: Colors.cyanAccent, size: 12),
+                    SizedBox(width: 6),
+                    Text('XAI HEATMAP', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                  ],
                 ),
               ),
+            ),
+          Positioned(
+            left: 24, bottom: 10,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _StatusPill(label: _themeColor == _T.highRisk ? "ATTENTION NEEDED" : "SCAN COMPLETE", color: _themeColor),
+                const SizedBox(height: 8),
+                Text(
+                  _acneStatus.toUpperCase(),
+                  style: TextStyle(color: _T.textPrim, fontSize: _acneStatus.length > 15 ? 24 : 32, fontWeight: FontWeight.w900, letterSpacing: -1.0),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroImage() {
+    if (_processedUrl != null) {
+      return Image.network(_processedUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => widget.image != null ? Image.file(widget.image!, fit: BoxFit.cover) : Container(color: _T.cardBorder));
+    }
+    if (widget.image != null) {
+      return Image.file(widget.image!, fit: BoxFit.cover);
+    }
+    return Container(color: _themeColor.withOpacity(0.1));
+  }
+
+  Widget _buildContent() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: AnimatedBuilder(
+        animation: _contentCtrl,
+        builder: (_, child) => Transform.translate(offset: Offset(0, _contentSlide.value), child: Opacity(opacity: _contentFade.value, child: child)),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            _ConfidenceRow(confidence: _acneConf, color: _themeColor),
+            const SizedBox(height: 16),
+            if (_processedUrl != null) ...[
+              _ExplainabilityCard(),
+              const SizedBox(height: 16),
+            ],
+            if (_otherConditions.isNotEmpty) ...[
+              _SectionTitle("OTHER CONDITIONS DETECTED"),
+              const SizedBox(height: 12),
+              ..._otherConditions.map((c) => _ConditionTile(condition: c)).toList(),
+              const SizedBox(height: 24),
+            ] else ...[
+              _InsightCard(status: _acneStatus, color: _themeColor),
+              const SizedBox(height: 24),
+            ],
+            
+            _SectionTitle("QUICK ACTIONS"),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _CompactAction(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  label: "AI Guide",
+                  color: _T.accent,
+                  onTap: () => Navigator.pushNamed(context, '/chatbot'),
+                ),
+                const SizedBox(width: 12),
+                _CompactAction(
+                  icon: Icons.local_hospital_rounded,
+                  label: "Consult",
+                  color: _T.textPrim,
+                  onTap: () => Navigator.pushNamed(context, '/appointment'),
+                ),
+                const SizedBox(width: 12),
+                _CompactAction(icon: Icons.share_rounded, label: "Share", color: _T.textSub, onTap: () {}),
+              ],
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              "Screening is based on visual patterns. Clinical assessment in person is always recommended.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11, color: _T.textMuted, height: 1.5, fontStyle: FontStyle.italic),
+            ),
           ],
         ),
       ),
     );
   }
 
-  /// ACNE STATUS CARD — The main hero card
-  Widget _buildAcneCard(String acneStatus, double acneConf) {
-    // Colors based on severity
-    Color statusColor;
-    IconData statusIcon;
-    String statusDesc;
+  Widget _SectionTitle(String text) => Align(
+    alignment: Alignment.centerLeft,
+    child: Text(text, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: _T.textMuted, letterSpacing: 1.5)),
+  );
+}
 
-    if (acneStatus == 'Moderate Acne') {
-      statusColor = const Color(0xFFE76F51); // Red-orange
-      statusIcon = Icons.warning_rounded;
-      statusDesc = 'Significant acne detected. Consider consulting a dermatologist.';
-    } else if (acneStatus == 'Mild Acne') {
-      statusColor = const Color(0xFFF4A261); // Warm orange
-      statusIcon = Icons.info_rounded;
-      statusDesc = 'Some signs of acne detected. Maintain good skincare routine.';
-    } else {
-      statusColor = const Color(0xFF2A9D8F); // Green-teal
-      statusIcon = Icons.check_circle_rounded;
-      statusDesc = 'No significant acne detected. Your skin looks clear!';
+// ─────────────────────────────────────────────
+//  WIDGET COMPONENTS
+// ─────────────────────────────────────────────
+
+class _ConfidenceRow extends StatelessWidget {
+  final double confidence;
+  final Color color;
+  const _ConfidenceRow({required this.confidence, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: _T.cardBorder)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.analytics_rounded, color: color, size: 18),
+                const SizedBox(height: 12),
+                Text("${confidence.toStringAsFixed(1)}%", style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 16)),
+                const Text("CONFIDENCE SCORE", style: TextStyle(color: _T.textMuted, fontWeight: FontWeight.bold, fontSize: 8, letterSpacing: 1)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ExplainabilityCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.cyan.withOpacity(0.05), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.cyan.withOpacity(0.2))),
+      child: Row(
+        children: [
+          const Icon(Icons.help_outline_rounded, color: Colors.cyan, size: 18),
+          const SizedBox(width: 12),
+          const Expanded(child: Text("The heatmap overlay on the image above indicates areas the AI focused on.", style: TextStyle(color: _T.textSub, fontSize: 12, height: 1.4))),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConditionTile extends StatelessWidget {
+  final dynamic condition;
+  const _ConditionTile({required this.condition});
+
+  @override
+  Widget build(BuildContext context) {
+    double conf = (condition['confidence'] ?? 0.0).toDouble();
+    String label = condition['label'] ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: _T.cardBorder)),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: _T.warning.withOpacity(0.1), shape: BoxShape.circle),
+            child: const Icon(Icons.warning_amber_rounded, color: _T.warning, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, color: _T.textPrim, fontSize: 12))),
+          Text("${conf.toStringAsFixed(1)}%", style: const TextStyle(fontWeight: FontWeight.w900, color: _T.warning, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+}
+
+class _InsightCard extends StatelessWidget {
+  final String status;
+  final Color color;
+  const _InsightCard({required this.status, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    String desc = 'No significant issues detected. Your skin looks clear!';
+    if (status.contains('Moderate')) {
+      desc = 'Significant acne detected. Consider a consistent skincare routine or consulting a dermatologist.';
+    } else if (status.contains('Mild')) {
+      desc = 'Some signs of acne detected. Maintain good hygiene and a gentle skincare routine.';
     }
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 8))
-        ],
-      ),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: _T.cardBorder)),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(statusIcon, color: statusColor, size: 36),
-          ),
-          const SizedBox(height: 14),
-          // Label
-          const Text('ACNE ASSESSMENT', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
-          const SizedBox(height: 8),
-          // Status
-          Text(
-            acneStatus,
-            style: TextStyle(color: statusColor, fontSize: 24, fontWeight: FontWeight.w900),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          // Confidence
-          Text(
-            'AI Confidence: ${acneConf.toStringAsFixed(1)}%',
-            style: const TextStyle(color: Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w600),
-          ),
+          Row(children: [
+            Icon(Icons.auto_awesome_rounded, color: color, size: 18),
+            const SizedBox(width: 10),
+            const Text("AI OBSERVATION", style: TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
+          ]),
           const SizedBox(height: 16),
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              width: double.infinity,
-              child: LinearProgressIndicator(
-                value: acneConf / 100,
-                minHeight: 10,
-                backgroundColor: const Color(0xFFF1F5F9),
-                color: statusColor,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          // Description
-          Text(
-            statusDesc,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Colors.grey[600], height: 1.4),
-          ),
+          Text(desc, style: const TextStyle(color: _T.textSub, fontSize: 14, height: 1.5, fontWeight: FontWeight.w500)),
         ],
       ),
     );
   }
+}
 
-  Widget _buildExplainabilityInfo() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.cyan.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.cyan.withOpacity(0.1)),
+class _CompactAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _CompactAction({required this.icon, required this.label, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: _T.cardBorder)),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(height: 8),
+              Text(label, style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 11)),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _StatusPill({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30), boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 10)]),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.help_outline_rounded, color: Colors.cyan, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'The heatmap above shows where the AI focused to make this prediction.',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600], height: 1.4),
-            ),
-          ),
+          Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 8),
+          Text(label, style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5)),
         ],
       ),
     );
   }
+}
 
-  /// OTHER CONDITIONS — Only shown if genuinely detected
-  Widget _buildOtherConditions(List<dynamic> conditions) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'OTHER CONDITIONS DETECTED',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF94A3B8), letterSpacing: 1.5),
-        ),
-        const SizedBox(height: 10),
-        ...conditions.map((c) {
-          double conf = (c['confidence'] ?? 0.0).toDouble();
-          String label = c['label'] ?? '';
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.04),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.orange.withOpacity(0.15)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 16),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF2C3E50), fontSize: 13),
-                  ),
-                ),
-                Text(
-                  '${conf.toStringAsFixed(1)}%',
-                  style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.orange, fontSize: 14),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildActionButtons(BuildContext context) {
-    return Column(
-      children: [
-        _buildActionButton(
-          label: 'Book Skin Specialist',
-          icon: Icons.calendar_month_rounded,
-          color: const Color(0xFF6A4C93),
-          onTap: () => Navigator.pushNamed(context, '/appointment'),
-        ),
-        const SizedBox(height: 12),
-        _buildActionButton(
-          label: 'Consult Skin AI',
-          icon: Icons.smart_toy_rounded,
-          color: const Color(0xFF264653),
-          onTap: () => Navigator.pushNamed(context, '/chatbot'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton({required String label, required IconData icon, required Color color, required VoidCallback onTap}) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: color.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: Colors.white, size: 20),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    label,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+class _NoGlowBehavior extends ScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) => child;
 }

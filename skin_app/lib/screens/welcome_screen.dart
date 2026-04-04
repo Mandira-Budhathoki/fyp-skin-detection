@@ -33,7 +33,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
     // 1. Main Entrance Controller (Controls the sequence)
     _mainController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(milliseconds: 3000),
     );
 
     // 2. Pulse Controller (Breathing logo)
@@ -72,8 +72,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
 
     _mainController.forward();
 
-    // Navigation Timer
-    Timer(const Duration(seconds: 4), () {
+    // Navigation Timer - Balanced transition
+    Timer(const Duration(milliseconds: 3000), () {
       if (mounted) {
         setState(() {
           _showIntro = true;
@@ -256,10 +256,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                     AnimatedBuilder(
                       animation: _scanController,
                       builder: (context, _) {
-                        // Cycles text based on scan progress
-                        String status = "Initializing...";
-                        if (_scanController.value > 0.33) status = "Loading Models...";
-                        if (_scanController.value > 0.66) status = "Verifying...";
+                        // Cycles text based on scan progress - No more 'Initializing' word
+                        String status = "AI PREPARING...";
+                        if (_scanController.value > 0.33) status = "OPTIMIZING...";
+                        if (_scanController.value > 0.66) status = "ALMOST READY...";
                         
                         return Text(
                           status.toUpperCase(),

@@ -2,6 +2,44 @@ import 'package:flutter/material.dart';
 
 class MelanomaInfoProvider {
   static const Map<String, Map<String, String>> classInfo = {
+    // New ISIC Binary Labels
+    'Melanoma Detected': {
+      'Type': 'Malignant skin cancer (most dangerous form)',
+      'Cause': 'Intense, intermittent sun exposure, genetics, many moles, fair skin',
+      'Symptoms': 'New or unusual growth, changes in an existing mole (ABCDE rule)',
+      'Prone to Melanoma?': 'This IS Melanoma. Early detection is critical for a high survival rate.',
+      'Treatment': 'Surgical excision, immunotherapy, targeted therapy, radiation or chemotherapy depending on stage.'
+    },
+    'Non-Melanoma (Safe)': {
+      'Type': 'Benign skin lesion',
+      'Cause': 'Sun exposure, genetics, aging, hormonal changes',
+      'Symptoms': 'Stable moles, spots, or patches that do not change rapidly',
+      'Prone to Melanoma?': 'Currently assessed as benign, but always monitor for new changes using the ABCDE rule.',
+      'Treatment': 'Usually none needed; schedule regular skin checks and protect from sun exposure.'
+    },
+    // New ISIC Multi-Class Labels
+    'Melanoma': {
+      'Type': 'Malignant skin cancer (most dangerous form)',
+      'Cause': 'Intense, intermittent sun exposure, genetics, many moles, fair skin',
+      'Symptoms': 'New or unusual growth, changes in an existing mole (ABCDE rule)',
+      'Prone to Melanoma?': 'This IS Melanoma. Early detection is critical for a high survival rate.',
+      'Treatment': 'Surgical excision, immunotherapy, targeted therapy, radiation or chemotherapy depending on stage.'
+    },
+    'Benign': {
+      'Type': 'Non-cancerous skin lesion',
+      'Cause': 'Sun exposure, genetics, aging',
+      'Symptoms': 'Stable moles, spots, or patches; typically painless and symmetrical',
+      'Prone to Melanoma?': 'Generally harmless; monitor for irregular changes',
+      'Treatment': 'Usually none needed; cosmetic removal if desired'
+    },
+    'Keratosis': {
+      'Type': 'Benign skin growth (seborrheic keratosis or actinic keratosis)',
+      'Cause': 'Long-term sun exposure (UV damage), fair skin, aging',
+      'Symptoms': 'Rough, scaly, waxy, or wart-like patches on sun-exposed areas',
+      'Prone to Melanoma?': 'Not melanoma. Actinic keratoses can rarely progress to squamous cell carcinoma.',
+      'Treatment': 'Cryotherapy (freezing), topical treatments, photodynamic therapy, or surgical removal if needed'
+    },
+    // Legacy HAM10000 Labels (keep for backward compatibility)
     'Melanoma (MEL)': {
       'Type': 'Malignant skin cancer (most dangerous form)',
       'Cause': 'Intense, intermittent sun exposure, genetics, many moles, fair skin',
@@ -54,9 +92,14 @@ class MelanomaInfoProvider {
   };
 
   static Map<String, String>? getInfoForClass(String className) {
-    // Exact match or partial match if string formats vary slightly
+    // Exact match first
+    if (classInfo.containsKey(className)) {
+      return classInfo[className];
+    }
+    // Then partial/case-insensitive match
+    String lower = className.toLowerCase();
     for (var key in classInfo.keys) {
-      if (className.contains(key) || key.contains(className)) {
+      if (lower.contains(key.toLowerCase()) || key.toLowerCase().contains(lower)) {
         return classInfo[key];
       }
     }

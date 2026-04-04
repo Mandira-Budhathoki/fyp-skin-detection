@@ -435,6 +435,7 @@ class _SkinImagePreviewScreen extends StatefulWidget {
 class _SkinImagePreviewScreenState extends State<_SkinImagePreviewScreen>
     with TickerProviderStateMixin {
   bool _isAnalyzing = false;
+  String _currentStatus = 'INITIALIZING SCAN...';
   late AnimationController _scanController;
   final TransformationController _transformationController = TransformationController();
 
@@ -443,7 +444,7 @@ class _SkinImagePreviewScreenState extends State<_SkinImagePreviewScreen>
     super.initState();
     _scanController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4), // Slow, detailed scan
+      duration: const Duration(seconds: 2), // Faster, snappy scan
     );
   }
 
@@ -457,6 +458,28 @@ class _SkinImagePreviewScreenState extends State<_SkinImagePreviewScreen>
   Future<void> _analyzeImage() async {
     setState(() => _isAnalyzing = true);
     _scanController.repeat();
+
+    // Dynamically update status based on scan progress
+    _scanController.addListener(() {
+      if (!mounted) return;
+      double val = _scanController.value;
+      String newStatus;
+      if (val < 0.20) {
+        newStatus = "MAPPNIG SKIN TEXTURE...";
+      } else if (val < 0.40) {
+        newStatus = "DETECTING PORE QUALITY...";
+      } else if (val < 0.60) {
+        newStatus = "ANALYZING SEBUM LEVELS...";
+      } else if (val < 0.80) {
+        newStatus = "CHECKING BLEMISH CONCENTRATE...";
+      } else {
+        newStatus = "OPTIMIZING REPORT...";
+      }
+      
+      if (_currentStatus != newStatus) {
+        setState(() => _currentStatus = newStatus);
+      }
+    });
 
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -585,9 +608,9 @@ class _SkinImagePreviewScreenState extends State<_SkinImagePreviewScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                    if (_isAnalyzing) ...[
-                     const Text(
-                       "MAPPING FACIAL FEATURES...",
-                       style: TextStyle(
+                     Text(
+                       _currentStatus,
+                       style: const TextStyle(
                          color: Colors.cyanAccent,
                          fontSize: 14,
                          letterSpacing: 2.0,
