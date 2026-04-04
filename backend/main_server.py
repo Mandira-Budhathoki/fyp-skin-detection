@@ -18,6 +18,7 @@ from app import image_bp
 from chatbot_server import chatbot_bp
 from appointment_routes import appointment_bp
 from vitality_routes import vitality_bp
+from quiz_routes import quiz_bp
 
 app = Flask(__name__)
 CORS(app)
@@ -31,6 +32,7 @@ app.register_blueprint(image_bp, url_prefix='/api')
 app.register_blueprint(chatbot_bp, url_prefix='/api')
 app.register_blueprint(appointment_bp, url_prefix='/api/appointments')
 app.register_blueprint(vitality_bp)
+app.register_blueprint(quiz_bp, url_prefix='/api')
 
 
 @app.route('/')

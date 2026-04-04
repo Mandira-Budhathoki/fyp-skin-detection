@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:math' as math;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({Key? key}) : super(key: key);
@@ -33,35 +36,108 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
       'icon': Icons.face_retouching_natural_rounded,
       'gradient': [Color(0xFF2A9D8F), Color(0xFF1A7A6E)],
       'color': Color(0xFF2A9D8F),
-      'description': '10 questions on skincare routines, ingredients & science',
+      'description': 'Questions on skincare routines, ingredients & science',
     },
     'Wound Care': {
       'icon': Icons.healing_rounded,
       'gradient': [Color(0xFFE76F51), Color(0xFFD4472A)],
       'color': Color(0xFFE76F51),
-      'description': '10 questions on wound treatment, first aid & recovery',
+      'description': 'Questions on wound treatment, first aid & recovery',
     },
     'Melanoma': {
       'icon': Icons.biotech_rounded,
       'gradient': [Color(0xFF7C5CBF), Color(0xFF5E3E9E)],
       'color': Color(0xFF7C5CBF),
-      'description': '10 questions on skin cancer detection & prevention',
+      'description': 'Questions on skin cancer detection & prevention',
     },
     'Nutrition': {
       'icon': Icons.restaurant_rounded,
       'gradient': [Color(0xFFFFB700), Color(0xFFE09500)],
       'color': Color(0xFFFFB700),
-      'description': '10 questions on diet, nutrients & skin health',
+      'description': 'Questions on diet, nutrients & skin health',
     },
     'UV & Sun Safety': {
       'icon': Icons.wb_sunny_rounded,
       'gradient': [Color(0xFFFF6B6B), Color(0xFFE63946)],
       'color': Color(0xFFFF6B6B),
-      'description': '10 questions on UV protection, SPF & sun safety',
+      'description': 'Questions on UV protection, SPF & sun safety',
     },
   };
 
-  static const Map<String, List<Map<String, dynamic>>> _questions = {
+  Map<String, List<Map<String, dynamic>>> _questions = {};
+  bool _loadingQuestions = true;
+
+  String? _userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _slideController = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _slideAnim = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
+    _scoreController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _scoreAnim = CurvedAnimation(parent: _scoreController, curve: Curves.easeOutBack);
+    _loadInitial();
+  }
+
+  Future<void> _loadInitial() async {
+    final prefs = await SharedPreferences.getInstance();
+    _userId = prefs.getString('userId');
+    _loadAllQuestions();
+  }
+
+  void _saveResults() async {
+    if (_userId == null || _selectedCategory == null) return;
+    final questions = _questions[_selectedCategory!]!;
+    try {
+      await ApiService.saveQuizResult({
+        'userId': _userId,
+        'category': _selectedCategory,
+        'score': _score,
+        'total': questions.length,
+        'percentage': ((_score / questions.length) * 100).round()
+      });
+      print("Quiz result saved successfully");
+    } catch (e) {
+      print("Error saving quiz result: $e");
+    }
+  }
+
+  Future<void> _loadAllQuestions() async {
+    if (mounted) setState(() => _loadingQuestions = true);
+    try {
+      // 1. Initialise with static (built-in) questions
+      Map<String, List<Map<String, dynamic>>> temp = {};
+      _staticQuestions.forEach((k, v) {
+        temp[k] = List<Map<String, dynamic>>.from(v);
+      });
+
+      // 2. Fetch additional questions from Admin/DB
+      final dynamicQs = await ApiService.getQuizQuestions(null);
+      if (dynamicQs.isNotEmpty) {
+        for (var q in dynamicQs) {
+          String cat = q['category'];
+          if (!temp.containsKey(cat)) temp[cat] = [];
+          
+          bool alreadyExists = temp[cat]!.any((oldQ) => oldQ['q'] == q['question']);
+          if (!alreadyExists) {
+            temp[cat]!.add({
+              'q': q['question'],
+              'a': List<String>.from(q['options']),
+              'c': q['correctIndex'],
+              'exp': q['explanation']
+            });
+          }
+        }
+      }
+      if (mounted) setState(() { _questions = temp; _loadingQuestions = false; });
+    } catch (e) { 
+      print("Quiz load error: $e");
+      if (mounted) setState(() { _questions = Map.from(_staticQuestions); _loadingQuestions = false; });
+    }
+  }
+
+  static const Map<String, List<Map<String, dynamic>>> _staticQuestions = {
     'Skin Care': [
       {'q': 'How often should you reapply sunscreen?', 'a': ['Every 30 min', 'Every 2 hours', 'Once at morning', 'Every 4 hours'], 'c': 1, 'exp': 'Sunscreen degrades with UV exposure and sweating. Reapply every 2 hours, or after swimming.'},
       {'q': 'What does SPF stand for in sunscreen?', 'a': ['Skin Protection Formula', 'Sun Protection Factor', 'Solar Power Filter', 'Sunburn Prevention Factor'], 'c': 1, 'exp': 'SPF = Sun Protection Factor. It measures how well sunscreen protects against UVB rays that cause sunburn.'},
@@ -125,16 +201,6 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
   };
 
   @override
-  void initState() {
-    super.initState();
-    _slideController = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
-    _slideAnim = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
-    _scoreController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
-    _scoreAnim = CurvedAnimation(parent: _scoreController, curve: Curves.easeOutBack);
-  }
-
-  @override
   void dispose() {
     _slideController.dispose();
     _scoreController.dispose();
@@ -175,7 +241,69 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
     } else {
       setState(() => _quizDone = true);
       _scoreController.forward(from: 0);
+      _saveResults(); // Automatically save to DB
     }
+  }
+
+  void _showHistory() async {
+    if (_userId == null) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 20),
+            const Text('Quiz History', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: navy)),
+            const SizedBox(height: 16),
+            Expanded(
+              child: FutureBuilder<List<dynamic>>(
+                future: ApiService.getUserQuizResults(_userId!),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: navy));
+                  final data = snapshot.data ?? [];
+                  if (data.isEmpty) return const Center(child: Text("No history yet. Take a quiz!", style: TextStyle(color: Colors.grey)));
+                  return ListView.builder(
+                    itemCount: data.length,
+                    itemBuilder: (context, i) {
+                      final r = data[i];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16)),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(color: teal.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                              child: const Icon(Icons.check_circle_rounded, color: teal, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(r['category'] ?? 'General', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: navy)),
+                                Text(r['timestamp'] != null ? r['timestamp'].substring(0, 10) : '', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                              ]),
+                            ),
+                            Text('${r['score']}/${r['total']}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: navy)),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -197,11 +325,13 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
         ),
         title: Text(
           _quizDone ? 'Results' : _selectedCategory ?? 'Health Quiz',
-          style: const TextStyle(color: navy, fontWeight: FontWeight.w900, fontSize: 20),
+          style: const TextStyle(color: navy, fontWeight: FontWeight.w900, fontSize: 18),
         ),
         centerTitle: true,
       ),
-      body: AnimatedSwitcher(
+      body: _loadingQuestions 
+          ? const Center(child: CircularProgressIndicator(color: navy))
+          : AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: _selectedCategory == null
             ? _buildCategoryPicker()
@@ -228,17 +358,27 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
               gradient: const LinearGradient(colors: [Color(0xFF1B263B), Color(0xFF2D3B55)]),
               borderRadius: BorderRadius.circular(24),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.quiz_rounded, color: Colors.white, size: 40),
-                SizedBox(width: 16),
+                const Icon(Icons.quiz_rounded, color: Colors.white, size: 40),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Test Your Knowledge', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20)),
-                      SizedBox(height: 4),
-                      Text('5 categories · 10 questions each\nScience-backed answers with explanations',
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Test Your Knowledge', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
+                          IconButton(
+                            onPressed: _loadAllQuestions,
+                            icon: const Icon(Icons.refresh_rounded, color: Colors.white70, size: 20),
+                            tooltip: 'Refresh Questions',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      const Text('Multiple categories · Real-time updates\nScience-backed answers with explanations',
                           style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4)),
                     ],
                   ),
@@ -270,28 +410,28 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                 child: Row(
                   children: [
                     Container(
-                      width: 52,
-                      height: 52,
+                      width: 44, // Reduced from 52
+                      height: 44, // Reduced from 52
                       decoration: BoxDecoration(
                         gradient: LinearGradient(colors: gradient),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(cat['icon'] as IconData, color: Colors.white, size: 26),
+                      child: Icon(cat['icon'] as IconData, color: Colors.white, size: 22), // Reduced from 26
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(entry.key, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: navy)),
-                          const SizedBox(height: 4),
-                          Text(cat['description'], style: TextStyle(fontSize: 12, color: Colors.grey[600], height: 1.3)),
-                          const SizedBox(height: 8),
+                          Text(entry.key, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: navy)), // Reduced from 16
+                          const SizedBox(height: 2),
+                          Text(cat['description'], style: TextStyle(fontSize: 11, color: Colors.grey[600], height: 1.2)), // Reduced from 12 and 1.3
+                          const SizedBox(height: 6),
                           Row(
                             children: [
                               _pill('${questions.length} Questions', color),
                               const SizedBox(width: 6),
-                              _pill('With Explanations', teal),
+                              _pill('Answers included', teal),
                             ],
                           ),
                         ],
@@ -303,6 +443,35 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
               ),
             );
           }),
+          const SizedBox(height: 24),
+          GestureDetector(
+            onTap: _showHistory,
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: blue.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: blue.withOpacity(0.2)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.history_rounded, color: blue, size: 24),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('View Previous Scores', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: navy)),
+                        Text('Track your learning progress', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 16, color: blue),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
         ],
       ),
     );
@@ -336,32 +505,32 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
         // Progress header
         Container(
           color: Colors.white,
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12), // Reduced padding
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: catColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                    child: Text(_selectedCategory!, style: TextStyle(color: catColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), // Compact
+                    decoration: BoxDecoration(color: catColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                    child: Text(_selectedCategory!, style: TextStyle(color: catColor, fontWeight: FontWeight.bold, fontSize: 11)),
                   ),
-                  Text('${_currentIndex + 1} / ${questions.length}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: navy, fontSize: 14)),
+                  Text('${_currentIndex + 1}/${questions.length}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: navy, fontSize: 13)),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: teal.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                    child: Text('Score: $_score', style: const TextStyle(color: teal, fontWeight: FontWeight.bold, fontSize: 12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: teal.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                    child: Text('Score: $_score', style: const TextStyle(color: teal, fontWeight: FontWeight.bold, fontSize: 11)),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               ClipRRect(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: progress,
-                  minHeight: 8,
+                  minHeight: 6, // Reduced height
                   backgroundColor: catColor.withOpacity(0.1),
                   valueColor: AlwaysStoppedAnimation(catColor),
                 ),
@@ -381,11 +550,11 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                 children: [
                   // Question
                   Container(
-                    padding: const EdgeInsets.all(22),
+                    padding: const EdgeInsets.all(18), // Reduced from 22
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(22),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 16)],
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12)],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,20 +562,20 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(colors: List<Color>.from(catData['gradient'])),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Icon(catData['icon'] as IconData, color: Colors.white, size: 20),
+                              child: Icon(catData['icon'] as IconData, color: Colors.white, size: 16),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 8),
                             Text('Question ${_currentIndex + 1}',
-                                style: TextStyle(color: catColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                                style: TextStyle(color: catColor, fontWeight: FontWeight.bold, fontSize: 13)),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(q['q'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: navy, height: 1.4)),
+                        const SizedBox(height: 12),
+                        Text(q['q'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: navy, height: 1.3)), // Reduced font size
                       ],
                     ),
                   ),
@@ -449,17 +618,17 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 250),
                         margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(12), // Reduced from 16
                         decoration: BoxDecoration(
                           color: bgColor,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: borderColor, width: _revealed && (i == correctIdx || i == _selectedAnswer) ? 2 : 1),
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8)],
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6)],
                         ),
                         child: Row(
                           children: [
                             Container(
-                              width: 32, height: 32,
+                              width: 28, height: 28, // Reduced from 32
                               decoration: BoxDecoration(
                                 color: _revealed && i == correctIdx ? teal : borderColor.withOpacity(0.2),
                                 shape: BoxShape.circle,
@@ -469,13 +638,14 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                                   String.fromCharCode(65 + i),
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 12, // Reduced
                                     color: _revealed && i == correctIdx ? Colors.white : Colors.grey[700],
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(child: Text(ans, style: const TextStyle(fontSize: 14, color: navy, fontWeight: FontWeight.w500))),
+                            const SizedBox(width: 10),
+                            Expanded(child: Text(ans, style: const TextStyle(fontSize: 13, color: navy, fontWeight: FontWeight.w500))), // Reduced from 14
                             if (trailingIcon != null) trailingIcon,
                           ],
                         ),
@@ -568,42 +738,42 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
         children: [
           // Score card
           Container(
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.all(24), // Reduced from 28
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Column(
               children: [
-                Icon(icon, color: Colors.white, size: 52),
-                const SizedBox(height: 14),
+                Icon(icon, color: Colors.white, size: 44), // Reduced from 52
+                const SizedBox(height: 10),
                 ScaleTransition(
                   scale: _scoreAnim,
-                  child: Text(grade, style: const TextStyle(fontSize: 72, fontWeight: FontWeight.w900, color: Colors.white)),
+                  child: Text(grade, style: const TextStyle(fontSize: 60, fontWeight: FontWeight.w900, color: Colors.white)), // Reduced from 72
                 ),
-                Text('$_score / ${questions.length} correct', style: const TextStyle(fontSize: 18, color: Colors.white70, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 8),
-                Text('$pct% Score', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(height: 16),
+                Text('$_score / ${questions.length} correct', style: const TextStyle(fontSize: 16, color: Colors.white70, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 6),
+                Text('$pct% Score', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(14)),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
                   child: Text(msg, textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4)),
+                      style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.3)),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // Stats breakdown
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16)],
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12)],
             ),
             child: Column(
               children: [
@@ -638,6 +808,37 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                     Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
                     SizedBox(width: 8),
                     Text('RETAKE QUIZ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Share results button
+          GestureDetector(
+            onTap: () {
+              final text = 'I scored $_score/${questions.length} on the Skin Health Quiz! Category: $_selectedCategory. Check your skin health on the Skin Detection App!';
+              Clipboard.setData(ClipboardData(text: text));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Results copied to clipboard! You can share with your doctor.')),
+              );
+            },
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                color: blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: blue.withOpacity(0.3)),
+              ),
+              child: const Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.share_rounded, color: blue, size: 20),
+                    SizedBox(width: 8),
+                    Text('SHARE SCORE', style: TextStyle(color: blue, fontWeight: FontWeight.w900, fontSize: 15)),
                   ],
                 ),
               ),

@@ -36,6 +36,13 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnim;
 
+  // Controllers for manual input
+  late TextEditingController _heightController;
+  late TextEditingController _weightController;
+  late TextEditingController _feetController;
+  late TextEditingController _inchesController;
+  late TextEditingController _weightLbsController;
+
   @override
   void initState() {
     super.initState();
@@ -44,13 +51,39 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
       ..repeat(reverse: true);
     _pulseAnim = Tween<double>(begin: 0.97, end: 1.03).animate(
         CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
+    
+    // Initialize controllers
+    _heightController = TextEditingController(text: _heightCm.toStringAsFixed(0));
+    _weightController = TextEditingController(text: _weightKg.toStringAsFixed(1));
+    _feetController = TextEditingController(text: '$_feet');
+    _inchesController = TextEditingController(text: '$_inches');
+    _weightLbsController = TextEditingController(text: _weightLbs.toStringAsFixed(1));
+
     _loadUser();
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
+    _feetController.dispose();
+    _inchesController.dispose();
+    _weightLbsController.dispose();
     super.dispose();
+  }
+
+  // Helper to sync text field with state
+  void _updateFromText(String val, String type) {
+    double? d = double.tryParse(val);
+    if (d == null) return;
+    setState(() {
+      if (type == 'h') _heightCm = d.clamp(50, 250);
+      if (type == 'w') _weightKg = d.clamp(20, 300);
+      if (type == 'f') _feet = d.toInt().clamp(3, 8);
+      if (type == 'i') _inches = d.toInt().clamp(0, 11);
+      if (type == 'wl') _weightLbs = d.clamp(44, 660);
+    });
   }
 
   Future<void> _loadUser() async {
@@ -141,12 +174,13 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
 
   Widget _stepper({
     required String label,
-    required String value,
+    required TextEditingController controller,
     required String unit,
     required VoidCallback onInc,
     required VoidCallback onDec,
     required Color color,
     required IconData icon,
+    required Function(String) onTextChange,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -172,13 +206,23 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
               children: [
                 Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey)),
                 const SizedBox(height: 4),
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(text: value, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: color)),
-                      TextSpan(text: ' $unit', style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
-                    ],
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    SizedBox(
+                      width: 80,
+                      child: TextField(
+                        controller: controller,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        onChanged: onTextChange,
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
+                        style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: color),
+                        decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
+                      ),
+                    ),
+                    Text(' $unit', style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
+                  ],
                 ),
               ],
             ),
@@ -343,52 +387,87 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
             if (_useCm) ...[
               _stepper(
                 label: 'Height',
-                value: _heightCm.toStringAsFixed(0),
+                controller: _heightController,
                 unit: 'cm',
                 icon: Icons.height_rounded,
                 color: purple,
-                onInc: () => setState(() => _heightCm = math.min(_heightCm + 1, 250)),
-                onDec: () => setState(() => _heightCm = math.max(_heightCm - 1, 50)),
+                onInc: () {
+                  setState(() => _heightCm = math.min(_heightCm + 1, 250));
+                  _heightController.text = _heightCm.toStringAsFixed(0);
+                },
+                onDec: () {
+                  setState(() => _heightCm = math.max(_heightCm - 1, 50));
+                  _heightController.text = _heightCm.toStringAsFixed(0);
+                },
+                onTextChange: (v) => _updateFromText(v, 'h'),
               ),
               const SizedBox(height: 14),
               _stepper(
                 label: 'Weight',
-                value: _weightKg.toStringAsFixed(1),
+                controller: _weightController,
                 unit: 'kg',
                 icon: Icons.monitor_weight_outlined,
                 color: teal,
-                onInc: () => setState(() => _weightKg = math.min(_weightKg + 0.5, 300)),
-                onDec: () => setState(() => _weightKg = math.max(_weightKg - 0.5, 20)),
+                onInc: () {
+                  setState(() => _weightKg = math.min(_weightKg + 0.5, 300));
+                  _weightController.text = _weightKg.toStringAsFixed(1);
+                },
+                onDec: () {
+                  setState(() => _weightKg = math.max(_weightKg - 0.5, 20));
+                  _weightController.text = _weightKg.toStringAsFixed(1);
+                },
+                onTextChange: (v) => _updateFromText(v, 'w'),
               ),
             ] else ...[
               _stepper(
                 label: 'Feet',
-                value: '$_feet',
+                controller: _feetController,
                 unit: 'ft',
                 icon: Icons.straighten_rounded,
                 color: purple,
-                onInc: () => setState(() => _feet = math.min(_feet + 1, 8)),
-                onDec: () => setState(() => _feet = math.max(_feet - 1, 3)),
+                onInc: () {
+                  setState(() => _feet = math.min(_feet + 1, 8));
+                  _feetController.text = '$_feet';
+                },
+                onDec: () {
+                  setState(() => _feet = math.max(_feet - 1, 3));
+                  _feetController.text = '$_feet';
+                },
+                onTextChange: (v) => _updateFromText(v, 'f'),
               ),
               const SizedBox(height: 10),
               _stepper(
                 label: 'Inches',
-                value: '$_inches',
+                controller: _inchesController,
                 unit: 'in',
                 icon: Icons.height_rounded,
                 color: purple,
-                onInc: () => setState(() => _inches = math.min(_inches + 1, 11)),
-                onDec: () => setState(() => _inches = math.max(_inches - 1, 0)),
+                onInc: () {
+                  setState(() => _inches = math.min(_inches + 1, 11));
+                  _inchesController.text = '$_inches';
+                },
+                onDec: () {
+                  setState(() => _inches = math.max(_inches - 1, 0));
+                  _inchesController.text = '$_inches';
+                },
+                onTextChange: (v) => _updateFromText(v, 'i'),
               ),
               const SizedBox(height: 14),
               _stepper(
                 label: 'Weight',
-                value: _weightLbs.toStringAsFixed(1),
+                controller: _weightLbsController,
                 unit: 'lbs',
                 icon: Icons.monitor_weight_outlined,
                 color: teal,
-                onInc: () => setState(() => _weightLbs = math.min(_weightLbs + 1, 660)),
-                onDec: () => setState(() => _weightLbs = math.max(_weightLbs - 1, 44)),
+                onInc: () {
+                  setState(() => _weightLbs = math.min(_weightLbs + 1, 660));
+                  _weightLbsController.text = _weightLbs.toStringAsFixed(1);
+                },
+                onDec: () {
+                  setState(() => _weightLbs = math.max(_weightLbs - 1, 44));
+                  _weightLbsController.text = _weightLbs.toStringAsFixed(1);
+                },
+                onTextChange: (v) => _updateFromText(v, 'wl'),
               ),
             ],
 

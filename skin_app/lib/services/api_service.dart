@@ -472,4 +472,40 @@ class ApiService {
     );
     return json.decode(response.body);
   }
+
+  // --- QUIZ METHODS ---
+  static Future<Map<String, dynamic>> saveQuizResult(Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('$serviceBase/quiz/results'),
+      headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
+      body: json.encode(data),
+    );
+    return json.decode(response.body);
+  }
+
+  static Future<List<dynamic>> getUserQuizResults(String uid) async {
+    final response = await http.get(Uri.parse('$serviceBase/quiz/results/$uid'), headers: {'Bypass-Tunnel-Reminder': 'true'});
+    return response.statusCode == 200 ? json.decode(response.body) : [];
+  }
+
+  static Future<List<dynamic>> getQuizQuestions(String? category) async {
+    String url = '$serviceBase/quiz/questions';
+    if (category != null) url += '?category=$category';
+    final response = await http.get(Uri.parse(url), headers: {'Bypass-Tunnel-Reminder': 'true'});
+    return response.statusCode == 200 ? json.decode(response.body) : [];
+  }
+
+  static Future<Map<String, dynamic>> addQuizQuestion(Map<String, dynamic> qData) async {
+    final response = await http.post(
+      Uri.parse('$serviceBase/quiz/questions'),
+      headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
+      body: json.encode(qData),
+    );
+    return json.decode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> deleteQuizQuestion(String qid) async {
+    final response = await http.delete(Uri.parse('$serviceBase/quiz/questions/$qid'), headers: {'Bypass-Tunnel-Reminder': 'true'});
+    return json.decode(response.body);
+  }
 }

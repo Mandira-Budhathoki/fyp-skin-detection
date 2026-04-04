@@ -103,9 +103,9 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
   List<Map<String, dynamic>> get _features => [
     {
       'title': 'BMI Calculator',
-      'subtitle': 'Track weight, height & get personalized advice',
+      'subtitle': 'Track weight, height & get health advice',
       'icon': Icons.monitor_weight_outlined,
-      'gradient': [const Color(0xFF7C5CBF), const Color(0xFF5E3E9E)],
+      'gradient': [const Color(0xFF8E6EE0), const Color(0xFF6B48C8)],
       'color': purple,
       'tag': 'cm & ft/in',
       'screen': const BmiScreen(),
@@ -113,9 +113,9 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
     },
     {
       'title': 'Vitality Tracker',
-      'subtitle': 'Sleep, hydration & stress habit scoring',
+      'subtitle': 'Habit scoring for sleep, water & stress',
       'icon': Icons.bolt_rounded,
-      'gradient': [const Color(0xFF3A86FF), const Color(0xFF1D6CE0)],
+      'gradient': [const Color(0xFF4C95FF), const Color(0xFF1D5CC0)],
       'color': blue,
       'tag': 'Live Score',
       'screen': const VitalityScreen(),
@@ -123,9 +123,9 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
     },
     {
       'title': 'Nutrition & Diets',
-      'subtitle': 'Meal plans, superfoods & foods to avoid',
+      'subtitle': 'Meal plans, superfoods & avoidance lists',
       'icon': Icons.restaurant_menu_rounded,
-      'gradient': [const Color(0xFF2A9D8F), const Color(0xFF1A7A6E)],
+      'gradient': [const Color(0xFF38B2AC), const Color(0xFF1E706A)],
       'color': teal,
       'tag': '5 Diet Plans',
       'screen': const DietScreen(),
@@ -133,9 +133,9 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
     },
     {
       'title': 'Health Articles',
-      'subtitle': 'Live PubMed research on skin, wounds & melanoma',
+      'subtitle': 'Live PubMed research on skin & melanoma',
       'icon': Icons.auto_stories_rounded,
-      'gradient': [const Color(0xFFFFB700), const Color(0xFFE09500)],
+      'gradient': [const Color(0xFFFFC107), const Color(0xFFE08E00)],
       'color': gold,
       'tag': 'Real Papers',
       'screen': const ArticlesScreen(),
@@ -143,21 +143,21 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
     },
     {
       'title': 'Health Journal',
-      'subtitle': 'Daily entries, moods, to-do list & calendar',
+      'subtitle': 'Daily entries, moods & wellness calendar',
       'icon': Icons.edit_note_rounded,
-      'gradient': [const Color(0xFFE76F51), const Color(0xFFD4472A)],
+      'gradient': [const Color(0xFFF1846A), const Color(0xFFD4472A)],
       'color': orange,
-      'tag': 'CRUD + Calendar',
+      'tag': 'Calendar',
       'screen': const JournalScreen(),
       'badge': null,
     },
     {
       'title': 'Knowledge Quiz',
-      'subtitle': 'Test yourself on skin, wounds & melanoma',
+      'subtitle': 'Test yourself on skin & wound health',
       'icon': Icons.quiz_rounded,
-      'gradient': [const Color(0xFF1B263B), const Color(0xFF2D3B55)],
+      'gradient': [const Color(0xFF2D3B55), const Color(0xFF0F172A)],
       'color': navy,
-      'tag': '50 Questions',
+      'tag': 'High Score',
       'screen': const QuizScreen(),
       'badge': 'NEW',
     },
@@ -173,11 +173,11 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
       body: FadeTransition(
         opacity: _fadeAnim,
         child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(), // Changed from BouncingScrollPhysics to prevent overscrolling
           slivers: [
             // ── Hero SliverAppBar ──
             SliverAppBar(
-              expandedHeight: 220,
+              expandedHeight: 200, // Reduced from 220 to give more space below
               floating: false,
               pinned: true,
               backgroundColor: navy,
@@ -219,9 +219,9 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.82,
+                  crossAxisSpacing: 10, // Reduced from 12
+                  mainAxisSpacing: 10,   // Reduced from 12
+                  childAspectRatio: 0.77, // Increased from 0.76 for tighter fit
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (_, i) => _buildFeatureCard(_features[i], i),
@@ -263,28 +263,32 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
           Positioned(top: 40, right: 30, child: _decCircle(60, purple, 0.15)),
 
           Padding(
-            padding: EdgeInsets.fromLTRB(20, safeTop + 60, 20, 20),
+            padding: EdgeInsets.fromLTRB(20, safeTop + 50, 20, 10), // Reduced top and bottom padding
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center, // Changed from end to center for stability
               children: [
                 Text('$_greeting, $_userName 👋',
-                    style: const TextStyle(fontSize: 13, color: Colors.white60, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 6),
+                    style: const TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w500)), // Reduced from 13
+                const SizedBox(height: 4), // Reduced from 6
                 const Text('Holistic Health Hub',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5)),
-                const SizedBox(height: 6),
-                const Text('Track, learn, and improve your total wellness in one place.',
-                    style: TextStyle(fontSize: 13, color: Colors.white54, height: 1.4)),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _heroPill(Icons.hub_rounded, '6 Tools'),
-                    const SizedBox(width: 10),
-                    _heroPill(Icons.article_outlined, 'Live Articles'),
-                    const SizedBox(width: 10),
-                    _heroPill(Icons.quiz_rounded, '50 Q&A'),
-                  ],
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5)), // Reduced from 28
+                const SizedBox(height: 4), // Reduced from 6
+                const Text('Track, learn, and improve your wellness.',
+                    maxLines: 1, overflow: TextOverflow.ellipsis, // Added constraints
+                    style: TextStyle(fontSize: 12, color: Colors.white54, height: 1.2)), // Reduced from 13
+                const SizedBox(height: 12), // Reduced from 16
+                SingleChildScrollView( // Added to prevent horizontal overflow just in case
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _heroPill(Icons.hub_rounded, '6 Tools'),
+                      const SizedBox(width: 8),
+                      _heroPill(Icons.article_outlined, 'Articles'),
+                      const SizedBox(width: 8),
+                      _heroPill(Icons.quiz_rounded, 'Quiz'),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -345,15 +349,16 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
     return GestureDetector(
       onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min, // Added to prevent expansion
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: color, size: 20),
+            padding: const EdgeInsets.all(8), // Reduced from 10
+            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: color, size: 18), // Reduced from 20
           ),
-          const SizedBox(height: 6),
-          Text(value, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: color)),
-          Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4), // Reduced from 6
+          Text(value, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: color)), // Reduced from 15
+          Text(label, style: const TextStyle(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.w500)), // Reduced from 10
         ],
       ),
     );
@@ -374,77 +379,119 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
-            BoxShadow(color: color.withOpacity(0.12), blurRadius: 20, offset: const Offset(0, 6)),
+            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4)),
+            BoxShadow(color: color.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10)),
           ],
         ),
-        child: Stack(
-          children: [
-            // Background decoration
-            Positioned(
-              right: -15,
-              bottom: -15,
-              child: Opacity(
-                opacity: 0.06,
-                child: Icon(f['icon'] as IconData, size: 100, color: color),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Icon container
-                  Container(
-                    width: 50, height: 50,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: grad, begin: Alignment.topLeft, end: Alignment.bottomRight),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [BoxShadow(color: grad.first.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4))],
-                    ),
-                    child: Icon(f['icon'] as IconData, color: Colors.white, size: 24),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Text(f['title'], style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: navy, height: 1.2)),
-                  const SizedBox(height: 4),
-                  Text(f['subtitle'],
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500], height: 1.3),
-                      maxLines: 2, overflow: TextOverflow.ellipsis),
-
-                  const Spacer(),
-
-                  // Tag pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(f['tag'], style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            ),
-
-            // Badge (LIVE / NEW)
-            if (badge != null)
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              // Background decoration
               Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: badge == 'LIVE' ? Colors.red : teal,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(badge, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                right: -10,
+                bottom: -10,
+                child: Opacity(
+                  opacity: 0.05,
+                  child: Icon(f['icon'] as IconData, size: 80, color: color),
                 ),
               ),
-          ],
+
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Icon container
+                    Container(
+                      width: 48, height: 48,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: grad,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: grad.last.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          )
+                        ],
+                      ),
+                      child: Icon(f['icon'] as IconData, color: Colors.white, size: 22),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    Text(
+                      f['title'],
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5, color: navy, height: 1.1, letterSpacing: -0.2),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4), // Reduced from 6
+                    Expanded(
+                      child: Text(
+                        f['subtitle'],
+                        style: TextStyle(fontSize: 10.0, color: Colors.grey[600], height: 1.25, fontWeight: FontWeight.w500),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Tag pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: color.withOpacity(0.1)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(width: 4, height: 4, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                          const SizedBox(width: 6),
+                          Text(f['tag'], style: TextStyle(fontSize: 9.5, color: color, fontWeight: FontWeight.w800, letterSpacing: 0.2)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Badge (LIVE / NEW)
+              if (badge != null)
+                Positioned(
+                  top: 14,
+                  right: 14,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: badge == 'LIVE' ? const Color(0xFFFF4D4D) : teal,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (badge == 'LIVE' ? Colors.red : teal).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: Text(
+                      badge,
+                      style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 0.8),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

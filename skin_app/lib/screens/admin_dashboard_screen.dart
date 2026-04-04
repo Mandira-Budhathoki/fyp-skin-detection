@@ -28,7 +28,9 @@ class _C {
 
   static const live    = Color(0xFF22D3A5);
   static const danger  = Color(0xFFFF4D4D);
-
+  static const quiz    = Color(0xFFA78BFA);
+  static const quizD   = Color(0xFF4C1D95);
+  
   static const w70 = Color(0xB3FFFFFF);
   static const w30 = Color(0x4DFFFFFF);
   static const w10 = Color(0x1AFFFFFF);
@@ -581,6 +583,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           onTap: _openSection,
         ),
       ]),
+      const SizedBox(height: 14),
+      Row(children: [
+        _SectionCard(
+          index: 4,
+          icon: Icons.quiz_rounded,
+          title: 'Quiz',
+          count: 0, // Dynamic loading if needed
+          color: _C.quiz,
+          darkColor: _C.quizD,
+          hint: 'Manage quiz\nquestions & bank',
+          emoji: '📝',
+          onTap: _openSection,
+        ),
+        const Spacer(),
+      ]),
     ]);
   }
 
@@ -812,14 +829,16 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
     _C.history,
     _C.users,
     _C.doctors,
+    _C.quiz,
   ];
   static const _tabIcons = [
     Icons.pending_actions_rounded,
     Icons.history_rounded,
     Icons.people_rounded,
     Icons.medical_services_rounded,
+    Icons.quiz_rounded,
   ];
-  static const _tabLabels = ['Pending', 'History', 'Users', 'Doctors'];
+  static const _tabLabels = ['Pending', 'History', 'Users', 'Doctors', 'Questions'];
 
   @override
   void initState() {
@@ -828,10 +847,31 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
     _allAppointments = widget.allAppointments;
     _users = widget.users;
     _doctors = widget.doctors;
+    _loadQuizQuestions();
     _fadeCtrl = AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 280))
       ..forward();
+  }
+
+  List<dynamic> _quizQuestions = [];
+  bool _loadingQuiz = false;
+
+  Future<void> _loadQuizQuestions() async {
+    setState(() => _loadingQuiz = true);
+    try {
+      final qs = await ApiService.getQuizQuestions(null);
+      setState(() => _quizQuestions = qs);
+    } catch (e) { print(e); }
+    setState(() => _loadingQuiz = false);
+  }
+
+  Future<void> _deleteQuizQ(String qid) async {
+    final res = await ApiService.deleteQuizQuestion(qid);
+    if (res['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Question Deleted")));
+      _loadQuizQuestions();
+    }
   }
 
   @override
@@ -882,14 +922,16 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
           ]),
         ),
       ]),
-      floatingActionButton: _selectedIndex == 3
+      floatingActionButton: _selectedIndex == 3 || _selectedIndex == 4
           ? FloatingActionButton.extended(
-              onPressed: () => widget.onShowAddDoctor(context),
-              backgroundColor: _C.doctors,
+              onPressed: () => _selectedIndex == 3 
+                  ? widget.onShowAddDoctor(context) 
+                  : _showAddQuizDialog(),
+              backgroundColor: _selectedIndex == 3 ? _C.doctors : _C.quiz,
               foregroundColor: Colors.white,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Add Specialist',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              label: Text(_selectedIndex == 3 ? 'Add Specialist' : 'Add Question',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             )
           : null,
     );
@@ -967,7 +1009,7 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
         border: Border.all(color: _C.w10),
       ),
       child: Row(
-        children: List.generate(4, (i) {
+        children: List.generate(5, (i) {
           final sel = _selectedIndex == i;
           return Expanded(
             child: Material(
@@ -1023,9 +1065,129 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
         return _buildUserList();
       case 3:
         return _buildDoctorList();
+      case 4:
+        return _buildQuizManager();
       default:
         return const SizedBox();
     }
+  }
+
+  Widget _buildQuizManager() {
+    if (_loadingQuiz) return const Center(child: CircularProgressIndicator(color: _C.quiz));
+    if (_quizQuestions.isEmpty) return const Center(child: Text("No custom questions found", style: TextStyle(color: _C.w30)));
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      itemCount: _quizQuestions.length,
+      itemBuilder: (context, index) {
+        final q = _quizQuestions[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: _C.card, borderRadius: BorderRadius.circular(20), border: Border.all(color: _C.quiz.withOpacity(0.1))),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: _C.quiz.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                child: Text(q['category'] ?? 'General', style: const TextStyle(color: _C.quiz, fontSize: 10, fontWeight: FontWeight.bold)),
+              ),
+              IconButton(icon: const Icon(Icons.delete_outline_rounded, color: _C.danger, size: 20), onPressed: () => _deleteQuizQ(q['id'] ?? q['_id'])),
+            ]),
+            const SizedBox(height: 8),
+            Text(q['question'] ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 8),
+            Text("Correct: ${q['options'][q['correctIndex']]}", style: const TextStyle(color: _C.users, fontSize: 11)),
+          ]),
+        );
+      },
+    );
+  }
+  void _showAddQuizDialog() {
+    final qCtrl = TextEditingController();
+    final opt1 = TextEditingController();
+    final opt2 = TextEditingController();
+    final opt3 = TextEditingController();
+    final opt4 = TextEditingController();
+    final expCtrl = TextEditingController();
+    String category = 'UV & Sun Safety';
+    int correct = 0;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setM) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(color: _C.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+            child: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Text('New Quiz Question', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                _customField(qCtrl, 'Question', Icons.help_outline),
+                _customField(opt1, 'Option 1', Icons.circle_outlined),
+                _customField(opt2, 'Option 2', Icons.circle_outlined),
+                _customField(opt3, 'Option 3', Icons.circle_outlined),
+                _customField(opt4, 'Option 4', Icons.circle_outlined),
+                _customField(expCtrl, 'Explanation (Optional)', Icons.info_outline),
+                const SizedBox(height: 12),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text("Correct Index (0-3):", style: TextStyle(color: Colors.white)),
+                  DropdownButton<int>(
+                    value: correct,
+                    dropdownColor: _C.surface,
+                    items: [0, 1, 2, 3].map((i) => DropdownMenuItem(value: i, child: Text(i.toString(), style: const TextStyle(color: Colors.white)))).toList(),
+                    onChanged: (v) => setM(() => correct = v!),
+                  ),
+                ]),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: _C.quiz, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    onPressed: () async {
+                      if (qCtrl.text.isEmpty || opt1.text.isEmpty || opt2.text.isEmpty) return;
+                      await ApiService.addQuizQuestion({
+                        'category': category,
+                        'question': qCtrl.text,
+                        'options': [opt1.text, opt2.text, opt3.text, opt4.text],
+                        'correctIndex': correct,
+                        'explanation': expCtrl.text
+                      });
+                      Navigator.pop(ctx);
+                      _loadQuizQuestions();
+                    },
+                    child: const Text('Add Question', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _customField(TextEditingController ctrl, String hint, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: ctrl,
+        style: const TextStyle(color: Colors.white, fontSize: 13),
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: _C.quiz, size: 18),
+          hintText: hint,
+          hintStyle: const TextStyle(color: _C.w30),
+          filled: true,
+          fillColor: _C.w06,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        ),
+      ),
+    );
   }
 
   // ── APPOINTMENT LIST (original logic) ───────
