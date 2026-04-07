@@ -15,15 +15,15 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
   List<dynamic> _appointments = [];
   late TabController _tabController;
 
-  // Premium color palette for consistency
-  static const Color deepNavy = Color(0xFF0A1828);
-  static const Color richBurgundy = Color(0xFF8B2635);
-  static const Color warmGold = Color(0xFFD4AF37);
-  static const Color softCream = Color(0xFFFAF9F6);
-  static const Color paleGray = Color(0xFFF5F5F0);
-  static const Color charcoal = Color(0xFF2D3748);
-  static const Color mutedTeal = Color(0xFF1B5B6B);
-  static const Color accentPurple = Color(0xFF6B4C8A);
+  // Premium color palette for consistency (Modern Indigo & Emerald)
+  static const Color primaryIndigo = Color(0xFF4F46E5);
+  static const Color lightIndigo   = Color(0xFFEEF2FF);
+  static const Color textDark      = Color(0xFF1E293B);
+  static const Color textMuted     = Color(0xFF64748B);
+  static const Color bgSurface     = Color(0xFFF8FAFC);
+  static const Color emerald       = Color(0xFF10B981);
+  static const Color amber         = Color(0xFFF59E0B);
+  static const Color rose          = Color(0xFFF43F5E);
 
   @override
   void initState() {
@@ -65,15 +65,15 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
       pageBuilder: (ctx, anim1, anim2) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Cancel Appointment?', style: TextStyle(color: deepNavy, fontWeight: FontWeight.bold)),
+        title: const Text('Cancel Appointment?', style: TextStyle(color: textDark, fontWeight: FontWeight.bold)),
         content: const Text(
           'Are you sure you want to cancel? This action cannot be undone.',
-          style: TextStyle(color: charcoal, height: 1.5),
+          style: TextStyle(color: textMuted, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Keep It', style: TextStyle(color: charcoal.withOpacity(0.6))),
+            child: Text('Keep It', style: TextStyle(color: textMuted)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -127,7 +127,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
     final history = _appointments.where((a) => a['status'] == 'cancelled' || a['status'] == 'rejected').toList();
 
     return Scaffold(
-      backgroundColor: paleGray,
+      backgroundColor: bgSurface,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -135,7 +135,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
         title: const Text(
           'MY VISITS',
           style: TextStyle(
-            color: deepNavy,
+            color: textDark,
             fontSize: 16,
             fontWeight: FontWeight.w900,
             letterSpacing: 2.0,
@@ -147,7 +147,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
             margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: paleGray,
+              color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(16),
             ),
             child: TabBar(
@@ -158,14 +158,14 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: deepNavy.withOpacity(0.05),
+                    color: primaryIndigo.withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              labelColor: deepNavy,
-              unselectedLabelColor: charcoal.withOpacity(0.5),
+              labelColor: primaryIndigo,
+              unselectedLabelColor: textMuted,
               labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, letterSpacing: 0.5),
               tabs: const [
                 Tab(text: "UPCOMING"),
@@ -176,7 +176,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: accentPurple))
+          ? const Center(child: CircularProgressIndicator(color: primaryIndigo))
           : TabBarView(
               controller: _tabController,
               children: [
@@ -200,18 +200,18 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: deepNavy.withOpacity(0.04),
+                    color: primaryIndigo.withOpacity(0.04),
                     blurRadius: 40,
                   ),
                 ],
               ),
-              child: Icon(Icons.event_note_outlined, size: 48, color: charcoal.withOpacity(0.2)),
+              child: Icon(Icons.event_note_outlined, size: 48, color: textMuted.withOpacity(0.2)),
             ),
             const SizedBox(height: 24),
             Text(
               isUpcoming ? "No scheduled visits" : "No past history",
               style: TextStyle(
-                color: charcoal.withOpacity(0.4),
+                color: textMuted.withOpacity(0.4),
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.5,
@@ -244,9 +244,9 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: deepNavy.withOpacity(0.06),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: primaryIndigo.withOpacity(0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
@@ -260,13 +260,13 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
                       padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: paleGray, width: 2),
+                        border: Border.all(color: const Color(0xFFF1F5F9), width: 2),
                       ),
                       child: CircleAvatar(
                         radius: 28,
                         backgroundImage: AssetImage(img),
-                        backgroundColor: paleGray,
-                        onBackgroundImageError: (_, __) => const Icon(Icons.person, color: charcoal),
+                        backgroundColor: const Color(0xFFF1F5F9),
+                        onBackgroundImageError: (_, __) => const Icon(Icons.person, color: textDark),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -277,7 +277,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
                           Text(
                             docName,
                             style: const TextStyle(
-                              color: deepNavy,
+                              color: textDark,
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                             ),
@@ -285,8 +285,8 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
                           const SizedBox(height: 2),
                           Text(
                             spec.toUpperCase(),
-                            style: TextStyle(
-                              color: mutedTeal,
+                            style: const TextStyle(
+                              color: primaryIndigo,
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.8,
@@ -303,16 +303,16 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: softCream.withOpacity(0.5),
+                  color: const Color(0xFFF1F5F9).withOpacity(0.5),
                   borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
                 ),
                 child: Column(
                   children: [
                     Row(
                       children: [
-                        _buildInfoItem(Icons.calendar_today_rounded, date, charcoal),
+                        _buildInfoItem(Icons.calendar_today_rounded, date, primaryIndigo),
                         const Spacer(),
-                        _buildInfoItem(Icons.access_time_filled_rounded, time, charcoal),
+                        _buildInfoItem(Icons.access_time_filled_rounded, time, textDark),
                       ],
                     ),
                     if (apt['adminNote'] != null && apt['adminNote'].toString().isNotEmpty) ...[
@@ -402,23 +402,23 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
     IconData icon;
     switch (status) {
       case 'approved':
-        color = Colors.green.shade600;
+        color = emerald;
         icon = Icons.check_circle_rounded;
         break;
       case 'pending':
-        color = warmGold;
+        color = amber;
         icon = Icons.hourglass_empty_rounded;
         break;
       case 'rejected':
-        color = Colors.red.shade600;
+        color = rose;
         icon = Icons.cancel_rounded;
         break;
       case 'cancelled':
-        color = charcoal.withOpacity(0.4);
+        color = textMuted;
         icon = Icons.do_not_disturb_on_rounded;
         break;
       default:
-        color = charcoal;
+        color = textDark;
         icon = Icons.info_rounded;
     }
 

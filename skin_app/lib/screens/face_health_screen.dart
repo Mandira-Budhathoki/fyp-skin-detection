@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'dart:math';
 import 'chatbot_screen.dart';
 import 'appointment_screen.dart';
 import 'face_health_results_screen.dart';
@@ -9,7 +8,7 @@ import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FaceHealthScreen extends StatefulWidget {
-  const FaceHealthScreen({Key? key}) : super(key: key);
+  const FaceHealthScreen({super.key});
 
   @override
   State<FaceHealthScreen> createState() => _FaceHealthScreenState();
@@ -113,79 +112,91 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 6),
-
-                  // Subtitle
                   const Text(
-                    'Analyze your skin type, acne, spots &\noverall vitality with our AI ensemble.',
+                    'Precision Face Diagnostics',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 32,
+                      color: Color(0xFF0F172A),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Analyze skin vitality, facial structure, and\nemotional resonance with clinical-grade AI.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Color(0xFF57606F),
+                      color: Color(0xFF64748B),
                       fontWeight: FontWeight.w500,
                       height: 1.5,
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 32),
 
                   // Model badges
-                  _buildModelBadges(),
+                  _buildModelBadgesView(),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 32),
 
                   // Camera / Gallery
                   Row(
                     children: [
                       Expanded(
-                        child: _buildInputCard(
-                          icon: Icons.face_6_rounded,
-                          title: 'Selfie',
-                          subtitle: 'Front Camera',
-                          color: const Color(0xFFE87EA1),
+                        child: _buildPremiumInputCard(
+                          icon: Icons.camera_front_rounded,
+                          title: 'Live Scan',
+                          subtitle: 'Selfie Mode',
+                          color: const Color(0xFF4F46E5),
                           onTap: () => _pickImage(ImageSource.camera),
                         ),
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 16),
                       Expanded(
-                        child: _buildInputCard(
-                          icon: Icons.photo_library_rounded,
-                          title: 'Gallery',
-                          subtitle: 'From Library',
-                          color: const Color(0xFF7C5CBF),
+                        child: _buildPremiumInputCard(
+                          icon: Icons.photo_size_select_actual_rounded,
+                          title: 'Import',
+                          subtitle: 'Gallery',
+                          color: const Color(0xFFEC4899),
                           onTap: () => _pickImage(ImageSource.gallery),
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 20),
-
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 40),
 
                   // Action buttons
-                  const Text(
-                    'GET PROFESSIONAL HELP',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.5,
-                      color: Color(0xFF1B263B),
-                    ),
+                  Row(
+                    children: [
+                      const Icon(Icons.medical_services_rounded, size: 14, color: Color(0xFF94A3B8)),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'PROFESSIONAL SUPPORT',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 16),
                   _buildActionBtn(
-                    icon: Icons.calendar_today_rounded,
-                    title: 'Book Appointment',
-                    color: const Color(0xFF7C5CBF),
+                    icon: Icons.calendar_month_rounded,
+                    title: 'Book Dermatologist',
+                    color: const Color(0xFF4F46E5),
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const AppointmentScreen())),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   _buildActionBtn(
-                    icon: Icons.smart_toy_outlined,
-                    title: 'Consult AI Chatbot',
-                    color: const Color(0xFF2A9D8F),
+                    icon: Icons.chat_bubble_rounded,
+                    title: 'AI Health Assistant',
+                    color: const Color(0xFF0D9488),
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -193,22 +204,31 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
                   // Disclaimer
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.info_outline_rounded,
-                          size: 12, color: Color(0xFF4A5568)),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Non-medical AI analysis. Consult a specialist.',
-                        style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-                      ),
-                    ],
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0).withOpacity(0.5)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.gpp_maybe_rounded,
+                            size: 14, color: Color(0xFF94A3B8)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'AI-assisted screening only. Not a medical diagnosis.',
+                            style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -218,58 +238,59 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
     );
   }
 
-  Widget _buildModelBadges() {
+  Widget _buildModelBadgesView() {
     final models = [
-      {'label': 'Skin Type', 'icon': '🧴'},
-      {'label': 'Acne', 'icon': '🫛'},
-      {'label': 'Spots', 'icon': '🎯'},
-      {'label': 'Inflammation', 'icon': '🔥'},
-      {'label': 'Face Shape', 'icon': '📐'},
-      {'label': 'Expression', 'icon': '😊'},
-      {'label': 'Health Info', 'icon': '🔬'},
+      {'label': 'Skin Type', 'icon': Icons.water_drop_rounded, 'color': const Color(0xFF6366F1)},
+      {'label': 'Acne', 'icon': Icons.face_retouching_natural_rounded, 'color': const Color(0xFFEC4899)},
+      {'label': 'Spots', 'icon': Icons.center_focus_strong_rounded, 'color': const Color(0xFF8B5CF6)},
+      {'label': 'Inflammation', 'icon': Icons.local_fire_department_rounded, 'color': const Color(0xFFEF4444)},
+      {'label': 'Face Shape', 'icon': Icons.architecture_rounded, 'color': const Color(0xFF10B981)},
+      {'label': 'Expression', 'icon': Icons.emoji_emotions_rounded, 'color': const Color(0xFFF59E0B)},
+      {'label': 'Gender', 'icon': Icons.person_search_rounded, 'color': const Color(0xFF3B82F6)},
     ];
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15)],
-        border: Border.all(color: const Color(0xFFE87EA1).withOpacity(0.1)),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 30, offset: const Offset(0, 10))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'ANALYZES WITH 7 AI MODELS',
+            'DIAGNOSTIC ENSEMBLE',
             style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
               letterSpacing: 1.5,
-              color: Color(0xFFE87EA1),
+              color: Color(0xFF64748B),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Wrap(
             spacing: 8,
-            runSpacing: 8,
+            runSpacing: 10,
             children: models
                 .map<Widget>((m) => Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: const Color(0xFFE87EA1).withOpacity(0.1)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: (m['color'] as Color).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(m['icon'] as IconData, size: 12, color: m['color'] as Color),
+                        const SizedBox(width: 6),
+                        Text(
+                          m['label'] as String,
+                          style: TextStyle(color: (m['color'] as Color), fontSize: 11, fontWeight: FontWeight.w900),
                         ),
-                        child: Text(
-                          '${m['icon']}  ${m['label']}',
-                          style: const TextStyle(
-                              color: Color(0xFF1B263B),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700),
-                        ),
-                    ))
+                      ],
+                    ),
+                  ))
                 .toList(),
           ),
         ],
@@ -277,56 +298,7 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
     );
   }
 
-  Widget _buildTipsCard() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'PHOTO TIPS',
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.5,
-              color: Color(0xFF4A90A4),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildTip(Icons.light_mode_outlined, 'Bright Light'),
-              _buildTip(Icons.face_outlined, 'No Makeup'),
-              _buildTip(Icons.remove_red_eye_outlined, 'No Glasses'),
-              _buildTip(Icons.center_focus_strong_outlined, 'Face Only'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTip(IconData icon, String label) {
-    return Column(
-      children: [
-        Icon(icon, size: 16, color: const Color(0xFF4A90A4)),
-        const SizedBox(height: 4),
-        Text(label,
-            style: const TextStyle(
-                fontSize: 10,
-                color: Color(0xFF1B263B),
-                fontWeight: FontWeight.w700)),
-      ],
-    );
-  }
-
-  Widget _buildInputCard({
+  Widget _buildPremiumInputCard({
     required IconData icon,
     required String title,
     required String subtitle,
@@ -335,38 +307,38 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> {
   }) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
-      elevation: 2,
-      shadowColor: color.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(32),
+      elevation: 0,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(32),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 22),
+          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: color.withOpacity(0.1)),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: [BoxShadow(color: color.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 8))],
           ),
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 28),
+                child: Icon(icon, color: color, size: 24),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text(title,
                   style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF1B263B))),
+                      color: Color(0xFF0F172A))),
               const SizedBox(height: 4),
               Text(subtitle,
                   style: const TextStyle(
-                      fontSize: 12, color: Color(0xFF57606F))),
+                      fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
             ],
           ),
         ),

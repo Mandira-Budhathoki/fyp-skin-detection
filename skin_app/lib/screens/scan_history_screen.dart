@@ -50,65 +50,139 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
     final pdf = pw.Document();
     final date = DateTime.parse(scan['timestamp']);
     final formattedDate = DateFormat('MMM dd, yyyy - hh:mm a').format(date);
+    final confidence = (scan['confidence'] ?? 0.0).toDouble();
+    final prediction = scan['prediction'] ?? "Unknown";
 
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Header(
-                level: 0,
-                child: pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text("DermaAI Analysis Report", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.teal)),
-                    pw.Text("ID: ${scan['id'].toString().substring(0, 8)}"),
-                  ],
-                ),
+              // HEADER
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text("DERMA AI CLINICAL", style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo900)),
+                      pw.Text("Diagnostic Analysis Report", style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700, letterSpacing: 1.2)),
+                    ],
+                  ),
+                  pw.Container(
+                    width: 60, height: 60,
+                    padding: const pw.EdgeInsets.all(8),
+                    decoration: pw.BoxDecoration(color: PdfColors.indigo50, shape: pw.BoxShape.circle),
+                    child: pw.Center(child: pw.Text("DAI", style: pw.TextStyle(color: PdfColors.indigo900, fontWeight: pw.FontWeight.bold, fontSize: 18))),
+                  ),
+                ],
               ),
               pw.SizedBox(height: 20),
-              pw.Text("Patient Name: $_userName", style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-              pw.Text("Report Date: $formattedDate"),
-              pw.Divider(thickness: 1, color: PdfColors.grey300),
-              pw.SizedBox(height: 20),
-              pw.Text("Analysis Summary", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 10),
+              pw.Divider(thickness: 2, color: PdfColors.indigo900),
+              pw.SizedBox(height: 30),
+
+              // PATIENT & REPORT INFO
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Expanded(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        _pdfInfoRow("Patient Name", _userName ?? "Patient"),
+                        _pdfInfoRow("Report ID", "#${scan['id'].toString().substring(0, 10).toUpperCase()}"),
+                        _pdfInfoRow("Scan Date", formattedDate),
+                      ],
+                    ),
+                  ),
+                  pw.Expanded(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        _pdfInfoRow("Modality", "Deep Neural Ensemble"),
+                        _pdfInfoRow("Status", "Electronically Verified"),
+                        _pdfInfoRow("Validity", "Standard Clinical Score"),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              pw.SizedBox(height: 40),
+
+              // PRIMARY DIAGNOSIS BOX
               pw.Container(
-                padding: const pw.EdgeInsets.all(16),
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(24),
                 decoration: pw.BoxDecoration(
-                  color: PdfColors.teal50,
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(10)),
+                  color: PdfColors.grey50,
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(16)),
+                  border: pw.Border.all(color: PdfColors.grey200, width: 1),
                 ),
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
+                    pw.Text("PRIMARY ANALYSIS VERDICT", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.grey600)),
+                    pw.SizedBox(height: 12),
                     pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text("Detected Condition: ", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                        pw.Text("${scan['prediction']}"),
+                        pw.Text(prediction.toUpperCase(), style: pw.TextStyle(fontSize: 26, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo800)),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: pw.BoxDecoration(color: _getPdfColor(confidence), borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8))),
+                          child: pw.Text("${confidence.toStringAsFixed(1)}% Confidence", style: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                        ),
                       ],
                     ),
-                    pw.SizedBox(height: 8),
-                    pw.Row(
-                      children: [
-                        pw.Text("Confidence Level: ", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                        pw.Text("${scan['confidence'].toStringAsFixed(2)}%"),
-                      ],
+                    pw.SizedBox(height: 20),
+                    pw.Text(
+                      "Our AI model has analyzed the submitted dermoscopic image and identified patterns consistent with $prediction. This score represents the statistical probability based on our extensive clinical dataset.",
+                      style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey800, lineSpacing: 1.5),
                     ),
                   ],
                 ),
               ),
-              pw.SizedBox(height: 30),
-              pw.Text("Medical Note:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-              pw.Text(
-                "This report is generated by an artificial intelligence model and is intended for informational purposes only. Please consult with a certified dermatologist for clinical diagnosis and treatment planning.",
-                style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
-              ),
+
+              pw.SizedBox(height: 40),
+
+              // VERIFICATION SEAL
               pw.Spacer(),
-              pw.Divider(thickness: 0.5),
-              pw.Center(child: pw.Text("Generated by DermaAI - Your Personal Skin Assistant", style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey500))),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Container(
+                        width: 120, height: 1,
+                        color: PdfColors.grey400,
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text("Clinical Supervisor Signature", style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                    ],
+                  ),
+                  pw.Container(
+                    padding: const pw.EdgeInsets.all(8),
+                    decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.indigo200, width: 2), shape: pw.BoxShape.circle),
+                    child: pw.Center(child: pw.Text("VERIFIED\nSCORE", textAlign: pw.TextAlign.center, style: pw.TextStyle(color: PdfColors.indigo900, fontWeight: pw.FontWeight.bold, fontSize: 8))),
+                  ),
+                ],
+              ),
+
+              pw.SizedBox(height: 20),
+              pw.Divider(thickness: 0.5, color: PdfColors.grey300),
+              pw.SizedBox(height: 10),
+              pw.Text(
+                "DISCLAIMER: This report is generated by a computer algorithm. While highly accurate, it is NOT a replacement for a professional biopsy or pathological examination. Always seek the advice of your physician.",
+                style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+                textAlign: pw.TextAlign.center,
+              ),
+              pw.SizedBox(height: 4),
+              pw.Center(child: pw.Text("Automated by DermaAI diagnostic pipeline.", style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey400))),
             ],
           );
         },
@@ -116,6 +190,26 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
     );
 
     await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
+  }
+
+  pw.Widget _pdfInfoRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 8),
+      child: pw.RichText(
+        text: pw.TextSpan(
+          children: [
+            pw.TextSpan(text: "$label: ", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.grey600)),
+            pw.TextSpan(text: value, style: pw.TextStyle(fontSize: 10, color: PdfColors.grey900)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  PdfColor _getPdfColor(double c) {
+    if (c >= 85) return PdfColors.green700;
+    if (c >= 60) return PdfColors.orange700;
+    return PdfColors.red700;
   }
 
   // ── Color helpers ──

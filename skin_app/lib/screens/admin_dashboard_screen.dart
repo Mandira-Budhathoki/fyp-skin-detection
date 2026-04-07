@@ -1110,61 +1110,121 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
     final opt3 = TextEditingController();
     final opt4 = TextEditingController();
     final expCtrl = TextEditingController();
-    String category = 'UV & Sun Safety';
+    String category = 'Skin Care';
     int correct = 0;
+
+    final cats = ['Skin Care', 'Wound Care', 'Melanoma', 'Nutrition', 'UV & Sun Safety'];
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setM) => Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(color: _C.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-            child: SingleChildScrollView(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Text('New Quiz Question', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                _customField(qCtrl, 'Question', Icons.help_outline),
+        builder: (ctx, setM) => Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+            left: 24, right: 24, top: 24
+          ),
+          decoration: const BoxDecoration(
+            color: _C.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32))
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: _C.w10, borderRadius: BorderRadius.circular(2)))),
+                const SizedBox(height: 20),
+                const Center(child: Text('Add New Question', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900))),
+                const SizedBox(height: 24),
+                
+                const Text("Select Category", style: TextStyle(color: _C.w70, fontSize: 12, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(color: _C.w06, borderRadius: BorderRadius.circular(14)),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: category,
+                      dropdownColor: _C.surface,
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: _C.quiz),
+                      items: cats.map((c) => DropdownMenuItem(
+                        value: c, 
+                        child: Text(c, style: const TextStyle(color: Colors.white, fontSize: 14))
+                      )).toList(),
+                      onChanged: (v) => setM(() => category = v!),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                _customField(qCtrl, 'Enter Question', Icons.help_outline),
                 _customField(opt1, 'Option 1', Icons.circle_outlined),
                 _customField(opt2, 'Option 2', Icons.circle_outlined),
                 _customField(opt3, 'Option 3', Icons.circle_outlined),
                 _customField(opt4, 'Option 4', Icons.circle_outlined),
                 _customField(expCtrl, 'Explanation (Optional)', Icons.info_outline),
+                
                 const SizedBox(height: 12),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  const Text("Correct Index (0-3):", style: TextStyle(color: Colors.white)),
-                  DropdownButton<int>(
-                    value: correct,
-                    dropdownColor: _C.surface,
-                    items: [0, 1, 2, 3].map((i) => DropdownMenuItem(value: i, child: Text(i.toString(), style: const TextStyle(color: Colors.white)))).toList(),
-                    onChanged: (v) => setM(() => correct = v!),
-                  ),
-                ]),
-                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Correct Answer Index:", style: TextStyle(color: _C.w70, fontSize: 13, fontWeight: FontWeight.bold)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(color: _C.w06, borderRadius: BorderRadius.circular(12)),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          value: correct,
+                          dropdownColor: _C.surface,
+                          icon: const Icon(Icons.check_circle_rounded, color: _C.live, size: 18),
+                          items: [0, 1, 2, 3].map((i) => DropdownMenuItem(
+                            value: i, 
+                            child: Text('Option ${i+1}', style: const TextStyle(color: Colors.white, fontSize: 13))
+                          )).toList(),
+                          onChanged: (v) => setM(() => correct = v!),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: 54,
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: _C.quiz, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _C.quiz,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 8,
+                      shadowColor: _C.quiz.withOpacity(0.4),
+                    ),
                     onPressed: () async {
-                      if (qCtrl.text.isEmpty || opt1.text.isEmpty || opt2.text.isEmpty) return;
-                      await ApiService.addQuizQuestion({
+                      if (qCtrl.text.isEmpty || opt1.text.isEmpty || opt2.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill at least the question and 2 options")));
+                        return;
+                      }
+                      HapticFeedback.mediumImpact();
+                      final res = await ApiService.addQuizQuestion({
                         'category': category,
                         'question': qCtrl.text,
-                        'options': [opt1.text, opt2.text, opt3.text, opt4.text],
+                        'options': [opt1.text, opt2.text, opt3.text.isEmpty ? 'N/A' : opt3.text, opt4.text.isEmpty ? 'N/A' : opt4.text],
                         'correctIndex': correct,
                         'explanation': expCtrl.text
                       });
-                      Navigator.pop(ctx);
-                      _loadQuizQuestions();
+                      if (res['success']) {
+                        Navigator.pop(ctx);
+                        _loadQuizQuestions();
+                      }
                     },
-                    child: const Text('Add Question', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: const Text('SAVE QUESTION', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 1.2)),
                   ),
                 ),
-              ]),
+                const SizedBox(height: 12),
+              ],
             ),
           ),
         ),
@@ -1387,26 +1447,35 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
 
   Widget _infoChip(IconData icon, String label, Color color) {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(9),
         border: Border.all(color: color.withOpacity(0.2)),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 12, color: color),
-        const SizedBox(width: 5),
-        Text(label,
-            style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.bold,
-                fontSize: 11)),
-      ]),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 5),
+          Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11)),
+        ],
+      ),
     );
   }
 
-  // ── USER LIST (original logic) ───────────────
+  Widget _tag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(text, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900)),
+    );
+  }
+
   Widget _buildUserList() {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
@@ -1416,105 +1485,74 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
         final user = _users[index];
         final name = user['name'] ?? 'User';
         final isFrozen = user['isFrozen'] ?? false;
+        final userId = user['_id'] ?? user['id'];
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(
-              horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: _C.card,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _C.users.withOpacity(0.15)),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: _C.w10),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
           ),
           child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    colors: isFrozen
-                        ? [
-                            const Color(0xFF2D3748),
-                            const Color(0xFF4A5568)
-                          ]
-                        : [
-                            const Color(0xFF059669),
-                            const Color(0xFF34EFA8)
-                          ]),
-                borderRadius: BorderRadius.circular(14),
+            children: [
+              Container(
+                width: 48, height: 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isFrozen 
+                      ? [const Color(0xFF64748B), const Color(0xFF334155)] 
+                      : [const Color(0xFF00D1FF), const Color(0xFF007BFF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: isFrozen ? null : [BoxShadow(color: const Color(0xFF00D1FF).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                ),
+                child: const Icon(Icons.person_rounded, color: Colors.white, size: 24),
               ),
-              child: const Icon(Icons.person_rounded,
-                  color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                Text(name,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        fontSize: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 2),
-                Text(user['email'] ?? '',
-                    style: const TextStyle(
-                        fontSize: 11, color: _C.w30),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-              ]),
-            ),
-            const SizedBox(width: 6),
-            // fixed-width trailing — NO OVERFLOW
-            SizedBox(
-              width: 72,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    isFrozen ? 'PASSIVE' : 'ACTIVE',
-                    style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: isFrozen
-                            ? _C.danger
-                            : _C.users,
-                        letterSpacing: 0.5),
-                  ),
-                  Transform.scale(
-                    scale: 0.72,
-                    alignment: Alignment.center,
-                    child: Switch(
-                      value: !isFrozen,
-                      onChanged: (val) async {
-                         await widget.onToggleUser(user['_id'] ?? user['id']);
-                         _reload();
-                      },
-                      activeColor: _C.users,
-                      inactiveThumbColor: _C.danger,
-                      activeTrackColor:
-                          _C.users.withOpacity(0.25),
-                      inactiveTrackColor:
-                          _C.danger.withOpacity(0.2),
-                      materialTapTargetSize:
-                          MaterialTapTargetSize.shrinkWrap,
+                    Text(name, style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 16)),
+                    const SizedBox(height: 4),
+                    Text(user['email'] ?? '', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _tag("🔥 ${user['currentStreak'] ?? 0}d", const Color(0xFFFF9F1C)),
+                        const SizedBox(width: 6),
+                        _tag("📸 ${user['totalScans'] ?? 0} scans", const Color(0xFF00D1FF)),
+                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ]),
+              _StatusToggle(
+                isActive: !isFrozen,
+                activeLabel: 'ACTIVE',
+                passiveLabel: 'PASSIVE',
+                onChanged: (val) async {
+                  HapticFeedback.lightImpact();
+                  setState(() => user['isFrozen'] = !val);
+                  try {
+                    await widget.onToggleUser(userId);
+                  } catch (e) {
+                    setState(() => user['isFrozen'] = val);
+                  }
+                },
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-  // ── DOCTOR LIST (original logic) ─────────────
   Widget _buildDoctorList() {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
@@ -1523,104 +1561,66 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
       itemBuilder: (context, index) {
         final doc = _doctors[index];
         final isActive = doc['isActive'] ?? true;
+        final docId = doc['_id'] ?? doc['id'];
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(
-              horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: _C.card,
-            borderRadius: BorderRadius.circular(20),
-            border:
-                Border.all(color: _C.doctors.withOpacity(0.15)),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: _C.w10),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
           ),
           child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    colors: isActive
-                        ? [
-                            const Color(0xFFB91C1C),
-                            const Color(0xFFFF6B6B)
-                          ]
-                        : [
-                            const Color(0xFF2D3748),
-                            const Color(0xFF4A5568)
-                          ]),
-                borderRadius: BorderRadius.circular(14),
+            children: [
+              Container(
+                width: 48, height: 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isActive 
+                      ? [const Color(0xFFBD00FF), const Color(0xFF6A00FF)] 
+                      : [const Color(0xFF64748B), const Color(0xFF334155)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: !isActive ? null : [BoxShadow(color: const Color(0xFFBD00FF).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                ),
+                child: const Icon(Icons.medical_services_rounded, color: Colors.white, size: 22),
               ),
-              child: const Icon(Icons.medical_services_rounded,
-                  color: Colors.white, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                Text(doc['name'],
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        fontSize: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 2),
-                Text(doc['specialization'] ?? '',
-                    style: const TextStyle(
-                        fontSize: 11, color: _C.w30),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-              ]),
-            ),
-            const SizedBox(width: 6),
-            // fixed-width trailing — NO OVERFLOW
-            SizedBox(
-              width: 72,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    isActive ? 'ACTIVE' : 'PASSIVE',
-                    style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: isActive
-                            ? _C.doctors
-                            : _C.danger,
-                        letterSpacing: 0.5),
-                  ),
-                  Transform.scale(
-                    scale: 0.72,
-                    alignment: Alignment.center,
-                    child: Switch(
-                      value: isActive,
-                      onChanged: (val) async {
-                         await widget.onToggleDoctor(doc['_id'] ?? doc['id']);
-                         _reload();
-                      },
-                      activeColor: _C.doctors,
-                      inactiveThumbColor: _C.danger,
-                      activeTrackColor:
-                          _C.doctors.withOpacity(0.25),
-                      inactiveTrackColor:
-                          _C.danger.withOpacity(0.2),
-                      materialTapTargetSize:
-                          MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                ],
+                    Text(doc['name'], style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 16)),
+                    const SizedBox(height: 4),
+                    Text(doc['specialization'] ?? '', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                  ],
+                ),
               ),
-            ),
-          ]),
+              _StatusToggle(
+                isActive: isActive,
+                activeLabel: 'ACTIVE',
+                passiveLabel: 'PASSIVE',
+                onChanged: (val) async {
+                  HapticFeedback.lightImpact();
+                  setState(() => doc['isActive'] = val);
+                  try {
+                    await widget.onToggleDoctor(docId);
+                  } catch (e) {
+                    setState(() => doc['isActive'] = !val);
+                  }
+                },
+              ),
+            ],
+          ),
         );
       },
     );
   }
+
   void _showApproveDialog(dynamic apt) {
     final noteCtrl = TextEditingController();
     showDialog(
@@ -1714,7 +1714,6 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
       ),
     );
   }
-
 
   void _showCancelDialog(dynamic apt) {
     showDialog(
@@ -1923,6 +1922,84 @@ class _TypewriterTextState extends State<_TypewriterText> {
         maxLines: 2,
         overflow: TextOverflow.clip,
       );
+}
+
+class _StatusToggle extends StatelessWidget {
+  final bool isActive;
+  final String activeLabel;
+  final String passiveLabel;
+  final ValueChanged<bool> onChanged;
+
+  const _StatusToggle({
+    required this.isActive,
+    required this.activeLabel,
+    required this.passiveLabel,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Standard Azure/Slate theme
+    final themeColor = isActive 
+        ? (activeLabel == 'ACTIVE' ? const Color(0xFF00D1FF) : const Color(0xFFBD00FF))
+        : const Color(0xFF94A3B8);
+
+    return GestureDetector(
+      onTap: () => onChanged(!isActive),
+      child: Container(
+        width: 64, // Bigger hit area
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              isActive ? activeLabel : passiveLabel,
+              style: TextStyle(
+                fontSize: 10, 
+                fontWeight: FontWeight.w900, 
+                letterSpacing: 1.0,
+                color: themeColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: 54,
+              height: 28,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: themeColor.withOpacity(0.12),
+                border: Border.all(
+                  color: themeColor.withOpacity(0.4),
+                  width: 1.5,
+                ),
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutBack,
+                alignment: isActive ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.4),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────

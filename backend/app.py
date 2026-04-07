@@ -11,7 +11,8 @@ from melanoma_analyzer import MelanomaAnalyzer
 from acne_analyzer import AcneAnalyzer
 from face_health_analyzer import FaceHealthAnalyzer
 from wound_analyzer import wound_engine
-from appointment_models import ScanHistory
+from appointment_models import ScanHistory, User
+from datetime import datetime, timedelta
 
 # Create Blueprint
 image_bp = Blueprint('image_bp', __name__)
@@ -43,6 +44,36 @@ def get_user_id(req):
         except: return None
     return None
 
+def update_user_scans(user_id):
+    """Increments total scans and updates daily streak"""
+    try:
+        user = User.objects(id=user_id).first()
+        if not user: return
+        
+        now = datetime.utcnow()
+        user.totalScans += 1
+        
+        # Streak logic
+        if user.lastScanDate:
+            last = user.lastScanDate
+            diff = (now.date() - last.date()).days
+            
+            if diff == 1:
+                # Consecutive day: Increment streak
+                user.currentStreak += 1
+            elif diff > 1:
+                # Missed a day: Reset streak to 1
+                user.currentStreak = 1
+            # If diff == 0, they scanned today already, keep current streak
+        else:
+            # First scan ever
+            user.currentStreak = 1
+            
+        user.lastScanDate = now
+        user.save()
+    except Exception as e:
+        print(f"[ENGAGEMENT ERROR] Failed to update user scans: {e}")
+
 @image_bp.route('/analyze', methods=['POST'])
 @image_bp.route('/analyze/melanoma', methods=['POST'])
 def analyze_melanoma():
@@ -72,6 +103,7 @@ def analyze_melanoma():
                 imagePath=filename
             )
             scan.save()
+            update_user_scans(user_id)
 
         return jsonify(result), 200
 
@@ -123,6 +155,7 @@ def analyze_acne():
                 imagePath=filename
             )
             scan.save()
+            update_user_scans(user_id)
 
         return jsonify(result), 200
 
@@ -183,6 +216,7 @@ def analyze_face_health():
                 imagePath=filename
             )
             scan.save()
+            update_user_scans(user_id)
 
         return jsonify(result), 200
 
@@ -235,6 +269,7 @@ def analyze_face_health_stream():
                             imagePath=filename
                         )
                         scan.save()
+                        update_user_scans(user_id)
                     
                     yield json.dumps(update) + "\n"
                 else:
@@ -325,6 +360,7 @@ def analyze_wound():
                 imagePath=filename
             )
             scan.save()
+            update_user_scans(user_id)
 
         return jsonify(result), 200
 

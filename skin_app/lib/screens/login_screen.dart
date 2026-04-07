@@ -120,6 +120,9 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('userId', userId);
         await prefs.setString('userName', name);
         await prefs.setString('userEmail', emailRes);
+        await prefs.setInt('totalScans', result['user']['totalScans'] ?? 0);
+        await prefs.setInt('currentStreak', result['user']['currentStreak'] ?? 0);
+        await prefs.setString('lastScanDate', result['user']['lastScanDate'] ?? '');
 
         _showSnack(
           result['message'] ?? 'Logged in successfully!',

@@ -49,7 +49,10 @@ class _DashboardScreenState extends State<DashboardScreen>
   late Animation<double>   _fadeAnimation;
   List<Map<String, dynamic>> _upcomingAppointments = [];
   String _userName = 'User';
+  int _totalScans = 0;
+  int _currentStreak = 0;
   bool _notifDismissed = false;
+  bool _notificationsEnabled = true;
 
   @override
   void initState() {
@@ -74,13 +77,43 @@ class _DashboardScreenState extends State<DashboardScreen>
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('userToken');
     final name  = prefs.getString('userName');
-    if (mounted) setState(() => _userName = name ?? 'User');
+    
+    if (mounted) {
+      setState(() {
+        _userName = name ?? 'User';
+        // Use cached values initially
+        _totalScans = prefs.getInt('totalScans') ?? 0;
+        _currentStreak = prefs.getInt('currentStreak') ?? 0;
+        _notificationsEnabled = prefs.getBool('notificationsOn') ?? true;
+      });
+    }
 
     if (token != null) {
+      // 1. Fetch REAL-TIME Scan History for Count & Streak
+      final historyData = await ApiService.getScanHistory(token);
+      if (historyData['success'] == true) {
+        final history = historyData['history'] as List;
+        final count = history.length;
+        
+        // Calculate Streak
+        int streak = _calculateStreak(history);
+
+        if (mounted) {
+          setState(() {
+            _totalScans = count;
+            _currentStreak = streak;
+          });
+          // Cache for next session
+          prefs.setInt('totalScans', count);
+          prefs.setInt('currentStreak', streak);
+        }
+      }
+
+      // 2. Fetch Appointments
       final appointments = await ApiService.getUserAppointments(token);
       if (appointments.isNotEmpty) {
         final upcoming = appointments
-            .where((a) => a['status'] == 'upcoming')
+            .where((a) => a['status'] == 'pending' || a['status'] == 'approved')
             .toList();
         if (mounted) {
           setState(() {
@@ -91,8 +124,50 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
   }
 
-  Future<void> _push(Widget screen) =>
-      Navigator.push(context, _slideRoute(screen));
+  int _calculateStreak(List<dynamic> history) {
+    if (history.isEmpty) return 0;
+    
+    // Get unique dates of scans
+    final dates = history.map((s) {
+      final dt = DateTime.parse(s['timestamp']);
+      return DateTime(dt.year, dt.month, dt.day);
+    }).toSet().toList();
+    
+    dates.sort((a, b) => b.compareTo(a)); // Newest first
+
+    final today = DateTime.now();
+    final todayClean = DateTime(today.year, today.month, today.day);
+    
+    int streak = 0;
+    DateTime checkDate = todayClean;
+
+    // Check if the first date is today or yesterday
+    if (dates.isEmpty) return 0;
+    if (dates[0] != todayClean && dates[0] != todayClean.subtract(const Duration(days: 1))) {
+      return 0; // Streak broken if no scan today or yesterday
+    }
+
+    if (dates[0] == todayClean || dates[0] == todayClean.subtract(const Duration(days: 1))) {
+      checkDate = dates[0];
+      streak = 1;
+      
+      for (int i = 1; i < dates.length; i++) {
+        if (dates[i] == checkDate.subtract(const Duration(days: 1))) {
+          streak++;
+          checkDate = dates[i];
+        } else {
+          break;
+        }
+      }
+    }
+    
+    return streak;
+  }
+
+  Future<void> _push(Widget screen) async {
+    await Navigator.push(context, _slideRoute(screen));
+    _loadUserData(); // REFRESH DATA when returning to dashboard
+  }
 
   Route _slideRoute(Widget page) => PageRouteBuilder(
         pageBuilder: (_, a, __) => page,
@@ -133,6 +208,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     return Scaffold(
       backgroundColor: _C.bg,
+      drawer: _buildDrawer(),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Column(
@@ -141,6 +217,9 @@ class _DashboardScreenState extends State<DashboardScreen>
 
             // ── HEADER ──
             _buildHeader(),
+            
+            // ── STREAK & STATS BAR ──
+            _buildEngagementBar(),
             const Divider(height: 1, color: _C.border, thickness: 1),
 
             // ── HORIZONTAL MENU (Reference style) ──
@@ -156,12 +235,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   children: [
                     const SizedBox(height: 12),
 
-                    // Appointment Notification (if any)
-                    if (_upcomingAppointments.isNotEmpty && !_notifDismissed)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildAppointmentNotification(),
-                      ),
+                    const SizedBox(height: 12),
 
                     // Primary Action Card
                     Expanded(
@@ -308,10 +382,12 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ],
           ),
-          IconButton(
-            onPressed: () => Scaffold.of(context).openDrawer(), // or custom action
-            icon: const Icon(Icons.menu_rounded, color: _C.primary, size: 28),
-            splashRadius: 24,
+          Builder(
+            builder: (context) => IconButton(
+              onPressed: () => Scaffold.of(context).openDrawer(),
+              icon: const Icon(Icons.menu_rounded, color: _C.primary, size: 28),
+              splashRadius: 24,
+            ),
           ),
         ],
       ),
@@ -548,51 +624,246 @@ class _DashboardScreenState extends State<DashboardScreen>
     final appt   = _upcomingAppointments[0];
     final doctor = appt['dermatologistId'];
     final docName = (doctor != null ? doctor['name'] : 'Your Specialist') as String;
-    final date   = appt['date'] ?? '';
-    final time   = appt['time'] ?? '';
-    final count  = _upcomingAppointments.length;
+    final dateStr = appt['date'] ?? '';
+    final timeStr = appt['time'] ?? '';
+    final count   = _upcomingAppointments.length;
+
+    // Time left calculation
+    String timeLeft = "";
+    try {
+      final now = DateTime.now();
+      final apptDate = DateTime.parse(dateStr);
+      final diff = apptDate.difference(now);
+      
+      if (diff.isNegative) {
+        timeLeft = "Starting now";
+      } else if (diff.inDays > 0) {
+        timeLeft = "${diff.inDays}d ${diff.inHours % 24}h remaining";
+      } else if (diff.inHours > 0) {
+        timeLeft = "${diff.inHours}h ${diff.inMinutes % 60}m remaining";
+      } else {
+        timeLeft = "${diff.inMinutes} mins remaining";
+      }
+    } catch (_) {
+      timeLeft = "Be on time!";
+    }
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8EC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFDC8A)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFFDC8A).withOpacity(0.5)),
+        boxShadow: [BoxShadow(color: const Color(0xFFFFAB2E).withOpacity(0.1), blurRadius: 10)],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.info_outline_rounded, color: Color(0xFFFFAB2E), size: 20),
-          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: const Color(0xFFFFAB2E).withOpacity(0.1), shape: BoxShape.circle),
+            child: const Icon(Icons.alarm_on_rounded, color: Color(0xFFFFAB2E), size: 20),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  count > 1 ? '$count Upcoming Appointments' : 'Upcoming Appointment',
-                  style: const TextStyle(
-                    color: _C.textPri,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      count > 1 ? '$count Appointments' : 'Upcoming Visit',
+                      style: const TextStyle(color: _C.textPri, fontWeight: FontWeight.w800, fontSize: 13),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(color: const Color(0xFFFF6B6B).withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                      child: Text(timeLeft, style: const TextStyle(color: Color(0xFFFF6B6B), fontSize: 9, fontWeight: FontWeight.w900)),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Dr. $docName • $date at $time',
-                  style: const TextStyle(
-                    color: _C.textSec,
-                    fontSize: 12,
-                  ),
+                  'Dr. $docName • $dateStr at $timeStr',
+                  style: const TextStyle(color: _C.textSec, fontSize: 11, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
           ),
-          GestureDetector(
-            onTap: () => setState(() => _notifDismissed = true),
-            child: const Icon(Icons.close_rounded, size: 18, color: _C.textSec),
+          IconButton(
+            onPressed: () => setState(() => _notifDismissed = true),
+            icon: const Icon(Icons.close_rounded, size: 18, color: _C.textSec),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEngagementBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      color: _C.bg,
+      child: Row(
+        children: [
+          _statItem("🔥", "$_currentStreak day streak", const Color(0xFFFF9F1C)),
+          const SizedBox(width: 12),
+          _statItem("📸", "$_totalScans scans", const Color(0xFF00D1FF)),
+        ],
+      ),
+    );
+  }
+
+  Widget _statItem(String emoji, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawer() {
+    String timeLeft = "Be on time!";
+    String docDetails = "No upcoming visits";
+    if (_upcomingAppointments.isNotEmpty) {
+      final appt = _upcomingAppointments[0];
+      docDetails = "Dr. ${appt['dermatologistId']?['name'] ?? 'Consultant'}";
+      try {
+        final now = DateTime.now();
+        final diff = DateTime.parse(appt['date']).difference(now);
+        if (diff.isNegative) timeLeft = "Starting now";
+        else if (diff.inDays > 0) timeLeft = "${diff.inDays}d left";
+        else timeLeft = "${diff.inHours}h ${diff.inMinutes % 60}m left";
+      } catch (_) {}
+    }
+
+    return Drawer(
+      backgroundColor: _C.bg,
+      child: Column(
+        children: [
+          UserAccountsDrawerHeader(
+            decoration: const BoxDecoration(gradient: LinearGradient(colors: [_C.primary, Color(0xFF2C3E50)])),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Text(_userName.isNotEmpty ? _userName[0].toUpperCase() : 'U', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _C.primary)),
+            ),
+            accountName: Text(_userName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            accountEmail: const Text("Verified Health Profile", style: TextStyle(color: Colors.white70, fontSize: 12)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("MY ENGAGEMENT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: _C.textSec, letterSpacing: 1)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _statItem("🔥", "$_currentStreak streak", const Color(0xFFFF9F1C))),
+                    const SizedBox(width: 8),
+                    Expanded(child: _statItem("📸", "$_totalScans scans", const Color(0xFF00D1FF))),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+
+          if (_upcomingAppointments.isNotEmpty && _notificationsEnabled) ...[
+            _drawerMenuHeader("DON'T FORGET!"),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF9F1C).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFFF9F1C).withOpacity(0.3), width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.alarm_on_rounded, size: 16, color: Color(0xFFD35400)),
+                        const SizedBox(width: 8),
+                        const Text("NOW BE READY", style: TextStyle(color: Color(0xFFD35400), fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 0.5)),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
+                          child: Text(timeLeft, style: const TextStyle(color: Color(0xFFFF9F1C), fontWeight: FontWeight.w900, fontSize: 10)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      docDetails,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF2C3E50)),
+                    ),
+                    Text(
+                      "${_upcomingAppointments[0]['date']} at ${_upcomingAppointments[0]['time']}",
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFF2C3E50).withOpacity(0.6)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          _drawerMenuHeader("NAVIGATION"),
+          _drawerTile(Icons.history_rounded, "Scan History", () => _push(const ScanHistoryScreen())),
+          _drawerTile(Icons.calendar_month_rounded, "My Visits", () => _push(const MyAppointmentsScreen())),
+          _drawerTile(Icons.person_outline_rounded, "Account Settings", () => _push(const ProfileScreen())),
+          const Spacer(),
+          const Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Opacity(opacity: 0.5, child: Text("DermaAI v1.2.0", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _drawerMenuHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Text(title, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: _C.textSec, letterSpacing: 1)),
+    );
+  }
+
+  Widget _drawerTile(IconData icon, String title, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: _C.primary, size: 22),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: _C.textPri)),
+      dense: true,
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
     );
   }
 }

@@ -20,6 +20,11 @@ class User(mongoengine.DynamicDocument):
     role = mongoengine.StringField(default='user')
     isFrozen = mongoengine.BooleanField(default=False)
     
+    # Engagement Fields
+    totalScans = mongoengine.IntField(default=0)
+    currentStreak = mongoengine.IntField(default=0)
+    lastScanDate = mongoengine.DateTimeField()
+    
     meta = {'collection': 'users', 'strict': False}
 
     def to_dict(self):
@@ -29,7 +34,10 @@ class User(mongoengine.DynamicDocument):
             'name': getattr(self, 'name', ''),
             'email': getattr(self, 'email', ''),
             'role': getattr(self, 'role', 'user'),
-            'isFrozen': getattr(self, 'isFrozen', False)
+            'isFrozen': getattr(self, 'isFrozen', False),
+            'totalScans': getattr(self, 'totalScans', 0),
+            'currentStreak': getattr(self, 'currentStreak', 0),
+            'lastScanDate': getattr(self, 'lastScanDate', None)
         })
 
 class Dermatologist(mongoengine.DynamicDocument):

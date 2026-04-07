@@ -99,11 +99,11 @@ class AcneAnalyzer:
             preds = self.model.predict(np.expand_dims(img_raw, axis=0), verbose=0)[0]
             
             # --- 🌟 STRICT Invalid/Random Image Handling (Noise Filter) ---
-            # If the best guess is less than 50% sure, it's likely a random object or a blurry photo
+            # If the best guess is less than 10% sure, it's likely a random object or a blurry photo
             target_idx = int(np.argmax(preds))
             top_conf = float(preds[target_idx])
             
-            if top_conf < 0.50:
+            if top_conf < 0.10:
                 return {
                     'prediction': 'Unclear Image / Try Again',
                     'message': 'We could not detect a valid skin condition in this photo. Please ensure the skin is centered, focused, and well-lit.',

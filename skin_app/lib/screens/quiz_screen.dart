@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../services/api_service.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -30,6 +34,8 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
   late Animation<Offset> _slideAnim;
   late AnimationController _scoreController;
   late Animation<double> _scoreAnim;
+
+  final ScreenshotController _screenshotController = ScreenshotController();
 
   static const Map<String, Map<String, dynamic>> _categories = {
     'Skin Care': {
@@ -737,31 +743,34 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Score card
-          Container(
-            padding: const EdgeInsets.all(24), // Reduced from 28
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Column(
-              children: [
-                Icon(icon, color: Colors.white, size: 44), // Reduced from 52
-                const SizedBox(height: 10),
-                ScaleTransition(
-                  scale: _scoreAnim,
-                  child: Text(grade, style: const TextStyle(fontSize: 60, fontWeight: FontWeight.w900, color: Colors.white)), // Reduced from 72
-                ),
-                Text('$_score / ${questions.length} correct', style: const TextStyle(fontSize: 16, color: Colors.white70, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 6),
-                Text('$pct% Score', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
-                  child: Text(msg, textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.3)),
-                ),
-              ],
+          Screenshot(
+            controller: _screenshotController,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                children: [
+                  Icon(icon, color: Colors.white, size: 44),
+                  const SizedBox(height: 10),
+                  ScaleTransition(
+                    scale: _scoreAnim,
+                    child: Text(grade, style: const TextStyle(fontSize: 60, fontWeight: FontWeight.w900, color: Colors.white)),
+                  ),
+                  Text('$_score / ${questions.length} correct', style: const TextStyle(fontSize: 16, color: Colors.white70, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 6),
+                  Text('$pct% Score', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                    child: Text(msg, textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.3)),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -818,13 +827,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
 
           // Share results button
           GestureDetector(
-            onTap: () {
-              final text = 'I scored $_score/${questions.length} on the Skin Health Quiz! Category: $_selectedCategory. Check your skin health on the Skin Detection App!';
-              Clipboard.setData(ClipboardData(text: text));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Results copied to clipboard! You can share with your doctor.')),
-              );
-            },
+            onTap: _shareResults,
             child: Container(
               height: 52,
               decoration: BoxDecoration(
@@ -872,6 +875,50 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+
+  Future<void> _shareResults() async {
+    final questions = _questions[_selectedCategory!]!;
+    final pct = (_score / questions.length * 100).round();
+    final text = 'I scored $_score/${questions.length} ($pct%) on the Skin Health Quiz (${_selectedCategory!})! 🧬\n\nCheck your skin health with the Skin Detection App! #SkinHealth #Quiz';
+
+    try {
+      // Show loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Generating shareable result...'), duration: Duration(seconds: 1)),
+      );
+
+      final image = await _screenshotController.capture(
+        delay: const Duration(milliseconds: 10),
+        pixelRatio: 2.0, // High quality
+      );
+
+      if (image != null) {
+        final directory = await getTemporaryDirectory();
+        final imagePath = await File('${directory.path}/quiz_result.png').create();
+        await imagePath.writeAsBytes(image);
+
+        // Share Image + Text
+        await Share.shareXFiles(
+          [XFile(imagePath.path)],
+          text: text,
+          subject: 'My Skin Health Quiz Score',
+        );
+      } else {
+        // Fallback to text copy if image fail
+        Clipboard.setData(ClipboardData(text: text));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Couldn\'t generate image. Result copied to clipboard.')),
+        );
+      }
+    } catch (e) {
+      print("Share error: $e");
+      // Fallback
+      Clipboard.setData(ClipboardData(text: text));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error sharing. Result copied to clipboard.')),
+      );
+    }
   }
 
   Widget _statChip(String label, String value, Color color, IconData icon) {

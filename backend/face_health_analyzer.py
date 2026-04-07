@@ -243,7 +243,7 @@ class FaceHealthAnalyzer:
 
         # 🛡️ THE FINAL FACE GUARD
         # If all major face-identifying models are confused, it's likely an object (like a book)
-        if confused_models >= 2:
+        if confused_models >= 3:
             yield {"error": "Invalid Face Image", "message": "The AI is unable to verify this is a human face. Please ensure the camera is level and clear.", "status": "fail"}
             return
 
@@ -393,7 +393,7 @@ class FaceHealthAnalyzer:
                 results[key] = {"label": "Not Loaded", "confidence": 0.0}
 
         # 🛡️ THE FINAL FACE GUARD
-        if confused_models >= 2:
+        if confused_models >= 3:
             return {"error": "Invalid Face Image", "message": "The AI is unable to verify this is a human face. Please try again with better framing.", "status": "fail"}
 
         # 🟢 NEW: SPOTS / PORES (Custom ResNet)

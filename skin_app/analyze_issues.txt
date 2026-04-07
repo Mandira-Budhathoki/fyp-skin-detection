@@ -1,0 +1,256 @@
+﻿
+warning - The value of 
+the field 'surface' isn't 
+used - lib\screens\face_he
+alth_results_screen.dart:1
+1:16 - unused_field
+warning - The value of 
+the field 'glassBorder' 
+isn't used - lib\screens\f
+ace_health_results_screen.
+dart:23:16 - unused_field
+   info - Parameter 'key' 
+could be a super 
+parameter - lib\screens\fa
+ce_health_results_screen.d
+art:30:9 - 
+use_super_parameters
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_results_scr
+een.dart:104:34 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_results_scr
+een.dart:106:27 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_results_scr
+een.dart:124:63 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_results_scr
+een.dart:139:60 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_results_scr
+een.dart:208:44 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_results_scr
+een.dart:217:56 - 
+deprecated_member_use
+   info - Use 'const' 
+with the constructor to 
+improve performance - lib\
+screens\face_health_result
+s_screen.dart:221:50 - 
+prefer_const_constructors
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_results_scr
+een.dart:416:56 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_results_scr
+een.dart:444:84 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_results_scr
+een.dart:526:49 - 
+deprecated_member_use
+warning - Unused import: 
+'dart:math' - lib\screens\
+face_health_screen.dart:4:
+8 - unused_import
+   info - Parameter 'key' 
+could be a super 
+parameter - lib\screens\fa
+ce_health_screen.dart:12:9
+ - use_super_parameters
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:62:57 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:91:48 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:103:48 - 
+deprecated_member_use
+   info - Use 'const' 
+with the constructor to 
+improve performance - lib\
+screens\face_health_screen
+.dart:173:19 - 
+prefer_const_constructors
+   info - Use 'const' 
+literals as arguments to 
+constructors of 
+'@immutable' classes - lib
+\screens\face_health_scree
+n.dart:174:31 - prefer_con
+st_literals_to_create_immu
+tables
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:216:73 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:258:51 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:280:52 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:321:48 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:328:32 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:360:33 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:371:32 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:503:32 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:505:32 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:579:53 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:612:41 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:624:33 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:625:33 - 
+deprecated_member_use
+   info - 'withOpacity' 
+is deprecated and 
+shouldn't be used. Use 
+.withValues() to avoid 
+precision loss - lib\scree
+ns\face_health_screen.dart
+:634:30 - 
+deprecated_member_use
+
+

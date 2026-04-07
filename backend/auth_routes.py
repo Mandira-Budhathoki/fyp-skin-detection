@@ -98,7 +98,10 @@ def login():
                 'id': str(user.id),
                 'name': user.name,
                 'email': user.email,
-                'role': user.role
+                'role': user.role,
+                'totalScans': getattr(user, 'totalScans', 0),
+                'currentStreak': getattr(user, 'currentStreak', 0),
+                'lastScanDate': getattr(user, 'lastScanDate', None)
             }
         }), 200
     except Exception as e:
