@@ -9,19 +9,19 @@ import 'wound_treatment_screen.dart';
 //  DESIGN TOKENS (Modern Clinical Pro)
 // ─────────────────────────────────────────────
 class _T {
-  static const bg        = Color(0xFFF8FAFC);
+  static const bg        = Color(0xFFF6F4E8); // Cream
   static const surface   = Colors.white;
   static const card      = Colors.white;
-  static const cardBorder= Color(0xFFE2E8F0);
+  static const cardBorder= Color(0xFFE5EEE4); // Pale Green border
 
-  static const textPrim  = Color(0xFF0F172A);
-  static const textSub   = Color(0xFF475569);
-  static const textMuted = Color(0xFF94A3B8);
+  static const textPrim  = Color(0xFF2D3436);
+  static const textSub   = Color(0xFF636E72);
+  static const textMuted = Color(0xFFAEB8B8);
 
-  static const primary   = Color(0xFF0066FF);
-  static const emergency = Color(0xFFE11D48);
-  static const warning   = Color(0xFFF59E0B);
-  static const accent    = Color(0xFF7C3AED);
+  static const primary   = Color(0xFFC0E1D2); // Seafoam (Stable)
+  static const emergency = Color(0xFFDC9B9B); // Rose (Urgent)
+  static const warning   = Color(0xFFE2A96F);
+  static const accent    = Color(0xFFE5EEE4); // Pale Green
 
   static const r20 = Radius.circular(20);
 }
@@ -182,6 +182,13 @@ class _WoundResultsScreenState extends State<WoundResultsScreen>
             const SizedBox(height: 16),
             _ObservationCard(message: _message, color: _themeColor),
             const SizedBox(height: 24),
+
+            if (widget.results['recommendations'] != null && (widget.results['recommendations'] as List).isNotEmpty) ...[
+              _SectionTitle("AI CARE RECOMMENDATIONS"),
+              const SizedBox(height: 16),
+              ...(widget.results['recommendations'] as List).map((rec) => _RecommendationTile(rec: rec)).toList(),
+              const SizedBox(height: 24),
+            ],
             
             // ─────────────────────────────────────────────
             //  NEW FEATURE: HEALING TIMELINE
@@ -334,7 +341,7 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget pill = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30), boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 10)]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30), boxShadow: [BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 10)]),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -467,4 +474,64 @@ class _EnsembleCard extends StatelessWidget {
 class _NoGlowBehavior extends ScrollBehavior {
   @override
   Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) => child;
+}
+class _RecommendationTile extends StatelessWidget {
+  final Map<String, dynamic> rec;
+  const _RecommendationTile({required this.rec});
+
+  @override
+  Widget build(BuildContext context) {
+    final title = rec['title'] ?? 'Care Suggestion';
+    final desc = rec['description'] ?? '';
+    final type = rec['type'] ?? 'info';
+    final iconKey = rec['icon'] ?? 'star';
+
+    Color color = _T.primary;
+    IconData icon = Icons.auto_awesome_rounded;
+
+    if (type == 'urgent') color = _T.emergency;
+    else if (type == 'treatment') color = _T.warning;
+    else if (type == 'health') color = _T.accent;
+
+    if (iconKey == 'warning') icon = Icons.warning_rounded;
+    else if (iconKey == 'medical') icon = Icons.medical_services_rounded;
+    else if (iconKey == 'sunny') icon = Icons.wb_sunny_rounded;
+    else if (iconKey == 'fire') icon = Icons.local_fire_department_rounded;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _T.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(type.toString().toUpperCase(), style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: _T.textPrim)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(desc, style: const TextStyle(color: _T.textSub, fontSize: 13, height: 1.5)),
+        ],
+      ),
+    );
+  }
 }

@@ -3,6 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'scan_tips_screen.dart';
 
+// ───────────────────────────────────────────────────────
+//  NEW PALETTE (Clinical Soft)
+// ───────────────────────────────────────────────────────
+class _Pal {
+  static const rose    = Color(0xFFDC9B9B);
+  static const cream   = Color(0xFFF6F4E8);
+  static const lightGr = Color(0xFFE5EEE4);
+  static const seafoam = Color(0xFFC0E1D2);
+  
+  static const textPrim = Color(0xFF2D3436);
+  static const textSub  = Color(0xFF636E72);
+}
+
 class IntroScreen extends StatefulWidget {
   const IntroScreen({super.key});
 
@@ -12,7 +25,7 @@ class IntroScreen extends StatefulWidget {
 
 class _IntroScreenState extends State<IntroScreen>
     with TickerProviderStateMixin {
-  int _currentPage = 0; // source of truth
+  int _currentPage = 0; 
 
   late AnimationController _entranceController;
   late AnimationController _floatController;
@@ -29,47 +42,47 @@ class _IntroScreenState extends State<IntroScreen>
       description:
           "Early detection is key. Our AI analyzes moles and lesions to identify potential risks instantly.",
       imagePath: 'assets/images/intro_melanoma.png',
-      accentColor: const Color(0xFFE2A96F),
-      bgColor: const Color(0xFF1E1B2E), // lighter deep purple
+      accentColor: _Pal.rose,
+      bgColor: _Pal.cream,
       icon: Icons.health_and_safety_outlined,
-      particleColor: const Color(0xFFE2A96F),
+      particleColor: _Pal.rose,
     ),
     OnboardingData(
       title: "Wound\nAnalysis",
       description:
           "Monitor healing progress and detect signs of infection early with advanced visual analysis.",
       imagePath: 'assets/images/intro_wound.png',
-      accentColor: const Color(0xFF7EB8A4),
-      bgColor: const Color(0xFF152220), // lighter deep green
+      accentColor: Colors.teal.shade400, // Balanced with seafoam
+      bgColor: _Pal.lightGr,
       icon: Icons.healing_outlined,
-      particleColor: const Color(0xFF7EB8A4),
+      particleColor: _Pal.seafoam,
     ),
     OnboardingData(
       title: "Skin Condition\nCheck",
       description:
           "Identify acne, eczema, and more to get personalized care recommendations tailored for you.",
       imagePath: 'assets/images/intro_skin.png',
-      accentColor: const Color(0xFFB8A7D9),
-      bgColor: const Color(0xFF1C1828), // lighter deep lavender
+      accentColor: _Pal.rose,
+      bgColor: _Pal.cream,
       icon: Icons.face_retouching_natural_outlined,
-      particleColor: const Color(0xFFB8A7D9),
+      particleColor: _Pal.rose,
     ),
     OnboardingData(
       title: "Track Your\nHealth",
       description:
           "Keep a secure history of your scans to monitor changes over time and share with your doctor.",
       imagePath: 'assets/images/intro_track.png',
-      accentColor: const Color(0xFF00BFA5),
-      bgColor: const Color(0xFF0F2220), // lighter deep teal
+      accentColor: _Pal.seafoam.withValues(alpha: 1.0),
+      bgColor: _Pal.lightGr,
       icon: Icons.insights_outlined,
-      particleColor: const Color(0xFF00BFA5),
+      particleColor: _Pal.seafoam,
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
 
     _entranceController = AnimationController(
       vsync: this,
@@ -112,7 +125,6 @@ class _IntroScreenState extends State<IntroScreen>
     super.dispose();
   }
 
-  // ✅ FIX: only use _currentPage (int), never _pageController.page
   void _onPageChanged(int index) {
     setState(() => _currentPage = index);
     _entranceController.reset();
@@ -176,7 +188,7 @@ class _IntroScreenState extends State<IntroScreen>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      data.accentColor.withValues(alpha: 0.2),
+                      data.accentColor.withValues(alpha: 0.15),
                       data.accentColor.withValues(alpha: 0.0),
                     ],
                   ),
@@ -226,8 +238,8 @@ class _IntroScreenState extends State<IntroScreen>
             '0${_currentPage + 1}  /  0${_pages.length}',
             style: TextStyle(
               fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: data.accentColor.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w800,
+              color: data.accentColor == _Pal.seafoam ? Colors.teal.shade700 : data.accentColor,
               letterSpacing: 2.5,
             ),
           ),
@@ -238,16 +250,16 @@ class _IntroScreenState extends State<IntroScreen>
                   const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
               decoration: BoxDecoration(
                 border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.15), width: 1),
+                    color: _Pal.textPrim.withValues(alpha: 0.1), width: 1),
                 borderRadius: BorderRadius.circular(20),
-                color: Colors.white.withValues(alpha: 0.06),
+                color: _Pal.textPrim.withValues(alpha: 0.04),
               ),
-              child: Text(
+              child: const Text(
                 'Skip',
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w600,
+                  color: _Pal.textSub,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -277,8 +289,8 @@ class _IntroScreenState extends State<IntroScreen>
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: data.accentColor.withValues(
-                          alpha: 0.06 + _iconPulseController.value * 0.06),
-                      width: 1,
+                          alpha: 0.1 + _iconPulseController.value * 0.1),
+                      width: 1.5,
                     ),
                   ),
                 ),
@@ -289,8 +301,8 @@ class _IntroScreenState extends State<IntroScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: data.accentColor.withValues(alpha: 0.15),
-                      width: 1,
+                      color: data.accentColor.withValues(alpha: 0.2),
+                      width: 1.2,
                     ),
                   ),
                 ),
@@ -300,16 +312,16 @@ class _IntroScreenState extends State<IntroScreen>
                   height: 136,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: data.accentColor.withValues(alpha: 0.12),
+                    color: Colors.white,
                     border: Border.all(
-                      color: data.accentColor.withValues(alpha: 0.32),
-                      width: 1.5,
+                      color: data.accentColor.withValues(alpha: 0.25),
+                      width: 2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: data.accentColor.withValues(alpha: 0.28),
-                        blurRadius: 40,
-                        spreadRadius: 4,
+                        color: data.accentColor.withValues(alpha: 0.12),
+                        blurRadius: 30,
+                        spreadRadius: 2,
                       ),
                     ],
                   ),
@@ -333,27 +345,10 @@ class _IntroScreenState extends State<IntroScreen>
                         color: data.accentColor,
                         boxShadow: [
                           BoxShadow(
-                            color: data.accentColor.withValues(alpha: 0.7),
-                            blurRadius: 10,
+                            color: data.accentColor.withValues(alpha: 0.4),
+                            blurRadius: 8,
                           ),
                         ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Orbiting dot 2 (counter)
-                Transform.rotate(
-                  angle:
-                      -(_particleController.value * 1.5 * 2 * pi) + pi / 3,
-                  child: Transform.translate(
-                    offset: const Offset(68, 0),
-                    child: Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: data.accentColor.withValues(alpha: 0.6),
                       ),
                     ),
                   ),
@@ -379,32 +374,32 @@ class _IntroScreenState extends State<IntroScreen>
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 500),
-                width: 36,
-                height: 3,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: data.accentColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 24),
               Text(
                 data.title,
                 style: const TextStyle(
                   fontSize: 38,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  color: _Pal.textPrim,
                   height: 1.1,
-                  letterSpacing: -0.8,
+                  letterSpacing: -1.0,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Text(
                 data.description,
-                style: TextStyle(
-                  fontSize: 15,
-                  height: 1.75,
-                  color: Colors.white.withValues(alpha: 0.55),
-                  fontWeight: FontWeight.w400,
+                style: const TextStyle(
+                  fontSize: 16,
+                  height: 1.6,
+                  color: _Pal.textSub,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -415,7 +410,6 @@ class _IntroScreenState extends State<IntroScreen>
   }
 
   Widget _buildBottomBar(OnboardingData data) {
-    // ✅ FIX: use _currentPage int — never touch _pageController.page
     final bool isLast = _currentPage == _pages.length - 1;
 
     return Padding(
@@ -432,14 +426,14 @@ class _IntroScreenState extends State<IntroScreen>
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 350),
                   curve: Curves.easeInOut,
-                  margin: const EdgeInsets.only(right: 7),
-                  height: 6,
-                  width: _currentPage == index ? 30 : 6,
+                  margin: const EdgeInsets.only(right: 8),
+                  height: 8,
+                  width: _currentPage == index ? 32 : 8,
                   decoration: BoxDecoration(
                     color: _currentPage == index
                         ? data.accentColor
-                        : Colors.white.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(3),
+                        : data.accentColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               ),
@@ -452,16 +446,16 @@ class _IntroScreenState extends State<IntroScreen>
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 450),
               curve: Curves.easeInOut,
-              width: isLast ? 158 : 66,
-              height: 66,
+              width: isLast ? 160 : 70,
+              height: 70,
               decoration: BoxDecoration(
                 color: data.accentColor,
-                borderRadius: BorderRadius.circular(33),
+                borderRadius: BorderRadius.circular(35),
                 boxShadow: [
                   BoxShadow(
-                    color: data.accentColor.withValues(alpha: 0.45),
-                    blurRadius: 24,
-                    offset: const Offset(0, 10),
+                    color: data.accentColor.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -473,8 +467,8 @@ class _IntroScreenState extends State<IntroScreen>
                           'Get Started',
                           key: ValueKey('start'),
                           style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
                             letterSpacing: 0.2,
                           ),
@@ -483,7 +477,7 @@ class _IntroScreenState extends State<IntroScreen>
                           Icons.arrow_forward_rounded,
                           key: ValueKey('arrow'),
                           color: Colors.white,
-                          size: 28,
+                          size: 30,
                         ),
                 ),
               ),
@@ -495,9 +489,6 @@ class _IntroScreenState extends State<IntroScreen>
   }
 }
 
-// -------------------------------------------------------
-// PARTICLE PAINTER
-// -------------------------------------------------------
 class ParticlePainter extends CustomPainter {
   final double progress;
   final Color color;
@@ -509,15 +500,15 @@ class ParticlePainter extends CustomPainter {
     final rng = Random(42);
     final paint = Paint()..style = PaintingStyle.fill;
 
-    for (int i = 0; i < 28; i++) {
+    for (int i = 0; i < 22; i++) {
       final x = rng.nextDouble() * size.width;
       final baseY = rng.nextDouble() * size.height;
-      final speed = 0.25 + rng.nextDouble() * 0.6;
-      final radius = 1.0 + rng.nextDouble() * 2.2;
-      final opacity = 0.06 + rng.nextDouble() * 0.15;
+      final speed = 0.2 + rng.nextDouble() * 0.4;
+      final radius = 1.5 + rng.nextDouble() * 2.0;
+      final opacity = 0.1 + rng.nextDouble() * 0.15;
 
       final y =
-          (baseY - (progress * speed * size.height * 0.35)) % size.height;
+          (baseY - (progress * speed * size.height * 0.3)) % size.height;
 
       paint.color = color.withValues(alpha: opacity);
       canvas.drawCircle(Offset(x, y), radius, paint);
@@ -529,9 +520,6 @@ class ParticlePainter extends CustomPainter {
       old.progress != progress || old.color != color;
 }
 
-// -------------------------------------------------------
-// DATA MODEL
-// -------------------------------------------------------
 class OnboardingData {
   final String title;
   final String description;

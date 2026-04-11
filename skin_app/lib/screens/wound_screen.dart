@@ -25,7 +25,7 @@ class _WoundScreenState extends State<WoundScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8), // Soft Gray-Blue like Melanoma Screen
+      backgroundColor: const Color(0xFFF6F4E8), // Cream
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -46,7 +46,7 @@ class _WoundScreenState extends State<WoundScreen> {
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: Color(0xFFC0392B), size: 20),
+                  color: Color(0xFFDC9B9B), size: 20),
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -54,8 +54,8 @@ class _WoundScreenState extends State<WoundScreen> {
         title: const Text(
           'Wound Analysis',
           style: TextStyle(
-            color: Color(0xFF2C3E50),
-            fontWeight: FontWeight.w800,
+            color: Color(0xFF2D3436), // Charcoal
+            fontWeight: FontWeight.w900,
             fontSize: 22,
             letterSpacing: 0.5,
           ),
@@ -72,7 +72,7 @@ class _WoundScreenState extends State<WoundScreen> {
               width: 300,
               height: 300,
               decoration: BoxDecoration(
-                color: const Color(0xFFE74C3C).withValues(alpha: 0.1), // Soft Red
+                color: const Color(0xFFDC9B9B).withValues(alpha: 0.1), // Rose
                 shape: BoxShape.circle,
               ),
             ),
@@ -84,7 +84,7 @@ class _WoundScreenState extends State<WoundScreen> {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: const Color(0xFFF39C12).withValues(alpha: 0.1), // Soft Amber
+                color: const Color(0xFFC0E1D2).withValues(alpha: 0.15), // Seafoam
                 shape: BoxShape.circle,
               ),
             ),
@@ -112,7 +112,7 @@ class _WoundScreenState extends State<WoundScreen> {
                         child: _buildInputCard(
                           icon: Icons.camera_alt_outlined,
                           title: 'Camera',
-                          color: const Color(0xFFE74C3C), // Red
+                          color: const Color(0xFFDC9B9B), // Rose
                           onTap: () => _pickImage(ImageSource.camera),
                         ),
                       ),
@@ -121,7 +121,7 @@ class _WoundScreenState extends State<WoundScreen> {
                         child: _buildInputCard(
                           icon: Icons.photo_library_outlined,
                           title: 'Gallery',
-                          color: const Color(0xFFE67E22), // Orange
+                          color: const Color(0xFFE2A96F), // Soft Orange
                           onTap: () => _pickImage(ImageSource.gallery),
                         ),
                       ),
@@ -145,7 +145,7 @@ class _WoundScreenState extends State<WoundScreen> {
                     icon: Icons.calendar_month_rounded,
                     title: 'Book Appointment',
                     subtitle: 'Schedule a visit with a specialist',
-                    color: const Color(0xFF8E44AD), // Purple
+                    color: const Color(0xFFDC9B9B), // Rose
                     onTap: () => Navigator.pushNamed(context, '/appointment'),
                   ),
                   const SizedBox(height: 16),
@@ -153,7 +153,7 @@ class _WoundScreenState extends State<WoundScreen> {
                     icon: Icons.smart_toy_rounded,
                     title: 'Chat with AI Assistant',
                     subtitle: 'Get instant answers to your doubts',
-                    color: const Color(0xFF16A085), // Teal
+                    color: const Color(0xFFC0E1D2), // Seafoam
                      onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -165,7 +165,7 @@ class _WoundScreenState extends State<WoundScreen> {
                     icon: Icons.auto_stories_rounded,
                     title: 'Wound Care Guide',
                     subtitle: '20+ Essential FAQs & Tips',
-                    color: const Color(0xFFF39C12), // Amber/Orange
+                    color: const Color(0xFFE2A96F), // Soft Orange
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -192,10 +192,10 @@ class _WoundScreenState extends State<WoundScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE74C3C).withValues(alpha: 0.1)),
+        border: Border.all(color: const Color(0xFFDC9B9B).withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE74C3C).withValues(alpha: 0.15),
+            color: const Color(0xFFDC9B9B).withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -206,12 +206,12 @@ class _WoundScreenState extends State<WoundScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFDEDEC), // Light Red Bg
+              color: const Color(0xFFF9E8E8), // Light Rose Bg
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
               Icons.warning_amber_rounded,
-              color: Color(0xFFE74C3C),
+              color: Color(0xFFDC9B9B),
               size: 28,
             ),
           ),
@@ -223,7 +223,7 @@ class _WoundScreenState extends State<WoundScreen> {
                 const Text(
                   'Emergency Notice',
                   style: TextStyle(
-                    color: Color(0xFFC0392B),
+                    color: Color(0xFFDC9B9B),
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -577,7 +577,7 @@ class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen>
                      Text(
                        _currentStatus,
                        style: const TextStyle(
-                         color: Colors.cyanAccent,
+                         color: Color(0xFFDC9B9B), // Rose status
                          fontSize: 14,
                          letterSpacing: 2.0,
                          fontWeight: FontWeight.bold,
@@ -594,13 +594,13 @@ class _WoundImagePreviewScreenState extends State<_WoundImagePreviewScreen>
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _isAnalyzing
                             ? Colors.grey[800]
-                            : const Color(0xFFE74C3C), // Red
+                            : const Color(0xFFDC9B9B), // Rose
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: _isAnalyzing ? 0 : 10,
-                        shadowColor: const Color(0xFFE74C3C).withValues(alpha: 0.5),
+                        shadowColor: const Color(0xFFDC9B9B).withValues(alpha: 0.5),
                       ),
                       child: _isAnalyzing
                           ? const SizedBox(
@@ -643,7 +643,7 @@ class WoundScannerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Paint linePaint = Paint()
-      ..color = Colors.cyanAccent.withValues(alpha: 0.8)
+      ..color = const Color(0xFFDC9B9B).withValues(alpha: 0.8) // Rose
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
 
@@ -661,7 +661,7 @@ class WoundScannerPainter extends CustomPainter {
       end: Alignment.bottomCenter,
       colors: [
          Colors.transparent,
-         Colors.cyanAccent.withValues(alpha: 0.6),
+         const Color(0xFFDC9B9B).withValues(alpha: 0.6),
          Colors.transparent,
       ],
     ).createShader(beamRect);

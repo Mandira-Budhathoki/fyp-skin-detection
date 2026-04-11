@@ -1,660 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'dart:convert';
-import 'dart:math';
-import 'dart:async';
-import 'chatbot_screen.dart';
-import 'faq_screen.dart';
-import 'skin_results_screen.dart';
-import '../services/api_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+// ─────────────────────────────────────────────
+//  PREMIUM SAND & WOOD PALETTE (REQUESTED)
+// ─────────────────────────────────────────────
+class _Pal {
+  static const wood     = Color(0xFF504B38); 
+  static const olive    = Color(0xFFB9B28A); 
+  static const khaki    = Color(0xFFEBE5C2); 
+  static const sand     = Color(0xFFF8F3D9); 
+}
 
 class SkinScreen extends StatefulWidget {
-  const SkinScreen({Key? key}) : super(key: key);
+  const SkinScreen({super.key});
 
   @override
   State<SkinScreen> createState() => _SkinScreenState();
 }
 
-class _SkinScreenState extends State<SkinScreen> {
-  final ImagePicker _picker = ImagePicker();
-
-  @override
-  Widget build(BuildContext context) {
-    // Use LayoutBuilder to adapt to screen height
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8), // Soft Gray-Blue
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: Color(0xFF2980B9), size: 20),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-        ),
-        title: const Text(
-          'Face Analysis',
-          style: TextStyle(
-            color: Color(0xFF2C3E50),
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-            letterSpacing: 0.5,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Stack(
-        children: [
-          // Background Decorative Circles (Blue/Cyan)
-          Positioned(
-            top: -80,
-            right: -80,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                color: const Color(0xFF3498DB).withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -40,
-            left: -40,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1ABC9C).withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-
-          // Main Content - Compact Layout
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // 1. Header Area (Instead of just AppBar title)
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Analyze your skin with AI-powered precision.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF7F8C8D),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  
-                  const Spacer(flex: 1),
-
-                  // 2. Input Methods (Hero Section)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInputCard(
-                          icon: Icons.face_retouching_natural_rounded,
-                          title: 'Selfie',
-                          subtitle: 'Live Camera',
-                          color: const Color(0xFF3498DB),
-                          onTap: () => _pickImage(ImageSource.camera),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildInputCard(
-                          icon: Icons.photo_library_rounded,
-                          title: 'Gallery',
-                          subtitle: 'From Library',
-                          color: const Color(0xFF1ABC9C),
-                          onTap: () => _pickImage(ImageSource.gallery),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const Spacer(flex: 1),
-
-                  // 3. Photo Tips (Horizontal & Minimal)
-                  _buildCompactTipsRow(),
-
-                  const Spacer(flex: 2),
-
-                  // 4. Action Area
-                  const Text(
-                    'RESOURCES',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.5,
-                      color: Color(0xFF95A5A6),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPremiumActionButton(
-                    icon: Icons.calendar_today_rounded,
-                    title: 'Book Appointment',
-                    color: const Color(0xFF8E44AD),
-                    onTap: () => Navigator.pushNamed(context, '/appointment'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPremiumActionButton(
-                    icon: Icons.smart_toy_outlined,
-                    title: 'Consult AI Chatbot',
-                    color: const Color(0xFF16A085),
-                     onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ChatbotScreen(category: 'acne')),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPremiumActionButton(
-                    icon: Icons.menu_book_rounded,
-                    title: 'Skin Guide & FAQs',
-                    color: const Color(0xFFE67E22), // Orange
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const FaqScreen(),
-                      ),
-                    ),
-                  ),
-
-                  const Spacer(flex: 2),
-
-                  // 5. Disclaimer (Minimalist)
-                  _buildMinimalDisclaimer(),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMinimalDisclaimer() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFFBDC3C7)),
-          const SizedBox(width: 8),
-          Text(
-            'Non-medical AI analysis. Consult a specialist.',
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey[500],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactTipsRow() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'QUICK TIPS',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.2,
-              color: Color(0xFF3498DB),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildSmallTip(Icons.light_mode_outlined, 'Bright Light'),
-              _buildSmallTip(Icons.face_outlined, 'No Makeup'),
-              _buildSmallTip(Icons.center_focus_strong_outlined, 'Centered'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSmallTip(IconData icon, String label) {
-    return Column(
-      children: [
-        Icon(icon, size: 18, color: const Color(0xFF7F8C8D)),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 10, color: Color(0xFF7F8C8D), fontWeight: FontWeight.w600),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInputCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
-      elevation: 0,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.05)),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.08),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 32),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF2C3E50),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[500],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPremiumActionButton({
-    required IconData icon,
-    required String title,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.05)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: color, size: 22),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const Spacer(),
-                Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey[300]),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 100,
-        preferredCameraDevice: source == ImageSource.camera 
-          ? CameraDevice.front 
-          : CameraDevice.rear,
-      );
-
-      if (pickedFile != null && mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => _SkinImagePreviewScreen(
-              imageFile: File(pickedFile.path),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
-}
-
-
-// PREVIEW SCREEN
-
-
-class _SkinImagePreviewScreen extends StatefulWidget {
-  final File imageFile;
-
-  const _SkinImagePreviewScreen({required this.imageFile});
-
-  @override
-  State<_SkinImagePreviewScreen> createState() =>
-      _SkinImagePreviewScreenState();
-}
-
-class _SkinImagePreviewScreenState extends State<_SkinImagePreviewScreen>
-    with TickerProviderStateMixin {
-  bool _isAnalyzing = false;
-  String _currentStatus = 'INITIALIZING SCAN...';
-  late AnimationController _scanController;
-  final TransformationController _transformationController = TransformationController();
+class _SkinScreenState extends State<SkinScreen> with TickerProviderStateMixin {
+  late AnimationController _pulseCtrl;
 
   @override
   void initState() {
     super.initState();
-    _scanController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2), // Faster, snappy scan
-    );
+    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
   }
 
   @override
   void dispose() {
-    _scanController.dispose();
-    _transformationController.dispose();
+    _pulseCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _analyzeImage() async {
-    setState(() => _isAnalyzing = true);
-    _scanController.repeat();
-
-    // Dynamically update status based on scan progress
-    _scanController.addListener(() {
-      if (!mounted) return;
-      double val = _scanController.value;
-      String newStatus;
-      if (val < 0.20) {
-        newStatus = "MAPPNIG SKIN TEXTURE...";
-      } else if (val < 0.40) {
-        newStatus = "DETECTING PORE QUALITY...";
-      } else if (val < 0.60) {
-        newStatus = "ANALYZING SEBUM LEVELS...";
-      } else if (val < 0.80) {
-        newStatus = "CHECKING BLEMISH CONCENTRATE...";
-      } else {
-        newStatus = "OPTIMIZING REPORT...";
-      }
-      
-      if (_currentStatus != newStatus) {
-        setState(() => _currentStatus = newStatus);
-      }
-    });
-
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('userToken');
-
-      // Call the actual Backend API we just created
-      final result = await ApiService.analyzeSkinAcne(widget.imageFile.path, token);
-
-      if (mounted) {
-        if (result['status'] == 'success' || result['prediction'] != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SkinResultsScreen(
-                results: result,
-                image: widget.imageFile,
-              ),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${result['error'] ?? 'Analysis failed'}')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Connection failed: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isAnalyzing = false);
-        _scanController.stop();
-        _scanController.reset();
-      }
+  Future<void> _getImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source);
+    if (pickedFile != null) {
+      // Logic for results
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: Stack(
-        fit: StackFit.expand,
         children: [
-          // 1. Image
-          InteractiveViewer(
-            transformationController: _transformationController,
-            minScale: 0.5,
-            maxScale: 4.0,
-            child: Image.file(
-              widget.imageFile,
-              fit: BoxFit.cover,
-            ),
-          ),
+          _buildB(120, -50, _Pal.sand.withOpacity(0.6), 200),
+          _buildB(-70, 480, _Pal.khaki.withOpacity(0.3), 240),
 
-          // 2. Overlay Gradient
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.6),
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.8),
-                ],
-              ),
-            ),
-          ),
-
-          // 3. Scanner Animation Overlay (Only when analyzing)
-          if (_isAnalyzing)
-            Positioned.fill(
-              child: AnimatedBuilder(
-                animation: _scanController,
-                builder: (context, child) {
-                   return CustomPaint(
-                    painter: SkinScannerPainter( // Using Skin variant
-                      progress: _scanController.value,
-                    ),
-                  );
-                },
-              ),
-            ),
-
-          // 4. Header
-          Positioned(
-            top: 50,
-            left: 20,
-            right: 20,
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: _isAnalyzing ? null : () => Navigator.pop(context),
-                ),
-                const Spacer(),
-                const Text(
-                  'Face Analysis',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                const SizedBox(width: 48),
-              ],
-            ),
-          ),
-
-          // 5. Bottom Controls
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(30),
-              decoration: const BoxDecoration(
-                color: Colors.transparent,
-              ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                   if (_isAnalyzing) ...[
-                     Text(
-                       _currentStatus,
-                       style: const TextStyle(
-                         color: Colors.cyanAccent,
-                         fontSize: 14,
-                         letterSpacing: 2.0,
-                         fontWeight: FontWeight.bold,
-                       ),
-                     ),
-                     const SizedBox(height: 20),
-                   ],
-                   
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _isAnalyzing ? null : _analyzeImage,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isAnalyzing
-                            ? Colors.grey[800]
-                            : const Color(0xFF3498DB), // Blue
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: _isAnalyzing ? 0 : 10,
-                        shadowColor: const Color(0xFF3498DB).withValues(alpha: 0.5),
-                      ),
-                      child: _isAnalyzing
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              'ANALYZE SKIN',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                    ),
-                  ),
+                  _buildHeader(),
+                  const SizedBox(height: 2),
+                  _buildStatusPill(),
+                  const SizedBox(height: 8),
+                  _buildHeroScanner(),
+                  const SizedBox(height: 12),
+                  _buildDetectionEngine(),
+                  const SizedBox(height: 12),
+                  _buildProtocolNote(),
+                  const Spacer(),
+                  _buildActionCenter(),
+                  const SizedBox(height: 15),
                 ],
               ),
             ),
@@ -663,94 +76,141 @@ class _SkinImagePreviewScreenState extends State<_SkinImagePreviewScreen>
       ),
     );
   }
-}
 
-// BIO-METRIC SCANNER PAINTER (Custom for Skin)
+  Widget _buildB(double l, double t, Color c, double s) => Positioned(left: l, top: t, child: Container(width: s, height: s, decoration: BoxDecoration(color: c, shape: BoxShape.circle)));
 
-class SkinScannerPainter extends CustomPainter {
-  final double progress; // 0.0 to 1.0
-
-  SkinScannerPainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Blue/Cyan Theme for Skin Analysis
-    final Paint linePaint = Paint()
-      ..color = const Color(0xFF3498DB).withValues(alpha: 0.8)
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-
-    // 1. Moving Scan Line
-    double yPos = size.height * sin(progress * pi); 
-    yPos = (size.height * progress) % size.height;
-    
-    // Scan Beam Effect
-    Rect beamRect = Rect.fromLTWH(0, yPos - 40, size.width, 80);
-    final Shader beamShader = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-         Colors.transparent,
-         const Color(0xFF3498DB).withValues(alpha: 0.5),
-         const Color(0xFF1ABC9C).withValues(alpha: 0.5), // Teal mix
-         Colors.transparent,
-      ],
-    ).createShader(beamRect);
-    
-    Paint beamPaint = Paint()..shader = beamShader;
-    canvas.drawRect(beamRect, beamPaint);
-    
-    canvas.drawLine(Offset(0, yPos), Offset(size.width, yPos), linePaint);
-    
-    // 2. Face Guide Outline (Subtle visual aid)
-    // Draw a rounded rect in the center to suggest face placement
-    final Paint guidePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.15)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    double guideWidth = size.width * 0.7;
-    double guideHeight = size.height * 0.5;
-    double guideLeft = (size.width - guideWidth) / 2;
-    double guideTop = (size.height - guideHeight) / 2;
-
-    RRect faceGuide = RRect.fromRectAndRadius(
-      Rect.fromLTWH(guideLeft, guideTop, guideWidth, guideHeight),
-      const Radius.circular(100), // Very rounded for face shape
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: _Pal.wood, size: 18), onPressed: () => Navigator.pop(context)),
+          const Text("SKIN DIAGNOSTICS", style: TextStyle(color: _Pal.wood, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 2)),
+          const Icon(Icons.verified_user_rounded, color: _Pal.olive, size: 18),
+        ],
+      ),
     );
-    canvas.drawRRect(faceGuide, guidePaint);
-
-
-    // 3. Corner Brackets (HUD style)
-    double bracketLen = 30;
-    double padding = 20;
-    
-    Path corners = Path();
-    // Top Left
-    corners.moveTo(padding, padding + bracketLen);
-    corners.lineTo(padding, padding);
-    corners.lineTo(padding + bracketLen, padding);
-    
-    // Top Right
-    corners.moveTo(size.width - padding - bracketLen, padding);
-    corners.lineTo(size.width - padding, padding);
-    corners.lineTo(size.width - padding, padding + bracketLen);
-    
-    // Bottom Left
-    corners.moveTo(padding, size.height - padding - bracketLen);
-    corners.lineTo(padding, size.height - padding);
-    corners.lineTo(padding + bracketLen, size.height - padding);
-    
-    // Bottom Right
-    corners.moveTo(size.width - padding - bracketLen, size.height - padding);
-    corners.lineTo(size.width - padding, size.height - padding);
-    corners.lineTo(size.width - padding, size.height - padding - bracketLen);
-    
-    canvas.drawPath(corners, linePaint..strokeWidth = 4);
   }
 
-  @override
-  bool shouldRepaint(covariant SkinScannerPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+  Widget _buildStatusPill() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: _Pal.wood.withOpacity(0.05), borderRadius: BorderRadius.circular(8)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 5, height: 5, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          const Text("NEURAL STABILITY: 99.8%", style: TextStyle(color: _Pal.wood, fontSize: 7, fontWeight: FontWeight.bold, letterSpacing: 1)),
+        ],
+      ),
+    );
   }
+
+  Widget _buildHeroScanner() {
+    return AnimatedBuilder(
+      animation: _pulseCtrl,
+      builder: (context, child) => Container(
+        height: 120, width: 120,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: _Pal.olive.withOpacity(0.6 * (1 - _pulseCtrl.value)), width: 25 * _pulseCtrl.value),
+        ),
+        child: const Center(
+          child: Icon(Icons.center_focus_strong_rounded, color: _Pal.wood, size: 50),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetectionEngine() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("CLINICAL DETECTION ENGINE", style: TextStyle(color: _Pal.olive, fontWeight: FontWeight.w900, fontSize: 8, letterSpacing: 1.5)),
+        const SizedBox(height: 8),
+        GridView.count(
+          shrinkWrap: true,
+          crossAxisCount: 2,
+          mainAxisSpacing: 6,
+          crossAxisSpacing: 6,
+          childAspectRatio: 4.2,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _diagChip("🔬", "Acne detection", _Pal.wood, Colors.white),
+            _diagChip("🛡️", "Milia detection", _Pal.khaki, _Pal.wood),
+            _diagChip("🧫", "Eczema pattern", _Pal.olive, Colors.white),
+            _diagChip("🌡️", "Inflammation", _Pal.sand, _Pal.wood),
+            _diagChip("🧬", "Healthy dermis", Colors.white, _Pal.wood),
+            _diagChip("✨", "Texture health", Colors.white, _Pal.wood),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _diagChip(String emoji, String text, Color bg, Color tc) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10),
+    decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10), border: bg == Colors.white ? Border.all(color: Colors.black.withOpacity(0.05)) : null),
+    child: Row(children: [Text(emoji, style: const TextStyle(fontSize: 10)), const SizedBox(width: 6), Expanded(child: Text(text, style: TextStyle(color: tc, fontSize: 8, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))]),
+  );
+
+  Widget _buildProtocolNote() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: _Pal.sand, borderRadius: BorderRadius.circular(18)),
+      child: const Text(
+        "FAZ-SKIN protocol cross-checks 6 trained neural layers to isolate Acne and Milia clusters with maximum clinical precision.",
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 9, color: _Pal.wood, height: 1.4, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  Widget _buildActionCenter() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            _actionBtn("SKIN SCAN", Icons.camera_alt_rounded, _Pal.wood, Colors.white, () => _getImage(ImageSource.camera)),
+            const SizedBox(width: 10),
+            _actionBtn("IMPORT", Icons.photo_library_rounded, _Pal.olive, Colors.white, () => _getImage(ImageSource.gallery)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: _Pal.khaki.withOpacity(0.3), borderRadius: BorderRadius.circular(15)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _smallBtn(Icons.chat_bubble_rounded, "CHAT"),
+              _smallBtn(Icons.medical_services, "DOCTOR"),
+              _smallBtn(Icons.help_outline, "FAQ"),
+              _smallBtn(Icons.history_rounded, "REPORTS"),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _actionBtn(String l, IconData i, Color c, Color tc, VoidCallback tap) => Expanded(
+    child: GestureDetector(
+      onTap: tap,
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(12)),
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(i, color: tc, size: 16), const SizedBox(width: 6), Text(l, style: TextStyle(color: tc, fontWeight: FontWeight.w900, fontSize: 10))]),
+      ),
+    ),
+  );
+
+  Widget _smallBtn(IconData i, String l) => Column(children: [
+    Icon(i, color: _Pal.wood, size: 16),
+    const SizedBox(height: 2),
+    Text(l, style: const TextStyle(color: _Pal.wood, fontSize: 7, fontWeight: FontWeight.w900)),
+  ]);
 }

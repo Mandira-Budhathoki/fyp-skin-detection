@@ -106,33 +106,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF1a1a2e),
-              Color(0xFF16213e),
-              Color(0xFF0f3460),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        color: const Color(0xFFF6F4E8), // Cream
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
               child: Column(
                 children: [
-                  const Icon(Icons.person_add_rounded, size: 80, color: Colors.white),
-                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFDC9B9B), // Rose
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.person_add_rounded, size: 40, color: Colors.white),
+                  ),
+                  const SizedBox(height: 24),
                   const Text(
-                    'Register Account',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                    'Create Account',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: Color(0xFF2D3436), letterSpacing: -0.5),
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Create your account',
-                    style: TextStyle(color: Colors.white70),
+                    'Join the SkinHealth AI community',
+                    style: TextStyle(color: Color(0xFF636E72), fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 32),
 
@@ -170,16 +167,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 58,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        backgroundColor: const Color(0xFFDC9B9B), // Rose
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: const Color(0xFFDC9B9B).withValues(alpha: 0.3),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                       onPressed: _isLoading ? null : _register,
                       child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Register', style: TextStyle(fontSize: 18)),
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text('Register Now', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -193,7 +193,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                     child: const Text(
                       'Already have an account? Login',
-                      style: TextStyle(color: Colors.tealAccent, fontSize: 14),
+                      style: TextStyle(color: Color(0xFFDC9B9B), fontSize: 14, fontWeight: FontWeight.w700),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -230,21 +230,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF2D3436), fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: Icon(icon, color: Colors.tealAccent),
+        labelStyle: const TextStyle(color: Color(0xFFAEB8B8), fontWeight: FontWeight.w500),
+        prefixIcon: Icon(icon, color: const Color(0xFFDC9B9B), size: 20),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.all(20),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: const BorderSide(color: Color(0xFFE5EEE4)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.teal, width: 2),
+          borderSide: const BorderSide(color: Color(0xFFDC9B9B), width: 1.5),
         ),
       ),
     );

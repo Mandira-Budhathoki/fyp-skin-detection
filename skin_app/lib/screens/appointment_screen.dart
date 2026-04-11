@@ -38,13 +38,13 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     _fetchDoctors();
   }
 
-  static const Color primary    = Color(0xFF1E293B); 
-  static const Color accent     = Color(0xFF0D9488); 
-  static const Color warning    = Color(0xFFD97706); 
-  static const Color background = Color(0xFFF1F5F9); 
+  static const Color background = Color(0xFFF6F4E8); // Cream
+  static const Color accent     = Color(0xFFDC9B9B); // Rose (Primary Action)
+  static const Color secondary  = Color(0xFFC0E1D2); // Seafoam (Badges)
+  static const Color warning    = Color(0xFFE2A96F); 
   
-  static const Color textDark   = Color(0xFF0F172A);
-  static const Color textGray   = Color(0xFF64748B);
+  static const Color textDark   = Color(0xFF2D3436);
+  static const Color textGray   = Color(0xFF636E72);
 
   Future<void> _fetchDoctors() async {
     final prefs = await SharedPreferences.getInstance();
@@ -214,9 +214,9 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: accent,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              elevation: 5,
-              shadowColor: accent.withOpacity(0.4),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 4,
+              shadowColor: accent.withValues(alpha: 0.3),
             ),
             onPressed: _bookAppointment,
             child: const Text("Book Appointment Now",
@@ -229,8 +229,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           ? const Center(child: CircularProgressIndicator(color: accent))
           : Stack(
               children: [
-                Positioned(top: -60, right: -60, child: _decorCircle(accent.withOpacity(0.06), 220)),
-                Positioned(bottom: 60, left: -70, child: _decorCircle(warning.withOpacity(0.07), 240)),
+                Positioned(top: -60, right: -60, child: _decorCircle(secondary.withValues(alpha: 0.15), 220)),
+                Positioned(bottom: 60, left: -70, child: _decorCircle(accent.withValues(alpha: 0.12), 240)),
 
                 SingleChildScrollView(
                   padding: EdgeInsets.only(top: 20, bottom: keyboardH + 16),
@@ -292,11 +292,11 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(28),
-                                      border: Border.all(color: isSelected ? accent : Colors.black.withOpacity(0.04), width: 2),
+                                      border: Border.all(color: isSelected ? accent : Colors.black.withValues(alpha: 0.04), width: 2),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: isSelected ? accent.withOpacity(0.12) : Colors.black.withOpacity(0.05),
-                                          blurRadius: 24, offset: const Offset(0, 12),
+                                          color: isSelected ? accent.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.04),
+                                          blurRadius: 20, offset: const Offset(0, 10),
                                         ),
                                       ],
                                     ),
@@ -323,10 +323,10 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                                               Positioned(
                                                 top: 10, right: 10,
                                                 child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                                   decoration: BoxDecoration(
-                                                    color: isAvailableToday ? accent : Colors.grey.withOpacity(0.8), 
-                                                    borderRadius: BorderRadius.circular(8)
+                                                    color: isAvailableToday ? secondary : Colors.grey.withValues(alpha: 0.5), 
+                                                    borderRadius: BorderRadius.circular(10)
                                                   ),
                                                   child: Text(_getDoctorDaysSummary(doc), 
                                                     style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
@@ -355,14 +355,14 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                                                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => DoctorBioScreen(doctor: doc))),
                                                 child: Container(
                                                   width: double.infinity,
-                                                  padding: const EdgeInsets.symmetric(vertical: 6),
+                                                  padding: const EdgeInsets.symmetric(vertical: 8),
                                                   decoration: BoxDecoration(
-                                                    color: accent.withOpacity(0.08),
-                                                    borderRadius: BorderRadius.circular(10),
-                                                    border: Border.all(color: accent.withOpacity(0.1)),
+                                                    color: secondary.withValues(alpha: 0.15),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    border: Border.all(color: secondary.withValues(alpha: 0.1)),
                                                   ),
                                                   child: const Center(
-                                                    child: Text("VIEW BIO", style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: accent, letterSpacing: 0.5)),
+                                                    child: Text("VIEW BIO", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: textDark, letterSpacing: 0.5)),
                                                   ),
                                                 ),
                                               ),
@@ -445,7 +445,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                             const Text("Select Time Slot",
+                             const Text("Time Slot",
                                 style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                             if (_isSlotsLoading) const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: accent)),
                           ],
@@ -491,12 +491,12 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                                       onTap: () => setState(() => _selectedTime = time),
                                       child: AnimatedContainer(
                                         duration: const Duration(milliseconds: 200),
-                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                         decoration: BoxDecoration(
-                                          color: isSel ? accent : background,
-                                          borderRadius: BorderRadius.circular(15),
-                                          border: Border.all(color: isSel ? accent : Colors.black.withOpacity(0.05)),
-                                          boxShadow: isSel ? [BoxShadow(color: accent.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))] : [],
+                                          color: isSel ? accent : Colors.white,
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(color: isSel ? accent : Colors.black.withValues(alpha: 0.05)),
+                                          boxShadow: isSel ? [BoxShadow(color: accent.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4))] : [],
                                         ),
                                         // Ensure the time fits well
                                         child: Text(time, 
@@ -584,19 +584,20 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           opacity: anim.value.clamp(0.0, 1.0),
           child: AlertDialog(
             backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            surfaceTintColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: secondary.withValues(alpha: 0.2), shape: BoxShape.circle),
                   child: TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0.0, end: 1.0),
                     duration: const Duration(milliseconds: 600),
                     builder: (c, v, ch) => Transform.rotate(angle: v * 6.28, child: ch),
-                    child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 64),
+                    child: const Icon(Icons.check_circle_rounded, color: Color(0xFF4CAF50), size: 64),
                   ),
                 ),
                 const SizedBox(height: 20),

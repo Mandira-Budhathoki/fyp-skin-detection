@@ -2,25 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:intl/intl.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'melanoma_info_provider.dart';
 import 'melanoma_detail_screen.dart';
 
 // ─────────────────────────────────────────────
-//  DESIGN TOKENS (Clinical Pro - Melanoma)
+//  DESIGN TOKENS (Clinical Soft - Melanoma)
 // ─────────────────────────────────────────────
 class _T {
-  static const bg        = Color(0xFFF8FAFC);
+  static const bg        = Color(0xFFF6F4E8); // Cream
   static const surface   = Colors.white;
-  static const cardBorder= Color(0xFFE2E8F0);
+  static const cardBorder= Color(0xFFE5EEE4); // Pale Green border
 
-  static const textPrim  = Color(0xFF0F172A);
-  static const textSub   = Color(0xFF475569);
-  static const textMuted = Color(0xFF94A3B8);
+  static const textPrim  = Color(0xFF2D3436);
+  static const textSub   = Color(0xFF636E72);
+  static const textMuted = Color(0xFFAEB8B8);
 
-  static const primary   = Color(0xFF0066FF); // Benign Blue
-  static const highRisk  = Color(0xFFE11D48); // Melanoma Red
-  static const warning   = Color(0xFFF59E0B); // Unclear Orange
-  static const accent    = Color(0xFF7C3AED);
+  static const primary   = Color(0xFFC0E1D2); // Seafoam (Benign)
+  static const highRisk  = Color(0xFFDC9B9B); // Rose (Melanoma)
+  static const warning   = Color(0xFFE2A96F); // Keeping a soft orange for warnings
+  static const accent    = Color(0xFFDC9B9B);
 }
 
 class MelanomaResultsScreen extends StatefulWidget {
@@ -42,6 +46,8 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
   late final Animation<double> _contentSlide;
   late final Animation<double> _contentFade;
   late final Animation<double> _pulse;
+
+  final ScreenshotController _screenshotController = ScreenshotController();
 
   late final String _prediction;
   late final double _confidence;
@@ -93,15 +99,21 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
       backgroundColor: _T.bg,
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
-      body: ScrollConfiguration(
-        behavior: _NoGlowBehavior(),
-        child: CustomScrollView(
-          physics: const ClampingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: _buildHero(mq)),
-            SliverToBoxAdapter(child: _buildContentSheet()),
-            const SliverToBoxAdapter(child: SizedBox(height: 60)),
-          ],
+      body: Screenshot(
+        controller: _screenshotController,
+        child: Container(
+          color: _T.bg, // Backing for screenshot
+          child: ScrollConfiguration(
+            behavior: _NoGlowBehavior(),
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(child: _buildHero(mq)),
+                SliverToBoxAdapter(child: _buildContentSheet()),
+                const SliverToBoxAdapter(child: SizedBox(height: 60)),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -123,46 +135,110 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
   );
 
   Widget _buildHero(MediaQueryData mq) {
-    return SizedBox(
-      height: mq.size.height * 0.38,
-      child: Stack(
-        fit: StackFit.expand,
+    final dateStr = DateFormat('MMMM d, yyyy').format(DateTime.now());
+    return Padding(
+      padding: EdgeInsets.only(top: mq.padding.top + 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Hero(
-            tag: 'melanoma_image',
-            child: AnimatedBuilder(
-              animation: _heroCtrl,
-              builder: (_, child) => Transform.scale(scale: _heroScale.value, child: child),
-              child: _imageFile != null ? Image.file(_imageFile!, fit: BoxFit.cover) : Container(color: _themeColor.withOpacity(0.1)),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                colors: [Colors.black.withOpacity(0.2), Colors.transparent, _T.bg],
-                stops: const [0, 0.5, 1],
-              ),
-            ),
-          ),
-          Positioned(
-            left: 24, bottom: 10,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _StatusPill(
-                  label: _isUnclear ? "UNSTABLE SCAN" : (_isMelanoma ? "HIGH RISK VERDICT" : "BENIGN INDICATED"),
-                  color: _themeColor,
-                  pulse: (_isMelanoma || _isUnclear) ? _pulse : null,
-                ),
-                const SizedBox(height: 8),
-                Text(_prediction.toUpperCase(), style: TextStyle(color: _T.textPrim, fontSize: _prediction.length > 15 ? 24 : 32, fontWeight: FontWeight.w900)),
+                const Text("ANALYZED IMAGE", style: TextStyle(color: _T.textMuted, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                Text(dateStr, style: const TextStyle(color: _T.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
-          Positioned(
-            right: 24, bottom: 10,
-            child: _ConfidenceArc(value: _confidence / 100, color: _themeColor),
+          Container(
+            height: mq.size.height * 0.35,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            child: Stack(
+              children: [
+                // Main Photo with Large Radius
+                Positioned.fill(
+                  child: Hero(
+                    tag: 'melanoma_image',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: AnimatedBuilder(
+                        animation: _heroCtrl,
+                        builder: (_, child) => Transform.scale(scale: _heroScale.value, child: child),
+                        child: _imageFile != null 
+                          ? Image.file(_imageFile!, fit: BoxFit.cover) 
+                          : Container(color: _themeColor.withOpacity(0.1)),
+                      ),
+                    ),
+                  ),
+                ),
+                // Percentage Badge (Circle above/on picture)
+                Positioned(
+                  top: 20,
+                  right: 20,
+                  child: Container(
+                    width: 68,
+                    height: 68,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.95),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 5))
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        _ConfidenceArc(value: _confidence / 100, color: _themeColor, size: 60),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text("${_confidence.toStringAsFixed(1)}", style: TextStyle(color: _T.textPrim, fontSize: 13, fontWeight: FontWeight.w900, height: 1)),
+                            const Text("%", style: TextStyle(color: _T.textMuted, fontSize: 8, fontWeight: FontWeight.w900)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Scan Status Overlay (Top Left)
+                Positioned(
+                  top: 20,
+                  left: 20,
+                  child: _StatusPill(
+                    label: _isUnclear ? "POOR SCAN" : (_isMelanoma ? "HIGH RISK" : "BENIGN"),
+                    color: _themeColor,
+                    pulse: (_isMelanoma || _isUnclear) ? _pulse : null,
+                  ),
+                ),
+                // Bottom Gradient
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(32),
+                      gradient: LinearGradient(
+                        begin: Alignment.center, end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black.withOpacity(0.4)],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              _prediction.toUpperCase(), 
+              style: TextStyle(
+                color: _T.textPrim, 
+                fontSize: _prediction.length > 15 ? 24 : 32, 
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5
+              )
+            ),
           ),
         ],
       ),
@@ -177,13 +253,38 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
         builder: (_, child) => Transform.translate(offset: Offset(0, _contentSlide.value), child: Opacity(opacity: _contentFade.value, child: child)),
         child: Column(
           children: [
-            const SizedBox(height: 10),
-            if (_isUnclear) _buildUnclearCard() else ...[
-              _SectionTitle("DIFFERENTIAL DIAGNOSIS"),
-              const SizedBox(height: 16),
-              ..._top3.map((item) => _ProbabilityTile(label: item['label'], value: (item['confidence'] as num).toDouble(), color: _themeColor)).toList(),
+            if (_isUnclear) ...[
+              const SizedBox(height: 20),
+              _buildUnclearCard(),
+            ] else ...[
               const SizedBox(height: 24),
-              _ObservationCard(isHighRisk: _isMelanoma, color: _themeColor),
+              _SectionTitle("TOP PREDICTIONS"),
+              const SizedBox(height: 16),
+              ...List.generate(_top3.length, (index) {
+                final item = _top3[index];
+                return _ProbabilityCard(
+                  rank: index + 1,
+                  label: item['label'],
+                  value: (item['confidence'] as num).toDouble(),
+                  color: index == 0 ? _themeColor : _T.textMuted,
+                );
+              }),
+              const SizedBox(height: 24),
+              _ActionCard(
+                icon: Icons.info_outline_rounded,
+                title: _isMelanoma ? "Immediate Action Recommended" : "Routine Checkup Advised",
+                subtitle: _isMelanoma 
+                  ? "Schedule a dermatologist appointment within 1-2 weeks for professional evaluation and biopsy."
+                  : "Monitor the spot for any changes in size, shape, or color over time.",
+                color: _isMelanoma ? _T.highRisk : _T.primary,
+              ),
+              const SizedBox(height: 12),
+              const _ActionCard(
+                icon: Icons.security_rounded,
+                title: "Early Detection Matters",
+                subtitle: "Early-stage melanoma has a 99% five-year survival rate. Prompt medical evaluation significantly improves outcomes.",
+                color: Color(0xFFF59E0B),
+              ),
             ],
 
             const SizedBox(height: 32),
@@ -192,9 +293,10 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
             Row(
               children: [
                 _CompactAction(
-                  icon: Icons.description_outlined,
+                  icon: Icons.assignment_rounded,
                   label: "Report",
-                  color: _T.accent,
+                  color: Colors.white,
+                  bgColor: const Color(0xFF0066FF),
                   onTap: () {
                      Navigator.push(context, MaterialPageRoute(builder: (context) => MelanomaDetailScreen(
                         conditionName: widget.results['raw_class'] ?? (_isMelanoma ? 'Melanoma' : 'Benign'),
@@ -204,43 +306,98 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
                 ),
                 const SizedBox(width: 12),
                 _CompactAction(
-                  icon: Icons.calendar_today_rounded,
+                  icon: Icons.chat_bubble_rounded,
                   label: "Consult",
                   color: _T.textPrim,
+                  bgColor: Colors.white,
                   onTap: () => Navigator.pushNamed(context, '/appointment'),
                 ),
                 const SizedBox(width: 12),
-                _CompactAction(icon: Icons.share_rounded, label: "Share", color: _T.textSub, onTap: () {}),
+                _CompactAction(
+                  icon: Icons.share_rounded,
+                  label: "Share",
+                  color: _T.textPrim,
+                  bgColor: Colors.white,
+                  onTap: _shareResults,
+                ),
               ],
             ),
             const SizedBox(height: 32),
-            _PipelineCard(isMelanoma: _isMelanoma, isUnclear: _isUnclear),
-            const SizedBox(height: 24),
-            const Text(
-              "Clinical AI screening is for diagnostic support only. Professional biopsy is required for definitive melanoma confirmation.",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11, color: _T.textMuted, height: 1.5, fontStyle: FontStyle.italic),
-            ),
+            _DisclaimerCard(),
           ],
         ),
       ),
     );
   }
 
+  Future<void> _shareResults() async {
+    try {
+      final image = await _screenshotController.capture();
+      if (image != null) {
+        final directory = await getApplicationDocumentsDirectory();
+        final imagePath = await File('${directory.path}/melanoma_scan_result.png').create();
+        await imagePath.writeAsBytes(image);
+        
+        await Share.shareXFiles(
+          [XFile(imagePath.path)],
+          text: 'SkinHealth AI: My Melanoma Screening Result. Early detection saves lives! #SkinHealth #Dermatology',
+        );
+      }
+    } catch (e) {
+      debugPrint("Sharing error: $e");
+    }
+  }
+
   Widget _buildUnclearCard() {
+    final backendMsg = widget.results['message'] ?? '';
+    final isInvalid = _prediction.contains('Invalid') || _prediction.contains('Wrong Image Type');
+
+    final title = isInvalid ? "NOT A SKIN LESION" : "IMAGE UNCLEAR";
+    final icon = isInvalid ? Icons.block_rounded : Icons.no_photography_rounded;
+    final desc = backendMsg.isNotEmpty
+        ? backendMsg
+        : "We couldn't detect a valid skin lesion. Please upload a focused, well-lit close-up of a specific mole or spot.";
+    final tip = isInvalid
+        ? "Zoom into one specific mole or spot only"
+        : "Use rear camera, good lighting, 10-15cm away";
+
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: _T.cardBorder)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _T.cardBorder),
+      ),
       child: Column(
         children: [
-          const Icon(Icons.no_photography_rounded, color: _T.warning, size: 48),
-          const SizedBox(height: 16),
-          const Text("SCAN QUALITY POOR", style: TextStyle(fontWeight: FontWeight.w900, color: _T.textPrim, fontSize: 16)),
-          const SizedBox(height: 8),
-          const Text(
-            "The system couldn't identify clear skin patterns. Please rescan with better lighting and focus.",
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF3E0),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: _T.warning, size: 42),
+          ),
+          const SizedBox(height: 20),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: _T.textPrim, fontSize: 16, letterSpacing: 0.5)),
+          const SizedBox(height: 12),
+          Text(
+            desc,
             textAlign: TextAlign.center,
-            style: TextStyle(color: _T.textSub, fontSize: 13, height: 1.5),
+            style: const TextStyle(color: _T.textSub, fontSize: 13, height: 1.6),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(16)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lightbulb_outline_rounded, color: _T.warning, size: 16),
+                const SizedBox(width: 8),
+                Text("Tip: $tip", style: const TextStyle(color: _T.warning, fontWeight: FontWeight.w700, fontSize: 11)),
+              ],
+            ),
           ),
         ],
       ),
@@ -257,31 +414,54 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
 //  WIDGET COMPONENTS
 // ─────────────────────────────────────────────
 
-class _ProbabilityTile extends StatelessWidget {
+class _ProbabilityCard extends StatelessWidget {
+  final int rank;
   final String label;
   final double value;
   final Color color;
-  const _ProbabilityTile({required this.label, required this.value, required this.color});
+  const _ProbabilityCard({required this.rank, required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: _T.cardBorder)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _T.cardBorder),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
+        ]
+      ),
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: _T.textPrim, fontSize: 13)),
-              Text("${value.toStringAsFixed(1)}%", style: TextStyle(fontWeight: FontWeight.w900, color: color, fontSize: 13)),
+              Container(
+                width: 24, height: 24,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text("$rank", style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900)),
+              ),
+              const SizedBox(width: 12),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.w700, color: _T.textPrim, fontSize: 14)),
+              const Spacer(),
+              Text("${value.toStringAsFixed(1)}%", style: TextStyle(fontWeight: FontWeight.w900, color: color, fontSize: 14)),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(value: value / 100, backgroundColor: _T.bg, valueColor: AlwaysStoppedAnimation<Color>(color), minHeight: 4),
+            child: LinearProgressIndicator(
+              value: value / 100, 
+              backgroundColor: _T.bg, 
+              valueColor: AlwaysStoppedAnimation<Color>(color), 
+              minHeight: 6
+            ),
           ),
         ],
       ),
@@ -289,31 +469,41 @@ class _ProbabilityTile extends StatelessWidget {
   }
 }
 
-class _ObservationCard extends StatelessWidget {
-  final bool isHighRisk;
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title, subtitle;
   final Color color;
-  const _ObservationCard({required this.isHighRisk, required this.color});
+  const _ActionCard({required this.icon, required this.title, required this.subtitle, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isHighRisk ? const Color(0xFFFFF1F2) : const Color(0xFFF0FDF4),
+        color: color.withOpacity(0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withOpacity(0.1)),
+        border: Border.all(color: color.withOpacity(0.15)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(isHighRisk ? Icons.warning_amber_rounded : Icons.check_circle_rounded, color: color, size: 20),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            child: Icon(icon, color: Colors.white, size: 16),
+          ),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              isHighRisk 
-                ? "This lesion shows critical ABCDE irregularities. Clinical dermoscopy is strongly recommended."
-                : "The patterns detected appear benign. Continue to monitor for any changes in color or size.",
-              style: TextStyle(color: isHighRisk ? const Color(0xFF9F1239) : const Color(0xFF166534), fontSize: 14, height: 1.5, fontWeight: FontWeight.w600),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(color: color.withOpacity(0.8), fontSize: 15, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: TextStyle(color: color.withOpacity(0.7), fontSize: 13, height: 1.5, fontWeight: FontWeight.w600),
+                ),
+              ],
             ),
           ),
         ],
@@ -326,8 +516,9 @@ class _CompactAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final Color bgColor;
   final VoidCallback onTap;
-  const _CompactAction({required this.icon, required this.label, required this.color, required this.onTap});
+  const _CompactAction({required this.icon, required this.label, required this.color, required this.bgColor, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -335,16 +526,56 @@ class _CompactAction extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: _T.cardBorder)),
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: bgColor, 
+            borderRadius: BorderRadius.circular(20), 
+            border: Border.all(color: _T.cardBorder),
+            boxShadow: bgColor != Colors.white ? [
+              BoxShadow(color: bgColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
+            ] : null,
+          ),
           child: Column(
             children: [
-              Icon(icon, color: color, size: 20),
+              Icon(icon, color: color, size: 24),
               const SizedBox(height: 8),
-              Text(label, style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 11)),
+              Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 13)),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DisclaimerCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.privacy_tip_rounded, color: _T.textMuted, size: 20),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Clinical AI Screening Disclaimer", style: TextStyle(color: _T.textPrim, fontSize: 12, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 6),
+                Text(
+                  "This AI screening is for diagnostic support only. Professional biopsy is required for definitive melanoma confirmation. This tool does not replace professional medical evaluation. Always consult a board-certified dermatologist for clinical diagnosis and treatment.",
+                  style: TextStyle(color: _T.textSub.withOpacity(0.8), fontSize: 11, height: 1.5, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -377,17 +608,17 @@ class _StatusPill extends StatelessWidget {
 class _ConfidenceArc extends StatelessWidget {
   final double value;
   final Color color;
-  const _ConfidenceArc({required this.value, required this.color});
+  final double size;
+  const _ConfidenceArc({required this.value, required this.color, this.size = 64});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 64, height: 64,
+      width: size, height: size,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          CustomPaint(size: const Size(64, 64), painter: _ArcPaint(value: value, color: color)),
-          Text("${(value * 100).toStringAsFixed(0)}%", style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 14)),
+          CustomPaint(size: Size(size, size), painter: _ArcPaint(value: value, color: color)),
         ],
       ),
     );
@@ -408,56 +639,6 @@ class _ArcPaint extends CustomPainter {
   }
   @override
   bool shouldRepaint(_ArcPaint old) => old.value != value;
-}
-
-class _PipelineCard extends StatelessWidget {
-  final bool isMelanoma, isUnclear;
-  const _PipelineCard({required this.isMelanoma, required this.isUnclear});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: _T.cardBorder)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("ENGINE CONSENSUS", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: _T.textMuted, letterSpacing: 1.5)),
-          const SizedBox(height: 16),
-          _PipelineStep(title: "Primary Scorer", sub: "Deep Ensemble", active: true, color: isMelanoma ? _T.highRisk : Colors.green),
-          _PipelineStep(title: "Pattern Linker", sub: "Neural Context", active: !isUnclear, color: Colors.blue),
-          _PipelineStep(title: "Final Verdict", sub: "Clinical Weighted", active: true, color: _T.textPrim),
-        ],
-      ),
-    );
-  }
-}
-
-class _PipelineStep extends StatelessWidget {
-  final String title, sub;
-  final bool active;
-  final Color color;
-  const _PipelineStep({required this.title, required this.sub, required this.active, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(active ? Icons.check_circle_rounded : Icons.radio_button_off_rounded, color: active ? color : _T.cardBorder, size: 16),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-               Text(title, style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.bold, fontSize: 12)),
-               Text(sub, style: const TextStyle(color: _T.textMuted, fontWeight: FontWeight.bold, fontSize: 9)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _NoGlowBehavior extends ScrollBehavior {

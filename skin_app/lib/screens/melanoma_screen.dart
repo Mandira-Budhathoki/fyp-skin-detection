@@ -67,7 +67,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8), // Soft gray-blue background
+      backgroundColor: const Color(0xFFF6F4E8), // Cream
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -87,7 +87,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
               ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF264653), size: 20),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFFDC9B9B), size: 20),
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -95,8 +95,8 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
         title: const Text(
           'Melanoma Detection',
           style: TextStyle(
-            color: Color(0xFF264653),
-            fontWeight: FontWeight.w700,
+            color: Color(0xFF2D3436), // Charcoal
+            fontWeight: FontWeight.w900,
             fontSize: 22,
             letterSpacing: 0.5,
           ),
@@ -113,7 +113,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
               width: 300,
               height: 300,
               decoration: BoxDecoration(
-                color: const Color(0xFF2A9D8F).withOpacity(0.1),
+                color: const Color(0xFFC0E1D2).withValues(alpha: 0.2), // Seafoam
                 shape: BoxShape.circle,
               ),
             ),
@@ -152,7 +152,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF264653).withOpacity(0.15),
+                color: const Color(0xFF2D3436).withValues(alpha: 0.05),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -164,12 +164,12 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3E0),
+                  color: const Color(0xFFF9E8E8), // Light Rose
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.health_and_safety_rounded,
-                  color: Color(0xFFF4A261),
+                  color: Color(0xFFDC9B9B), // Rose
                   size: 48,
                 ),
               ),
@@ -177,9 +177,9 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
               const Text(
                 'Medical Disclaimer',
                 style: TextStyle(
-                  color: Color(0xFF264653),
+                  color: Color(0xFF2D3436),
                   fontSize: 24,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w900,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -201,10 +201,11 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
                     setState(() => _showDisclaimer = false);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2A9D8F),
+                    backgroundColor: const Color(0xFFDC9B9B), // Rose
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    elevation: 0,
+                    elevation: 4,
+                    shadowColor: const Color(0xFFDC9B9B).withValues(alpha: 0.3),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -241,7 +242,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF264653),
+              color: Color(0xFF2D3436),
             ),
           ),
           const SizedBox(height: 16),
@@ -267,11 +268,11 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF264653),
+        color: const Color(0xFFDC9B9B), // Rose
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF264653).withOpacity(0.3),
+            color: const Color(0xFFDC9B9B).withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -286,8 +287,8 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
-              Icons.wb_sunny_rounded,
-              color: Color(0xFFE9C46A),
+              Icons.biotech_rounded,
+              color: Color(0xFFC0E1D2), // Seafoam
               size: 28,
             ),
           ),
@@ -328,7 +329,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
           child: _buildSelectionCard(
             icon: Icons.camera_alt_outlined,
             title: 'Camera',
-            color: const Color(0xFF2A9D8F),
+            color: const Color(0xFFDC9B9B), // Rose
             onTap: () => _pickImage(ImageSource.camera),
           ),
         ),
@@ -337,7 +338,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
           child: _buildSelectionCard(
             icon: Icons.photo_library_outlined,
             title: 'Gallery',
-            color: const Color(0xFFE76F51),
+            color: const Color(0xFFE2A96F), // Soft Orange
             onTap: () => _pickImage(ImageSource.gallery),
           ),
         ),
@@ -387,7 +388,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF264653),
+                  color: Color(0xFF2D3436),
                 ),
               ),
             ],
@@ -404,7 +405,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
           icon: Icons.calendar_month_rounded,
           label: 'Book an Appointment',
           subLabel: 'Schedule a visit with a dermatologist',
-          color: const Color(0xFF2A9D8F),
+          color: const Color(0xFFDC9B9B), // Rose
           onTap: () => Navigator.pushNamed(context, '/appointment'),
         ),
         const SizedBox(height: 14),
@@ -412,7 +413,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
           icon: Icons.chat_bubble_outline_rounded,
           label: 'Consult AI Assistant',
           subLabel: 'Ask questions about skin health',
-          color: const Color(0xFF264653),
+          color: const Color(0xFFC0E1D2), // Seafoam
           onTap: () {
             Navigator.push(
               context,
@@ -472,7 +473,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF264653),
+                          color: Color(0xFF2D3436),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -575,7 +576,8 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen>
       final respStr = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
-        final data = json.decode(respStr);
+        final data = json.decode(respStr) as Map<String, dynamic>;
+        data['imageFile'] = widget.imageFile; // ✅ Pass the local File so the results screen can display it
         if (mounted) {
           Navigator.push(
             context,
@@ -685,7 +687,7 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen>
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF264653).withOpacity(0.95),
+                color: const Color(0xFF2D3436).withValues(alpha: 0.95),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
@@ -705,7 +707,7 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen>
                     if (_isAnalyzing)
                       Column(
                         children: [
-                          const CircularProgressIndicator(color: Color(0xFF2A9D8F), strokeWidth: 2),
+                          const CircularProgressIndicator(color: Color(0xFFDC9B9B), strokeWidth: 2),
                           const SizedBox(height: 16),
                           Text(
                             _currentStatus,
@@ -746,7 +748,7 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen>
                             child: ElevatedButton(
                               onPressed: _analyzeImage,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2A9D8F),
+                                backgroundColor: const Color(0xFFDC9B9B), // Rose
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
@@ -784,7 +786,7 @@ class MelanomaScannerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Paint linePaint = Paint()
-      ..color = const Color(0xFF2A9D8F).withOpacity(0.8)
+      ..color = const Color(0xFFDC9B9B).withValues(alpha: 0.8) // Rose
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
 
@@ -796,7 +798,7 @@ class MelanomaScannerPainter extends CustomPainter {
       end: Alignment.bottomCenter,
       colors: [
          Colors.transparent,
-         const Color(0xFF2A9D8F).withOpacity(0.4),
+         const Color(0xFFDC9B9B).withValues(alpha: 0.4),
          const Color(0xFFE9C46A).withOpacity(0.3), 
          Colors.transparent,
       ],

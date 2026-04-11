@@ -158,17 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF0f2027),
-              Color(0xFF203a43),
-              Color(0xFF2c5364),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: const Color(0xFFF6F4E8), // Cream background
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -199,34 +189,45 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // CARD
   Widget _loginCard(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: Colors.white24),
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2D3436).withValues(alpha: 0.04), // Charcoal tint
+            blurRadius: 10,
+            offset: const Offset(0, 10),
+          )
+        ],
+        border: Border.all(color: const Color(0xFFE5EEE4)), // Pale Green border
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Color(0xFFDC9B9B), // Rose
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.health_and_safety_rounded, size: 40, color: Colors.white),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.security, size: 70, color: Colors.white),
               const SizedBox(height: 16),
               const Text(
                 'Welcome Back',
                 style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF2D3436), // Charcoal
+                  letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               const Text(
-                'Login to your account',
-                style: TextStyle(color: Colors.white70),
+                'Access your clinical health hub',
+                style: TextStyle(color: Color(0xFF636E72), fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 28),
 
@@ -246,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 suffix: IconButton(
                   icon: Icon(
                     _hidePassword ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.white70,
+                    color: const Color(0xFF636E72),
                   ),
                   onPressed: () {
                     setState(() {
@@ -272,9 +273,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Text(
                     'Forgot Password?',
                     style: TextStyle(
-                      color: Colors.tealAccent,
+                      color: Color(0xFFDC9B9B), // Rose
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -287,20 +288,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 52,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.tealAccent,
-                    foregroundColor: Colors.black,
+                    backgroundColor: const Color(0xFFDC9B9B), // Rose
+                    foregroundColor: Colors.white,
+                    elevation: 4,
+                    shadowColor: const Color(0xFFDC9B9B).withValues(alpha: 0.3),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   onPressed: _isLoading ? null : _login,
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.black)
+                      ? const SizedBox(
+                          width: 24, height: 24,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
                       : const Text(
                           'Login',
                           style: TextStyle(
                             fontSize: 17,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
                           ),
                         ),
                 ),
@@ -317,7 +324,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 child: const Text(
                   'Create new account',
-                  style: TextStyle(color: Colors.tealAccent),
+                  style: TextStyle(color: Color(0xFFDC9B9B), fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(height: 14),
@@ -330,14 +337,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 child: const Text(
                   'Register as Admin',
-                  style: TextStyle(color: Colors.white54, fontSize: 13, decoration: TextDecoration.underline),
+                  style: TextStyle(color: Color(0xFF636E72), fontSize: 13, decoration: TextDecoration.underline),
                 ),
               ),
             ],
-          ),
         ),
-      ),
-    );
+      );
   }
 
   //  INPUT
@@ -351,17 +356,22 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextField(
       controller: controller,
       obscureText: obscure,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF2D3436), fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white54),
-        prefixIcon: Icon(icon, color: Colors.tealAccent),
+        hintStyle: const TextStyle(color: Color(0xFFAEB8B8)),
+        prefixIcon: Icon(icon, color: const Color(0xFFDC9B9B), size: 20),
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.08),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+        fillColor: const Color(0xFFF6F4E8),
+        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFE5EEE4)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFDC9B9B), width: 1.5),
         ),
       ),
     );

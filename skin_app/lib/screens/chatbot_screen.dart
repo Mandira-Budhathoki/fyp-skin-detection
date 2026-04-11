@@ -22,14 +22,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
   bool _isLoadingHistory = false;
   List<String> _suggestions = [];
 
-  // Premium color palette for consistency
-  static const Color deepNavy = Color(0xFF0A1828);
-  static const Color richBurgundy = Color(0xFF8B2635);
-  static const Color warmGold = Color(0xFFD4AF37);
-  static const Color softCream = Color(0xFFFAF9F6);
-  static const Color paleGray = Color(0xFFF5F5F0);
-  static const Color charcoal = Color(0xFF2D3748);
-  static const Color mutedTeal = Color(0xFF1B5B6B);
+  // Premium clinical color palette
+  static const Color rose      = Color(0xFFDC9B9B);
+  static const Color cream     = Color(0xFFF6F4E8);
+  static const Color paleGreen = Color(0xFFE5EEE4);
+  static const Color seafoam   = Color(0xFFC0E1D2);
+  static const Color charcoal  = Color(0xFF2D3436);
+  static const Color textSub   = Color(0xFF636E72);
 
   @override
   void initState() {
@@ -187,7 +186,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: paleGray,
+      backgroundColor: cream,
       appBar: AppBar(
         toolbarHeight: 80,
         backgroundColor: Colors.white,
@@ -196,11 +195,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
         leading: Container(
           margin: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: paleGray,
+            color: cream,
             borderRadius: BorderRadius.circular(12),
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: deepNavy, size: 18),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: charcoal, size: 18),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -212,11 +211,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [richBurgundy, richBurgundy.withOpacity(0.8)],
+                  colors: [rose, rose.withOpacity(0.8)],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: richBurgundy.withOpacity(0.2),
+                    color: rose.withOpacity(0.2),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -231,7 +230,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
                 const Text(
                   'SKIN AI',
                   style: TextStyle(
-                    color: deepNavy,
+                    color: charcoal,
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
                     letterSpacing: 1.5,
@@ -240,7 +239,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
                 Text(
                   _isSending ? 'AI is thinking...' : 'Direct Assistance',
                   style: TextStyle(
-                    color: _isSending ? richBurgundy : mutedTeal,
+                    color: _isSending ? rose : seafoam,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
@@ -251,7 +250,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.history_rounded, color: deepNavy),
+            icon: const Icon(Icons.history_rounded, color: charcoal),
             onPressed: () {},
           ),
           const SizedBox(width: 8),
@@ -310,10 +309,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: richBurgundy.withOpacity(0.1)),
+          border: Border.all(color: rose.withValues(alpha: 0.1)),
           boxShadow: [
             BoxShadow(
-              color: deepNavy.withOpacity(0.04),
+              color: charcoal.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -322,7 +321,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
         child: Text(
           text,
           style: const TextStyle(
-            color: richBurgundy,
+            color: rose,
             fontSize: 12,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
@@ -340,7 +339,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: deepNavy.withOpacity(0.04),
+            color: const Color(0xFF2D3436).withValues(alpha: 0.04),
             blurRadius: 10,
           )
         ],
@@ -358,7 +357,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
       height: 6,
       margin: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
-        color: richBurgundy.withOpacity(0.4 + (index * 0.2)),
+        color: rose.withValues(alpha: 0.4 + (index * 0.2)),
         shape: BoxShape.circle,
       ),
     );
@@ -376,7 +375,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          color: isUser ? richBurgundy : Colors.white,
+          color: isUser ? rose : seafoam.withValues(alpha: 0.25),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(20),
             topRight: const Radius.circular(20),
@@ -386,8 +385,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
           boxShadow: [
             BoxShadow(
               color: isUser 
-                  ? richBurgundy.withOpacity(0.15) 
-                  : deepNavy.withOpacity(0.05),
+                  ? rose.withValues(alpha: 0.15) 
+                  : charcoal.withValues(alpha: 0.05),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
@@ -414,7 +413,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: deepNavy.withOpacity(0.06),
+            color: charcoal.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -426,12 +425,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: paleGray,
+                color: cream,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: TextField(
                 controller: _controller,
-                style: const TextStyle(color: deepNavy, fontWeight: FontWeight.w600, fontSize: 14),
+                style: const TextStyle(color: charcoal, fontWeight: FontWeight.w600, fontSize: 14),
                 decoration: const InputDecoration(
                   hintText: "Ask about your skin...",
                   hintStyle: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w400),
@@ -449,12 +448,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
               duration: const Duration(milliseconds: 300),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _isSending ? paleGray : richBurgundy,
+                color: _isSending ? cream : rose,
                 shape: BoxShape.circle,
                 boxShadow: [
                   if (!_isSending)
                     BoxShadow(
-                      color: richBurgundy.withOpacity(0.3),
+                      color: rose.withValues(alpha: 0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     )

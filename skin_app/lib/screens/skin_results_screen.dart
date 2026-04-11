@@ -7,18 +7,18 @@ import '../services/api_service.dart';
 //  DESIGN TOKENS (Clinical Pro - General Skin)
 // ─────────────────────────────────────────────
 class _T {
-  static const bg        = Color(0xFFF8FAFC);
+  static const bg        = Color(0xFFF6F4E8); // Cream
   static const surface   = Colors.white;
-  static const cardBorder= Color(0xFFE2E8F0);
+  static const cardBorder= Color(0xFFE5EEE4); // Pale Green border
 
-  static const textPrim  = Color(0xFF0F172A);
-  static const textSub   = Color(0xFF475569);
-  static const textMuted = Color(0xFF94A3B8);
+  static const textPrim  = Color(0xFF2D3436);
+  static const textSub   = Color(0xFF636E72);
+  static const textMuted = Color(0xFFAEB8B8);
 
-  static const primary   = Color(0xFF0066FF); // Clear/Mild
-  static const warning   = Color(0xFFF59E0B); // Moderate/Other
-  static const highRisk  = Color(0xFFE11D48); // Severe
-  static const accent    = Color(0xFF7C3AED);
+  static const primary   = Color(0xFFC0E1D2); // Seafoam (Clear)
+  static const warning   = Color(0xFFE2A96F); // Moderate
+  static const highRisk  = Color(0xFFDC9B9B); // Rose (High Risk)
+  static const accent    = Color(0xFFE5EEE4); // Pale Green
 }
 
 class SkinResultsScreen extends StatefulWidget {
@@ -42,6 +42,7 @@ class _SkinResultsScreenState extends State<SkinResultsScreen> with TickerProvid
   late final double _acneConf;
   late final String? _processedUrl;
   late final List<dynamic> _otherConditions;
+  late final List<dynamic> _recommendations;
   late final Color _themeColor;
 
   @override
@@ -52,6 +53,7 @@ class _SkinResultsScreenState extends State<SkinResultsScreen> with TickerProvid
     _acneConf = (widget.results['acne_confidence'] ?? widget.results['confidence'] ?? 0.0).toDouble();
     _processedUrl = widget.results['processed_url'] != null ? _buildFullUrl(widget.results['processed_url']) : null;
     _otherConditions = widget.results['other_conditions'] ?? [];
+    _recommendations = widget.results['recommendations'] ?? [];
 
     if (_acneStatus.contains('Moderate') || _otherConditions.isNotEmpty) {
       _themeColor = _T.warning;
@@ -155,9 +157,9 @@ class _SkinResultsScreenState extends State<SkinResultsScreen> with TickerProvid
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.auto_awesome, color: Colors.cyanAccent, size: 12),
+                    Icon(Icons.auto_awesome, color: _T.highRisk, size: 12),
                     SizedBox(width: 6),
-                    Text('XAI HEATMAP', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                    Text('AI ANALYSIS OVERLAY', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1)),
                   ],
                 ),
               ),
@@ -215,6 +217,13 @@ class _SkinResultsScreenState extends State<SkinResultsScreen> with TickerProvid
               _InsightCard(status: _acneStatus, color: _themeColor),
               const SizedBox(height: 24),
             ],
+
+            if (_recommendations.isNotEmpty) ...[
+              _SectionTitle("PERSONALIZED RECOMMENDATIONS"),
+              const SizedBox(height: 16),
+              ..._recommendations.map((rec) => _RecommendationTile(rec: rec)).toList(),
+              const SizedBox(height: 24),
+            ],
             
             _SectionTitle("QUICK ACTIONS"),
             const SizedBox(height: 16),
@@ -223,7 +232,7 @@ class _SkinResultsScreenState extends State<SkinResultsScreen> with TickerProvid
                 _CompactAction(
                   icon: Icons.chat_bubble_outline_rounded,
                   label: "AI Guide",
-                  color: _T.accent,
+                  color: _T.highRisk,
                   onTap: () => Navigator.pushNamed(context, '/chatbot'),
                 ),
                 const SizedBox(width: 12),
@@ -293,7 +302,7 @@ class _ExplainabilityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.cyan.withOpacity(0.05), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.cyan.withOpacity(0.2))),
+      decoration: BoxDecoration(color: _T.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: _T.primary.withValues(alpha: 0.2))),
       child: Row(
         children: [
           const Icon(Icons.help_outline_rounded, color: Colors.cyan, size: 18),
@@ -412,6 +421,67 @@ class _StatusPill extends StatelessWidget {
           Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 8),
           Text(label, style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5)),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecommendationTile extends StatelessWidget {
+  final Map<String, dynamic> rec;
+  const _RecommendationTile({required this.rec});
+
+  @override
+  Widget build(BuildContext context) {
+    final title = rec['title'] ?? 'Care Suggestion';
+    final desc = rec['description'] ?? '';
+    final type = rec['type'] ?? 'info';
+    final iconKey = rec['icon'] ?? 'star';
+    
+    Color color = _T.primary;
+    IconData icon = Icons.auto_awesome_rounded;
+
+    if (type == 'urgent') color = _T.highRisk;
+    else if (type == 'treatment') color = _T.warning;
+    else if (type == 'health') color = _T.primary;
+
+    if (iconKey == 'warning') icon = Icons.warning_rounded;
+    else if (iconKey == 'medical') icon = Icons.medical_services_rounded;
+    else if (iconKey == 'sunny') icon = Icons.wb_sunny_rounded;
+    else if (iconKey == 'fire') icon = Icons.local_fire_department_rounded;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _T.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(type.toString().toUpperCase(), style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: _T.textPrim)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(desc, style: const TextStyle(color: _T.textSub, fontSize: 13, height: 1.5)),
         ],
       ),
     );
