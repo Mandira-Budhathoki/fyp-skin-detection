@@ -56,6 +56,48 @@ class WoundAnalyzerEngine:
             else:
                 print(f"  ⚠️ Model '{key}' not found at {model_path}. Please run download_wound_models.py")
 
+    def generate_recommendations(self, results):
+        """Generates first-aid and care instructions based on wound detection."""
+        recommendations = []
+        primary = results.get("primary")
+        if not primary or "Unclear" in primary["label"]:
+            return []
+
+        label = primary["label"].lower()
+        
+        # 1. Condition Specific Advice
+        if "burn" in label:
+            recommendations.append({
+                "title": "Burn First Aid",
+                "type": "urgent",
+                "icon": "fire",
+                "description": "Run cool (not cold) water over the area for 10-20 minutes. Avoid ice, butter, or ointments which can trap heat. Cover loosely with sterile gauze."
+            })
+        elif "laceration" in label or "cut" in label:
+            recommendations.append({
+                "title": "Bleeding Control",
+                "type": "urgent",
+                "icon": "medical",
+                "description": "Apply steady, direct pressure with a clean cloth. Clean the area with mild soap and water once bleeding stops. Seek stitches if the cut is deep or gaping."
+            })
+        elif "bruise" in label or "contusion" in label:
+            recommendations.append({
+                "title": "R.I.C.E Method",
+                "type": "health",
+                "icon": "sunny",
+                "description": "Rest the area, apply Ice (wrapped in a towel) for 15 mins, use Compression wrap, and Elevate the limb to reduce swelling and pain."
+            })
+        
+        # 2. Infection Prevention (General)
+        recommendations.append({
+            "title": "Infection Watch",
+            "type": "treatment",
+            "icon": "warning",
+            "description": "Monitor for 'The Four Signs': increased redness, warmth, swelling, or foul-smelling discharge. If these occur, consult a doctor immediately."
+        })
+
+        return recommendations
+
     def analyze(self, image_bytes: bytes) -> dict:
         """
         Runs the ensemble on the image bytes and consolidates the results.
@@ -116,6 +158,9 @@ class WoundAnalyzerEngine:
             traceback.print_exc()
             results["engine_status"] = "Offline"
             results["error"] = str(e)
+            
+        # 🟢 GENERATE DYNAMIC RECOMMENDATIONS
+        results["recommendations"] = self.generate_recommendations(results)
             
         return results
 

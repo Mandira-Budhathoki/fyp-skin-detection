@@ -59,6 +59,55 @@ class AcneAnalyzer:
             print(f"Grad-CAM Error: {e}")
             return None
 
+    def generate_recommendations(self, preds):
+        """Generates clinical advice based on multi-class skin predictions."""
+        recommendations = []
+        target_idx = int(np.argmax(preds))
+        conf = float(preds[target_idx] * 100)
+        
+        # 1. Main Condition Advice
+        if target_idx == 0: # Acne
+            rec = {"title": "Acne Care", "type": "treatment", "icon": "medical"}
+            if conf >= 70:
+                rec["description"] = "Moderate to Severe Acne patterns detected. Avoid inflammatory foods and dairy. Consider clinical treatments like Salicylic Acid or Benzoyl Peroxide."
+            else:
+                rec["description"] = "Mild Acne found. Maintain a gentle cleansing routine and avoid picking at spots to prevent scarring."
+            recommendations.append(rec)
+        
+        elif target_idx == 1: # Carcinoma
+            recommendations.append({
+                "title": "Medical Alert",
+                "type": "urgent",
+                "icon": "warning",
+                "description": "Visual patterns similar to Carcinoma detected. This requires immediate clinical screening by a dermatologist for a biopsy. Please book an appointment."
+            })
+            
+        elif target_idx == 2: # Eczema
+            recommendations.append({
+                "title": "Barrier Repair",
+                "type": "health",
+                "icon": "sunny",
+                "description": "Skin appears inflamed/itchy (Eczema). Use thick, fragrance-free ceramides and avoid hot showers which strip natural oils."
+            })
+            
+        elif target_idx == 5: # Rosacea
+            recommendations.append({
+                "title": "Redness Control",
+                "type": "health",
+                "icon": "fire",
+                "description": "Signs of Rosacea detected. Identify your triggers (spicy food, sun, stress). Use soothing agents like Azelaic Acid or Niacinamide."
+            })
+
+        # 2. General Advice
+        recommendations.append({
+            "title": "Sun Protection",
+            "type": "prevention",
+            "icon": "sunny",
+            "description": "No matter the condition, daily SPF 30+ is the #1 tool for skin health and preventing hyperpigmentation."
+        })
+
+        return recommendations
+
     def analyze(self, image_path):
         if self.model is None:
             return {'prediction': 'Model missing', 'confidence': 0.0, 'status': 'warning'}
@@ -165,6 +214,7 @@ class AcneAnalyzer:
                 'acne_status': acne_status,
                 'confidence': acne_conf,
                 'other_conditions': other_conditions,
+                'recommendations': self.generate_recommendations(preds),
                 'message': f"Acne Level: {acne_status} ({acne_conf}%)",
                 'status': 'success',
                 'heatmap_img': heatmap_img,

@@ -134,6 +134,71 @@ class FaceHealthAnalyzer:
 
         print("[SUCCESS] Ensemble initialized.")
 
+    def generate_recommendations(self, results):
+        """Generates dynamic, personalized advice based on detected metrics."""
+        recommendations = []
+        
+        gender = results.get("gender", {}).get("label", "Unknown").lower()
+        face_shape = results.get("face_shape", {}).get("label", "Unknown").lower()
+        skin_type = results.get("skin_type", {}).get("label", "Unknown").lower()
+        emotion = results.get("emotion", {}).get("label", "Unknown").lower()
+        acne = results.get("acne", {}).get("label", "Unknown").lower()
+        
+        # 1. HAIRCUT REGIMEN (Gender + Face Shape)
+        if face_shape != "unknown" and face_shape != "inconclusive":
+            rec = {"title": "Recommended Haircut", "type": "style", "icon": "cut"}
+            if "oval" in face_shape:
+                rec["description"] = "Oval faces are perfectly balanced. " + ("For men, a classic pompadour or swept-back look adds height. " if "man" in gender or "male" in gender else "For women, almost any style works—try long layers or a blunt bob. ") + "Avoid heavy bangs that hide your symmetry."
+            elif "round" in face_shape:
+                rec["description"] = "To elongate your round face, add volume on top. " + ("Try a high fade with a textured quiff. " if "man" in gender or "male" in gender else "Try an asymmetrical pixie or long, face-framing layers. ") + "Avoid chin-length bobs."
+            elif "square" in face_shape:
+                rec["description"] = "Soften your strong jawline with texture. " + ("A messy crew cut or side-swept fringe is ideal. " if "man" in gender or "male" in gender else "Try wispy bangs or long waves that hit below the jaw. ") + "Avoid blunt cuts."
+            elif "heart" in face_shape:
+                rec["description"] = "Balance your wider forehead with width at the chin. " + ("A mid-length sweep or soft fringe works best. " if "man" in gender or "male" in gender else "Try a lob (long bob) or deep side part. ") + "Avoid top-heavy volume."
+            elif "oblong" in face_shape:
+                rec["description"] = "Avoid adding height; focus on width. " + ("A clean side part with shorter sides is great. " if "man" in gender or "male" in gender else "Try voluminous curls or a shoulder-length cut with bangs. ") + "Avoid sleek, long styles."
+            
+            if "description" in rec: recommendations.append(rec)
+
+        # 2. SKINCARE & SPF (Skin Type)
+        if skin_type != "unknown":
+            rec = {"title": "Skincare & UV Plan", "type": "health", "icon": "sunny"}
+            if "oily" in skin_type:
+                rec["description"] = "Your skin produces excess sebum. Prioritize oil-free, gel-based sunscreens (SPF 50+) and use a Salicylic Acid cleanser to keep pores clear."
+            elif "dry" in skin_type:
+                rec["description"] = "Focus on barrier repair. Use a cream-based moisturizer with Ceramides and a hydrating sunscreen containing Hyaluronic Acid. Avoid foaming cleansers."
+            elif "combination" in skin_type:
+                rec["description"] = "Use a 'multi-zone' approach: mattifying products on the T-zone and richer creams on the cheeks. A fluid-based SPF works best for you."
+            else:
+                rec["description"] = "Maintain your healthy glow with a broad-spectrum SPF 30+. Consistency with a gentle cleanser and moisturizer is key for long-term vitality."
+            recommendations.append(rec)
+
+        # 3. ACNE & TEXTURE
+        if "mild" in acne or "moderate" in acne or "severe" in acne:
+            rec = {"title": "Acne Management", "type": "treatment", "icon": "medical"}
+            if "severe" in acne:
+                rec["description"] = "Patterns suggest inflammatory acne. Avoid physical scrubs and touching the face. Consult a specialist for prescription-grade Retinoids or antibiotics."
+            elif "moderate" in acne:
+                rec["description"] = "Moderate breakouts detected. Introduce Benzoyl Peroxide or Adapalene into your nightly routine. Ensure all makeup is 'non-comedogenic'."
+            else:
+                rec["description"] = "Mild congestion found. A gentle BHA (Beta Hydroxy Acid) twice a week can help unclog pores and prevent new spots from forming."
+            recommendations.append(rec)
+
+        # 4. EMOTIONAL WELL-BEING
+        if emotion != "unknown":
+            rec = {"title": "AI Mood Insight", "type": "mood", "icon": "mood"}
+            if "sad" in emotion:
+                rec["description"] = "You look a bit down today. Take a moment for yourself—meditation or a short walk can significantly boost your endorphins. You've got this!"
+            elif "happy" in emotion:
+                rec["description"] = "Your energy is radiant! Keep that positive momentum going; your mood positively impacts your skin's natural glow."
+            elif "angry" in emotion or "stressed" in emotion:
+                rec["description"] = "High stress levels can spike cortisol, leading to breakouts. Try deep breathing exercises or a relaxing tea to calm your system."
+            else:
+                rec["description"] = "Your expression is balanced. Staying mindful throughout the day helps maintain this composure."
+            recommendations.append(rec)
+
+        return recommendations
+
     def preprocess_face(self, image_path):
         """Detects face and crops properly. Fallback to center crop if no face found."""
         img_bgr = cv2.imread(image_path)
@@ -310,6 +375,10 @@ class FaceHealthAnalyzer:
             results["face_shape"] = {"label": "Not Loaded", "confidence": 0.0}
 
         yield {"progress": "FINALIZING REPORT..."}
+        
+        # 🟢 GENERATE DYNAMIC RECOMMENDATIONS
+        results["recommendations"] = self.generate_recommendations(results)
+        
         yield {"result": results}
 
     def analyze(self, image_path, progress_callback=None):
@@ -463,6 +532,9 @@ class FaceHealthAnalyzer:
                 results["face_shape"] = {"label": "Engine Offline", "confidence": 0.0}
         else:
             results["face_shape"] = {"label": "Not Loaded", "confidence": 0.0}
+
+        # 🟢 GENERATE DYNAMIC RECOMMENDATIONS
+        results["recommendations"] = self.generate_recommendations(results)
 
         return results
 

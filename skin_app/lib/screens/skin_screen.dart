@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
+import 'skin_results_screen.dart';
 
 // ─────────────────────────────────────────────
 //  PREMIUM SAND & WOOD PALETTE (REQUESTED)
@@ -36,9 +40,15 @@ class _SkinScreenState extends State<SkinScreen> with TickerProviderStateMixin {
 
   Future<void> _getImage(ImageSource source) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
-    if (pickedFile != null) {
-      // Logic for results
+    final pickedFile = await picker.pickImage(source: source, imageQuality: 100);
+    
+    if (pickedFile != null && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => _SkinPreviewScreen(imageFile: File(pickedFile.path)),
+        ),
+      );
     }
   }
 
@@ -213,4 +223,92 @@ class _SkinScreenState extends State<SkinScreen> with TickerProviderStateMixin {
     const SizedBox(height: 2),
     Text(l, style: const TextStyle(color: _Pal.wood, fontSize: 7, fontWeight: FontWeight.w900)),
   ]);
+}
+
+class _SkinPreviewScreen extends StatefulWidget {
+  final File imageFile;
+  const _SkinPreviewScreen({required this.imageFile});
+  @override
+  State<_SkinPreviewScreen> createState() => _SkinPreviewScreenState();
+}
+
+class _SkinPreviewScreenState extends State<_SkinPreviewScreen> with TickerProviderStateMixin {
+  bool _isAnalyzing = false;
+  String _currentStatus = 'SCANNING DERMIS...';
+  late AnimationController _scanController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scanController = AnimationController(vsync: this, duration: const Duration(seconds: 2));
+  }
+
+  @override
+  void dispose() { 
+    _scanController.dispose(); 
+    super.dispose(); 
+  }
+
+  Future<void> _analyzeImage() async {
+    setState(() { _isAnalyzing = true; });
+    _scanController.repeat();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? prefs.getString('userToken');
+      
+      final result = await ApiService.analyzeSkinAcne(widget.imageFile.path, token);
+      
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+        _scanController.stop();
+        if (result['status'] == 'error' || result['success'] == false) {
+           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Error analyzing image')));
+        } else {
+           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SkinResultsScreen(image: widget.imageFile, results: result)));
+        }
+      }
+    } catch (e) { 
+      if (mounted) {
+        setState(() { _isAnalyzing = false; }); 
+        _scanController.stop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.file(widget.imageFile, fit: BoxFit.cover),
+          if (_isAnalyzing) Positioned.fill(child: AnimatedBuilder(animation: _scanController, builder: (context, child) => CustomPaint(painter: _SkinScanPainter(progress: _scanController.value)))),
+          Positioned(top: 50, left: 16, child: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18), onPressed: () => Navigator.pop(context))),
+          Positioned(
+            bottom: 40, left: 24, right: 24,
+            child: ElevatedButton(
+              onPressed: _isAnalyzing ? null : _analyzeImage,
+              style: ElevatedButton.styleFrom(backgroundColor: _Pal.wood, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), padding: const EdgeInsets.all(22)),
+              child: Text(_isAnalyzing ? _currentStatus : 'CONFIRM SCAN', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.2)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkinScanPainter extends CustomPainter {
+  final double progress;
+  _SkinScanPainter({required this.progress});
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = _Pal.olive..strokeWidth = 3;
+    double yPos = (size.height * progress) % size.height;
+    canvas.drawLine(Offset(0, yPos), Offset(size.width, yPos), paint);
+  }
+  @override
+  bool shouldRepaint(_SkinScanPainter old) => old.progress != progress;
 }
