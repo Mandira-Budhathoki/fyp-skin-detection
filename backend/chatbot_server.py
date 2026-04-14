@@ -17,11 +17,11 @@ try:
     api_key = os.getenv("GROQ_API_KEY")
     if api_key:
         groq_client = Groq(api_key=api_key)
-        print("✅ Groq AI client initialized (Free Llama 3)!")
+        print("[SUCCESS] Groq AI client initialized (Free Llama 3)!")
     else:
-        print("⚠️ No Groq key - running in Local Expert Mode")
+        print("[WARNING] No Groq key - running in Local Expert Mode")
 except Exception as e:
-    print(f"⚠️ Groq not available: {e}")
+    print(f"[ERROR] Groq not available: {e}")
 
 
 def clean_text(text):

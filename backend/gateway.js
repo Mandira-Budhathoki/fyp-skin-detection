@@ -28,7 +28,7 @@ proxy.on('error', (err, req, res) => {
 
 const PORT = 8000;
 console.log(`========================================`);
-console.log(`🚀 UNIFIED GATEWAY RUNNING ON PORT ${PORT}`);
+console.log(`UNIFIED GATEWAY RUNNING ON PORT ${PORT}`);
 console.log(`   Routing /api/auth -> ${AUTH_URL}`);
 console.log(`   Routing everything else -> ${SERVICE_URL}`);
 console.log(`========================================`);

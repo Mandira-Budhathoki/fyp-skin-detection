@@ -50,11 +50,11 @@ class WoundAnalyzerEngine:
                         device=0 if self.device.type != "cpu" else -1
                     )
                     self.pipelines[key] = pipe
-                    print(f"  ✅ {key.capitalize()} model loaded successfully.")
+                    print(f"  [SUCCESS] {key.capitalize()} model loaded successfully.")
                 except Exception as e:
-                    print(f"  ❌ Error loading {key} model: {e}")
+                    print(f"  [ERROR] Error loading {key} model: {e}")
             else:
-                print(f"  ⚠️ Model '{key}' not found at {model_path}. Please run download_wound_models.py")
+                print(f"  [WARNING] Model '{key}' not found at {model_path}. Please run download_wound_models.py")
 
     def generate_recommendations(self, results):
         """Generates first-aid and care instructions based on wound detection."""
@@ -159,7 +159,7 @@ class WoundAnalyzerEngine:
             results["engine_status"] = "Offline"
             results["error"] = str(e)
             
-        # 🟢 GENERATE DYNAMIC RECOMMENDATIONS
+        # [INFO] GENERATE DYNAMIC RECOMMENDATIONS
         results["recommendations"] = self.generate_recommendations(results)
             
         return results

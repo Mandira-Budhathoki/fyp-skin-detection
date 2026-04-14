@@ -349,13 +349,19 @@ class _DashboardScreenState extends State<DashboardScreen>
         children: [
           Row(
             children: [
+              // Build profile avatar directly next to greeting
               Container(
                 width: 36, height: 36,
                 decoration: const BoxDecoration(
                   color: _C.primary,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.search_rounded, color: Colors.white, size: 20),
+                child: Center(
+                  child: Text(
+                    _firstNameOnly.isNotEmpty ? _firstNameOnly[0].toUpperCase() : 'U',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  )
+                ),
               ),
               const SizedBox(width: 12),
               Column(

@@ -9,6 +9,7 @@ import 'face_faq_screen.dart';
 import 'face_health_results_screen.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'custom_scanner_screen.dart';
 
 class FaceHealthScreen extends StatefulWidget {
   const FaceHealthScreen({super.key});
@@ -93,6 +94,27 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> with TickerProvider
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      // Launch custom raw camera instead of native filter camera
+      final File? capturedFile = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const CustomScannerScreen(
+            title: 'Face AI Analysis',
+            helperText: 'Align your face in the center box',
+          ),
+        ),
+      );
+
+      if (capturedFile != null && mounted) {
+        Navigator.push(
+          context, 
+          MaterialPageRoute(builder: (context) => _FaceHealthPreviewScreen(imageFile: capturedFile))
+        );
+      }
+      return; 
+    }
+
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
@@ -140,68 +162,41 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> with TickerProvider
           ),
 
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 10),
-                  
-                  // TITLE CARD
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 10),
+                
+                // 1. TITLE HUB CARD (Back to Premium Size)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDC9B9B),
-                      borderRadius: BorderRadius.circular(28),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFDC9B9B), Color(0xFFCD8686)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(32),
                       boxShadow: [BoxShadow(color: const Color(0xFFDC9B9B).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))],
                     ),
-                    child: const Column(
+                    child: Column(
                       children: [
-                        Text('Face Health Hub', textAlign: TextAlign.center, style: TextStyle(fontSize: 26, color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
-                        SizedBox(height: 4),
-                        Text('COLLECTIVE AI DIAGNOSTICS', textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                        const Text('Face Health Hub', textAlign: TextAlign.center, style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+                        const SizedBox(height: 4),
+                        const Text('ADVANCED FACIAL HEALTH ANALYSIS SYSTEM', textAlign: TextAlign.center, style: TextStyle(fontSize: 9, color: Colors.white70, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
                       ],
                     ),
                   ),
+                ),
 
-                  const SizedBox(height: 16),
-                  
-                  // INFO SENTENCE CARD
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFC0E1D2).withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: const Color(0xFFC0E1D2)),
-                    ),
-                    child: const Text(
-                      'Face Faz analyzes 7 core layers: skin vitality, acne type, face shape, emotion levels, inflammation, pore health, and gender identification.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: Color(0xFF2D3436), height: 1.5, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // —— PROTOCOL STATUS CAPSULE ——
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), borderRadius: BorderRadius.circular(30), border: Border.all(color: const Color(0xFFE2E8F0))),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.greenAccent, blurRadius: 4)])),
-                          const SizedBox(width: 8),
-                          Text(_intelligenceNote, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 1.2)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 14),
-
-                  Row(
+                const SizedBox(height: 16),
+                
+                // 2. TECH PILLS (Live Data)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _techPill(Icons.wb_sunny_rounded, 'UV INDEX', _uvIndex.toStringAsFixed(1), const Color(0xFFDC9B9B)),
@@ -209,35 +204,102 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> with TickerProvider
                       _techPill(Icons.bolt_rounded, 'PRECISION', '${_precision.toStringAsFixed(2)}%', const Color(0xFFDC9B9B)),
                     ],
                   ),
+                ),
 
-                  const Spacer(flex: 3),
+                const Spacer(),
 
-                  // —— 2 SOLID ROSE BUTTONS (TOP) ——
-                  Row(
+                // 3. SCANNER DASHBOARD (Big & Premium again)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15, offset: const Offset(0, 4))],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(color: const Color(0xFFC0E1D2).withOpacity(0.2), shape: BoxShape.circle),
+                              child: const Icon(Icons.psychology_rounded, color: Color(0xFF71BC9D), size: 24),
+                            ),
+                            const SizedBox(width: 15),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('AI SCANNER READY', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Color(0xFF2D3436))),
+                                  Text('Multiple analysis layers active', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        const LinearProgressIndicator(
+                          value: 0.85,
+                          backgroundColor: Color(0xFFF1F5F9),
+                          color: Color(0xFFC0E1D2),
+                          minHeight: 8,
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(_intelligenceNote, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: Color(0xFFDC9B9B), fontWeight: FontWeight.w900, letterSpacing: 1)),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const Spacer(flex: 2),
+
+                // 4. MAIN ACTION BUTTONS
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _mainBtn(Icons.camera_front_rounded, 'Live Scan', const Color(0xFFDC9B9B), () => _pickImage(ImageSource.camera)),
-                      const SizedBox(width: 14),
-                      _mainBtn(Icons.photo_library_rounded, 'Import', const Color(0xFFDC9B9B), () => _pickImage(ImageSource.gallery)),
+                      const Text('START ANALYSIS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 1)),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _mainBtn(Icons.camera_front_rounded, 'Live Scan', const Color(0xFFDC9B9B), () => _pickImage(ImageSource.camera)),
+                          const SizedBox(width: 14),
+                          _mainBtn(Icons.photo_library_rounded, 'Import', const Color(0xFFDC9B9B), () => _pickImage(ImageSource.gallery)),
+                        ],
+                      ),
                     ],
                   ),
+                ),
 
-                  const Spacer(flex: 2),
+                const Spacer(), // Added spacer here to separate the sections
 
-                  // —— 3 SOLID SEAFOAM BUTTONS (BOTTOM) ——
-                  Row(
+                // 5. SECONDARY TRIO
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _trio(Icons.local_hospital_rounded, 'Doctor', const Color(0xFFC0E1D2), () => Navigator.pushNamed(context, '/appointment')),
-                      const SizedBox(width: 8),
-                      _trio(Icons.chat_bubble_rounded, 'AI Chat', const Color(0xFFC0E1D2), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatbotScreen(category: 'skin')))),
-                      const SizedBox(width: 8),
-                      _trio(Icons.help_outline_rounded, 'FAQs', const Color(0xFFC0E1D2), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FaceFaqScreen()))),
+                      const Text('RESOURCES & SUPPORT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 1)),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _trio(Icons.local_hospital_rounded, 'Visit Doctor', const Color(0xFFC0E1D2), () => Navigator.pushNamed(context, '/appointment')),
+                          const SizedBox(width: 10),
+                          _trio(Icons.chat_bubble_rounded, 'AI Chat', const Color(0xFFC0E1D2), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatbotScreen(category: 'skin')))),
+                          const SizedBox(width: 10),
+                          _trio(Icons.help_outline_rounded, 'FAQs', const Color(0xFFC0E1D2), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FaceFaqScreen()))),
+                        ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 15),
-                  const Center(child: Text('Advanced Biometric Diagnostic Protocol', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8), fontWeight: FontWeight.bold))),
-                  const SizedBox(height: 8),
-                ],
-              ),
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
           ),
         ],
@@ -268,27 +330,51 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> with TickerProvider
   Widget _glow(double s, Color c) => Container(width: s, height: s, decoration: BoxDecoration(color: c, shape: BoxShape.circle));
 
   Widget _mainBtn(IconData i, String l, Color c, VoidCallback t) => Expanded(
-    child: GestureDetector(
-      onTap: t,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        decoration: BoxDecoration(
-          color: c, 
-          borderRadius: BorderRadius.circular(22), 
-          boxShadow: [BoxShadow(color: c.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))]
+    child: Material(
+      color: c,
+      elevation: 6,
+      shadowColor: c.withOpacity(0.5),
+      borderRadius: BorderRadius.circular(22),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: t,
+        splashColor: Colors.white.withOpacity(0.2),
+        highlightColor: Colors.white.withOpacity(0.1),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            children: [
+              Icon(i, color: Colors.white, size: 28), 
+              const SizedBox(height: 8), 
+              Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Colors.white)),
+            ],
+          ),
         ),
-        child: Column(children: [Icon(i, color: Colors.white, size: 28), const SizedBox(height: 8), Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Colors.white))]),
       ),
     ),
   );
 
   Widget _trio(IconData i, String l, Color c, VoidCallback t) => Expanded(
-    child: GestureDetector(
-      onTap: t,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: c.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))]),
-        child: Column(children: [Icon(i, color: const Color(0xFF2D3436), size: 18), const SizedBox(height: 6), Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF2D3436)))]),
+    child: Material(
+      color: c,
+      elevation: 4,
+      shadowColor: c.withOpacity(0.4),
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: t,
+        splashColor: Colors.black.withOpacity(0.05),
+        highlightColor: Colors.black.withOpacity(0.02),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            children: [
+              Icon(i, color: const Color(0xFF2D3436), size: 18), 
+              const SizedBox(height: 6), 
+              Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF2D3436))),
+            ],
+          ),
+        ),
       ),
     ),
   );
@@ -327,11 +413,119 @@ class _FaceHealthPreviewScreenState extends State<_FaceHealthPreviewScreen> with
       if (mounted) {
         setState(() => _isAnalyzing = false);
         _scanController.stop();
-        if (finalResult != null) {
+
+        // ── Check for backend error / invalid image ──
+        final isError = finalResult == null
+            || finalResult['status'] == 'fail'
+            || finalResult['error'] != null;
+
+        if (isError) {
+          final errTitle = finalResult?['error'] ?? 'Invalid Image';
+          final errMsg   = finalResult?['message'] ?? 'We could not process this image. Please use a clear, well-lit photo of your face.';
+          _showInvalidImageSheet(errTitle, errMsg);
+        } else {
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => FaceHealthResultsScreen(imageFile: widget.imageFile, results: finalResult!)));
         }
       }
-    } catch (e) { if (mounted) setState(() { _isAnalyzing = false; }); }
+    } catch (e) { 
+      if (mounted) {
+        setState(() { _isAnalyzing = false; });
+        _scanController.stop();
+        _showInvalidImageSheet('Connection Error', 'Failed to connect to the AI server. Please check your internet connection and try again.');
+      }
+    }
+  }
+
+  void _showInvalidImageSheet(String title, String message) {
+    // Remap connection/server errors to a clean user-facing message
+    final displayTitle = 'Unable to Process Image';
+    final displayMsg = (message.toLowerCase().contains('connect') || message.toLowerCase().contains('server'))
+        ? 'Something went wrong. Please try again with a clearer image.'
+        : message;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Container(
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 30, offset: const Offset(0, 10))],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Error Icon
+              Container(
+                width: 80, height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3F3),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFDC9B9B).withOpacity(0.3), width: 2),
+                ),
+                child: const Icon(Icons.image_search_rounded, color: Color(0xFFDC9B9B), size: 38),
+              ),
+              const SizedBox(height: 20),
+              // Title
+              Text(
+                displayTitle,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF2D3436)),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              // Message
+              Text(
+                displayMsg,
+                style: const TextStyle(fontSize: 13.5, color: Color(0xFF636E72), height: 1.6),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              // Tips Card
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFC0E1D2).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFC0E1D2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('📸  Tips for a better scan:', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: Color(0xFF2D3436))),
+                    SizedBox(height: 6),
+                    Text('• Ensure your face is clearly visible', style: TextStyle(fontSize: 11.5, color: Color(0xFF636E72), height: 1.5)),
+                    Text('• Use good lighting — avoid dark rooms', style: TextStyle(fontSize: 11.5, color: Color(0xFF636E72), height: 1.5)),
+                    Text('• Hold the camera at face level', style: TextStyle(fontSize: 11.5, color: Color(0xFF636E72), height: 1.5)),
+                    Text('• Do not upload landscapes, food or objects', style: TextStyle(fontSize: 11.5, color: Color(0xFF636E72), height: 1.5)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+              // Try Again Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Try Again', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFDC9B9B),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
   @override
   Widget build(BuildContext context) {

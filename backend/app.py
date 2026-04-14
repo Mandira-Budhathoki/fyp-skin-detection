@@ -320,7 +320,7 @@ def analyze_wound():
             prediction = p_label
             confidence = max(p_score, s_score) + 10.0 # Agreement Bonus
             if confidence > 100: confidence = 99.9
-            agreement = "Models Agree ✓ (High Confidence)"
+            agreement = "Models Agree (OK) (High Confidence)"
         elif p_score >= 40:
             prediction = p_label
             confidence = p_score

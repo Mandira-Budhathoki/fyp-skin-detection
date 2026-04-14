@@ -60,63 +60,184 @@ class AcneAnalyzer:
             return None
 
     def generate_recommendations(self, preds):
-        """Generates clinical advice based on multi-class skin predictions."""
+        """Generates condition-specific clinical advice based on predictions."""
         recommendations = []
         target_idx = int(np.argmax(preds))
-        conf = float(preds[target_idx] * 100)
         
-        # 1. Main Condition Advice
         if target_idx == 0: # Acne
-            rec = {"title": "Acne Care", "type": "treatment", "icon": "medical"}
-            if conf >= 70:
-                rec["description"] = "Moderate to Severe Acne patterns detected. Avoid inflammatory foods and dairy. Consider clinical treatments like Salicylic Acid or Benzoyl Peroxide."
-            else:
-                rec["description"] = "Mild Acne found. Maintain a gentle cleansing routine and avoid picking at spots to prevent scarring."
-            recommendations.append(rec)
-        
-        elif target_idx == 1: # Carcinoma
             recommendations.append({
-                "title": "Medical Alert",
-                "type": "urgent",
-                "icon": "warning",
-                "description": "Visual patterns similar to Carcinoma detected. This requires immediate clinical screening by a dermatologist for a biopsy. Please book an appointment."
-            })
-            
-        elif target_idx == 2: # Eczema
-            recommendations.append({
-                "title": "Barrier Repair",
+                "title": "Clinical Causes",
                 "type": "health",
                 "icon": "sunny",
-                "description": "Skin appears inflamed/itchy (Eczema). Use thick, fragrance-free ceramides and avoid hot showers which strip natural oils."
+                "description": "Acne occurs when hair follicles plug with oil and dead skin cells, often triggered by hormonal changes, diet, stress, or certain medications."
             })
-            
+            recommendations.append({
+                "title": "Acne Treatment",
+                "type": "treatment",
+                "icon": "medical",
+                "description": "Use cleansers containing Salicylic Acid or Benzoyl Peroxide to unclog pores and reduce breakouts. Apply a light, non-comedogenic moisturizer."
+            })
+            recommendations.append({
+                "title": "Precautions",
+                "type": "prevention",
+                "icon": "warning",
+                "description": "Avoid picking or popping pimples, as this can lead to permanent scarring and pigment changes. Regularly clean your phone screen and pillowcases."
+            })
+
+        elif target_idx == 1: # Carcinoma
+            recommendations.append({
+                "title": "What is Carcinoma?",
+                "type": "health",
+                "icon": "sunny",
+                "description": "Carcinoma is a type of skin cancer primarily caused by prolonged, cumulative exposure to ultraviolet (UV) radiation from the sun or tanning beds."
+            })
+            recommendations.append({
+                "title": "Immediate Medical Alert",
+                "type": "urgent",
+                "icon": "warning",
+                "description": "Visual patterns indicate potential Carcinoma (Skin Cancer). This requires an immediate clinical screening and biopsy by a certified dermatologist."
+            })
+            recommendations.append({
+                "title": "Next Clinical Steps",
+                "type": "treatment",
+                "icon": "medical",
+                "description": "Do not attempt to treat this at home. Keep the specific area clean and protected from the sun, and book an urgent doctor consultation."
+            })
+
+        elif target_idx == 2: # Eczema
+            recommendations.append({
+                "title": "Clinical Causes",
+                "type": "health",
+                "icon": "sunny",
+                "description": "Eczema (Atopic Dermatitis) is related to a gene variation that affects the skin's ability to retain moisture and protect against bacteria and allergens."
+            })
+            recommendations.append({
+                "title": "Barrier Repair",
+                "type": "treatment",
+                "icon": "medical",
+                "description": "Apply thick, fragrance-free ceramide creams immediately after showering (while skin is damp) to lock in moisture and repair the skin barrier."
+            })
+            recommendations.append({
+                "title": "Avoid Triggers",
+                "type": "prevention",
+                "icon": "warning",
+                "description": "Avoid extremely hot water, harsh alkaline soaps, and scratchy fabrics like wool. Manage stress, which can heavily trigger eczema flare-ups."
+            })
+
+        elif target_idx == 3: # Keratosis
+            recommendations.append({
+                "title": "Clinical Causes",
+                "type": "health",
+                "icon": "sunny",
+                "description": "Keratosis Pilaris (strawberry skin) is caused by the buildup of keratin—a hard protein that protects skin from harmful substances and infection."
+            })
+            recommendations.append({
+                "title": "Chemical Exfoliation",
+                "type": "treatment",
+                "icon": "medical",
+                "description": "Use lotions containing Alpha Hydroxy Acids (AHAs), Lactic Acid, or Urea to gently dissolve the rough, scaly keratin plugs."
+            })
+            recommendations.append({
+                "title": "Hydration Practices",
+                "type": "prevention",
+                "icon": "warning",
+                "description": "Keep the skin consistently moisturized. Avoid aggressive physical loofahs or harsh scrubs, which can irritate the skin and worsen redness."
+            })
+
+        elif target_idx == 4: # Milia
+            recommendations.append({
+                "title": "Clinical Causes",
+                "type": "health",
+                "icon": "sunny",
+                "description": "Milia are small cysts formed when dead skin flakes (keratin) become trapped under the surface of the skin, often caused by heavy skincare products."
+            })
+            recommendations.append({
+                "title": "Cellular Turnover",
+                "type": "treatment",
+                "icon": "medical",
+                "description": "Incorporate a gentle chemical exfoliant like Glycolic Acid (AHA) or Retinol to increase cell turnover and dissolve trapped keratin naturally."
+            })
+            recommendations.append({
+                "title": "Product Re-evaluation",
+                "type": "prevention",
+                "icon": "warning",
+                "description": "Stop using heavy, pore-clogging eye creams or thick occlusive moisturizers. Never attempt to poke or squeeze Milia at home to avoid scarring and infection."
+            })
+
         elif target_idx == 5: # Rosacea
             recommendations.append({
-                "title": "Redness Control",
+                "title": "Clinical Causes",
                 "type": "health",
+                "icon": "sunny",
+                "description": "Rosacea is a chronic inflammatory skin condition. While the exact cause is unknown, it involves a combination of hereditary and environmental factors."
+            })
+            recommendations.append({
+                "title": "Redness & Inflammation",
+                "type": "treatment",
+                "icon": "medical",
+                "description": "Apply soothing, anti-inflammatory ingredients like Azelaic Acid, Niacinamide, or Centella Asiatica to reduce visible redness effectively."
+            })
+            recommendations.append({
+                "title": "Trigger Management",
+                "type": "prevention",
                 "icon": "fire",
-                "description": "Signs of Rosacea detected. Identify your triggers (spicy food, sun, stress). Use soothing agents like Azelaic Acid or Niacinamide."
+                "description": "Identify and aggressively avoid common daily triggers, including excessive sun exposure, spicy foods, hot beverages, and alcohol."
             })
 
-        # 2. General Advice
-        recommendations.append({
-            "title": "Sun Protection",
-            "type": "prevention",
-            "icon": "sunny",
-            "description": "No matter the condition, daily SPF 30+ is the #1 tool for skin health and preventing hyperpigmentation."
-        })
-
         return recommendations
+
+    def _has_skin_tones(self, image_path):
+        """
+        Validates if the uploaded image actually contains skin.
+        Prevents the model from 'diagnosing' random objects.
+        """
+        try:
+            img = cv2.imread(image_path)
+            if img is None: return False
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+            lower1 = np.array([0,  20, 70], dtype=np.uint8)
+            upper1 = np.array([20, 255, 255], dtype=np.uint8)
+            lower2 = np.array([170, 20, 70], dtype=np.uint8)
+            upper2 = np.array([180, 255, 255], dtype=np.uint8)
+
+            mask1 = cv2.inRange(hsv, lower1, upper1)
+            mask2 = cv2.inRange(hsv, lower2, upper2)
+            skin_mask = cv2.bitwise_or(mask1, mask2)
+
+            total_pixels = img.shape[0] * img.shape[1]
+            skin_pixels = int(np.sum(skin_mask > 0))
+            skin_ratio = skin_pixels / total_pixels
+
+            return skin_ratio >= 0.15 # Require at least 15% skin pixels
+        except:
+            return True
 
     def analyze(self, image_path):
         if self.model is None:
             return {'prediction': 'Model missing', 'confidence': 0.0, 'status': 'warning'}
 
         try:
-            # 1. READ IMAGE
+            # 1. READ & VALIDATE IMAGE
+            if not self._has_skin_tones(image_path):
+                return {
+                    'prediction': 'Invalid Image',
+                    'message': 'No skin tones detected. Please upload a clear photo of actual skin for analysis.',
+                    'confidence': 0.0,
+                    'status': 'warning',
+                    'other_conditions': [],
+                    'recommendations': [{
+                        'title': 'Scan Rejected',
+                        'type': 'urgent',
+                        'icon': 'warning',
+                        'description': 'The AI engine blocked this scan because it does not appear to be a skin photograph. Please avoid uploading random objects, highly shadowed photos, or non-human subjects.'
+                    }]
+                }
+
             img = cv2.imread(image_path)
             if img is None:
                 return {'error': 'Could not read image'}
+
             
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             
@@ -147,7 +268,7 @@ class AcneAnalyzer:
             # Let's try RAW [0-255] first as it's the standard for V2 with internal rescaling.
             preds = self.model.predict(np.expand_dims(img_raw, axis=0), verbose=0)[0]
             
-            # --- 🌟 STRICT Invalid/Random Image Handling (Noise Filter) ---
+            # --- STRICT Invalid/Random Image Handling (Noise Filter) ---
             # If the best guess is less than 10% sure, it's likely a random object or a blurry photo
             target_idx = int(np.argmax(preds))
             top_conf = float(preds[target_idx])
@@ -164,13 +285,10 @@ class AcneAnalyzer:
             # Class index 0 = Acne. Always report acne status first.
             acne_conf = float(round(preds[0] * 100, 2))
             
-            # Classify acne severity
-            if acne_conf >= 50:
-                acne_status = "Moderate Acne"
-            elif acne_conf >= 20:
-                acne_status = "Mild Acne"
-            else:
-                acne_status = "No Acne"
+            # Use the model's direct winner as the primary status
+            target_idx = int(np.argmax(preds))
+            acne_status = self.class_labels[target_idx]
+            acne_conf = float(round(preds[target_idx] * 100, 2))
             
             # Check other 5 conditions — only report if confidence >= 30%
             other_conditions = []

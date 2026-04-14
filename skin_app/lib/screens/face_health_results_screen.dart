@@ -46,16 +46,35 @@ class _FaceHealthResultsScreenState extends State<FaceHealthResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // THE 7 AUTHENTIC TRAINED LAYERS
-    final genderRaw = (widget.results['gender']?['label'] ?? "Woman").toString().toUpperCase();
-    final isMan = genderRaw.contains('MAN') && !genderRaw.contains('WOMAN');
-    final genderText = isMan ? "MAN" : "WOMAN";
-    final skin = (widget.results['skin_type']?['label'] ?? "Normal").toString().toUpperCase();
-    final acne = (widget.results['acne']?['label'] ?? "Clear").toString().toUpperCase();
-    final shape = (widget.results['face_shape']?['label'] ?? "Oval").toString().toUpperCase();
-    final emo = (widget.results['emotion']?['label'] ?? "Neutral").toString().toUpperCase();
-    final infla = (widget.results['inflammation']?['label'] ?? "Optimal").toString().toUpperCase();
-    final spots = (widget.results['spots']?['label'] ?? "Short").toString().toUpperCase();
+    // Updated Sensitivity: Strict for Gender, Generous for others
+    _DResult _res(String k, String def, {bool isGen = false}) {
+      final d = widget.results[k] ?? {};
+      final c = (d['confidence'] ?? 0.0);
+      String l = (d['label'] ?? def).toString();
+
+      // Simple Language Brackets
+      if (l.contains('Acne')) l = "Acne (Breakouts)";
+      if (l.contains('Clear Skin')) l = "Clear Skin (Healthy)";
+      if (l.contains('Spots')) l = "Skin Spots (Pigment)";
+      if (l.contains('Inflammation')) l = "Inflamed (Sensitive)";
+      
+      if (isGen) {
+        return _DResult(label: c > 70 ? l : "Low Clarity - Verify", show: c > 40);
+      } else {
+        // Generous 30% gate for other layers to ensure they show up as requested
+        return _DResult(label: l, show: c > 30);
+      }
+    }
+
+    final rSkin  = _res('skin_type', 'Normal');
+    final rAcne  = _res('acne', 'Clear');
+    final rShape = _res('face_shape', 'Oval');
+    final rEmo   = _res('emotion', 'Neutral');
+    final rInfla = _res('inflammation', 'Healthy');
+    final rSpots = _res('spots', 'Clear');
+    final rGen   = _res('gender', 'Female', isGen: true);
+
+    final isMale = rGen.label.toLowerCase().contains('male');
 
     return Scaffold(
       body: Container(
@@ -72,12 +91,12 @@ class _FaceHealthResultsScreenState extends State<FaceHealthResultsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: 12),
-                      const Text("FACIAL BIOMETRIC ANALYSIS LOG", textAlign: TextAlign.center, style: TextStyle(color: _Ref.navy, fontSize: 13, fontWeight: FontWeight.w900)),
-                      const Text("2026-04-12", textAlign: TextAlign.center, style: TextStyle(color: _Ref.slate, fontSize: 11, fontWeight: FontWeight.bold)),
+                      const Text("ADVANCED FACIAL ANALYSIS LOG", textAlign: TextAlign.center, style: TextStyle(color: _Ref.navy, fontSize: 13, fontWeight: FontWeight.w900)),
+                      const Text("CLINICAL FACE HEALTH REPORT", textAlign: TextAlign.center, style: TextStyle(color: _Ref.slate, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
                       
                       const SizedBox(height: 18),
-                      // 1. SYMMETRICAL & BIG STAR GRID
-                      _buildBigSymmetricalGrid(skin, acne, shape, emo, infla, spots, genderText),
+                      // 1. DYNAMIC GRID (Only shows high-confidence results)
+                      _buildBigSymmetricalGrid(rSkin, rAcne, rShape, rEmo, rInfla, rSpots, rGen),
 
                       const SizedBox(height: 24),
                       _buildTrackerHeader(),
@@ -85,34 +104,45 @@ class _FaceHealthResultsScreenState extends State<FaceHealthResultsScreen> {
                       // ─────────────────────────────────────────────
                       //  UNSTACKED CLINIC CARDS (NO IMAGES)
                       // ─────────────────────────────────────────────
-                      _ClinicCard(
-                        title: "🧬 SKIN PROFILE: $skin", badge: "Balanced", color: _Ref.trackBlue, val: _v(skin),
-                        desc: "🧴 Your skin barrier is stable. AM: Cleanse with tepid water & use a water-gel SPF 50. PM: Use a mild foaming cleanser & lightweight niacinamide serum. ✨",
-                      ),
-                      _ClinicCard(
-                        title: "🛡️ ACNE INTENSITY: $acne", badge: "Optimal 🎉", color: _Ref.trackPink, val: _v(acne),
-                        desc: "🏥 Current layer is $acne. Clinical Protocol: Use a 2% Salicylic Acid wash nightly. Avoid sugar & dairy for 48 hours to preserve index stability. 🥛🚫",
-                      ),
-                      _ClinicCard(
-                        title: "📐 FACE SHAPE: $shape", badge: "Style Fit", color: _Ref.purple, val: 0.5,
-                        desc: isMan ? "✂️ For your $shape structure, a POMPADOUR with high volume and a sharp jawline stubble is recommended for an angled look. 💈" : "✂️ For your $shape architect, FACE-FRAMING LAYERS or a LONG BOB (Lob) will beautifully elongate your profile. 💇‍♀️",
-                      ),
-                      _ClinicCard(
-                        title: "✨ EMOTION: $emo", badge: "Vibrant Hub", color: _Ref.trackBlue, val: _v(emo),
-                        desc: emo.contains("SAD") ? "💖 Don't be sad! You're much too pretty to frown. 😊 Cortisol from stress can impact your glow. Take 5 minutes for yourself! 🌸" : "🌟 Positive vitality index detected. This mood significantly boosts dermal regeneration. ✨",
-                      ),
-                      _ClinicCard(
-                        title: "🌿 INFLAMMATION: $infla", badge: "Dermal Calm", color: _Ref.trackOrg, val: _v(infla),
-                        desc: "🧊 Status is $infla. Use soothing agents like CICA, Centella, or Green Tea. Avoid hot water for 48 hours for biometric recovery. 🍃",
-                      ),
-                      _ClinicCard(
-                        title: "💎 PORES & TEXTURE: $spots", badge: "Clear View", color: _Ref.teal, val: _v(spots),
-                        desc: "🧼 Visibility is $spots. Maintain clarity with weekly kaolin treatments. Use heavy moisturizers sparingly on the orbital region. 🧴",
-                      ),
-                      _ClinicCard(
-                        title: "👤 GENDER ARCHETYPE: $genderText", badge: "Verified", color: _Ref.navy, val: 0.1,
-                        desc: "🧬 Report logic has been filtered through the $genderText biometric protocol for maximum diagnostic accuracy. ✅",
-                      ),
+                      if (rSkin.show)
+                        _ClinicCard(
+                          title: "SKIN PROFILE: ${rSkin.label}", badge: "Verified", color: _Ref.trackBlue, val: 0.22,
+                          desc: "Your skin barrier is stable. AM: Cleanse with tepid water and use a water-gel SPF 50. PM: Use a mild foaming cleanser and lightweight niacinamide serum.",
+                        ),
+                      if (rAcne.show)
+                        _ClinicCard(
+                          title: "ACNE INTENSITY: ${rAcne.label}", badge: "Analyzed", color: _Ref.trackPink, val: 0.45,
+                          desc: "Current layer is ${rAcne.label}. Clinical Protocol: Use a 2% Salicylic Acid wash nightly. Avoid sugar and dairy for 48 hours to preserve index stability.",
+                        ),
+                      if (rShape.show)
+                        _ClinicCard(
+                          title: "FACE SHAPE: ${rShape.label}", badge: "Style Fit", color: _Ref.purple, val: 0.5,
+                          desc: rGen.label.contains("Verify") 
+                            ? "For your ${rShape.label} structure: [MASCLINE] Try a Textured Quiff with volume. [FEMININE] Try Long Face-Framing layers. (Detecting Gender in Low Clarity...)"
+                            : (isMale 
+                                ? "For your ${rShape.label} structure, a POMPADOUR with high volume and a sharp jawline stubble is recommended for an angled look." 
+                                : "For your ${rShape.label} architect, FACE-FRAMING LAYERS or a LONG BOB will beautifully elongate your profile."),
+                        ),
+                      if (rEmo.show)
+                        _ClinicCard(
+                          title: "MOOD STATUS: ${rEmo.label}", badge: "Vitality", color: _Ref.trackBlue, val: 0.3,
+                          desc: rEmo.label.toUpperCase().contains("SAD") ? "Don't be sad! You're much too pretty to frown. Cortisol from stress can impact your glow. Take 5 minutes for yourself." : "Positive vitality index detected. This mood significantly boosts dermal regeneration.",
+                        ),
+                      if (rInfla.show)
+                        _ClinicCard(
+                          title: "DERMAL HEALTH: ${rInfla.label}", badge: "Stability", color: _Ref.trackOrg, val: 0.15,
+                          desc: "Status is ${rInfla.label}. Use soothing agents like CICA, Centella, or Green Tea. Avoid hot water for 48 hours for biometric recovery.",
+                        ),
+                      if (rSpots.show)
+                        _ClinicCard(
+                          title: "PORES & TEXTURE: ${rSpots.label}", badge: "Texture", color: _Ref.teal, val: 0.2,
+                          desc: "Visibility is ${rSpots.label}. Maintain clarity with weekly kaolin treatments. Use heavy moisturizers sparingly on the orbital region.",
+                        ),
+                      if (rGen.show)
+                        _ClinicCard(
+                          title: "GENDER ARCHETYPE: ${rGen.label}", badge: "Verified", color: _Ref.navy, val: 0.1,
+                          desc: "Report logic has been filtered through the ${rGen.label} biometric protocol for maximum diagnostic accuracy.",
+                        ),
 
                       const SizedBox(height: 32),
                       _buildFooterButtons(),
@@ -174,7 +204,7 @@ class _FaceHealthResultsScreenState extends State<FaceHealthResultsScreen> {
     );
   }
 
-  Widget _buildBigSymmetricalGrid(String skin, String acne, String shape, String emo, String infla, String spots, String gender) {
+  Widget _buildBigSymmetricalGrid(_DResult s, _DResult a, _DResult f, _DResult e, _DResult i, _DResult p, _DResult g) {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(32), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20)]),
@@ -183,44 +213,68 @@ class _FaceHealthResultsScreenState extends State<FaceHealthResultsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _megaItem("SKIN", skin, const Color(0xFF76D7EA)),
-              _megaItem("ACNE", acne, _Ref.trackBlue),
-              _megaItem("SHAPE", shape, _Ref.purple),
+              if (s.show) _megaItem("SKIN TYPE", s.label, const Color(0xFF76D7EA)),
+              if (a.show) _megaItem("ACNE", a.label, _Ref.trackBlue),
+              if (f.show) _megaItem("SHAPE", f.label, _Ref.purple),
             ],
           ),
           const SizedBox(height: 30),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _megaItem("MOOD", emo, _Ref.trackBlue),
-              _megaItem("PORES", infla, _Ref.trackOrg),
-              _megaItem("SPOTS", spots, _Ref.trackPink),
+              if (e.show) _megaItem("MOOD", e.label, _Ref.trackBlue),
+              if (i.show) _megaItem("INFLAM.", i.label, _Ref.trackOrg),
+              if (p.show) _megaItem("PORES", p.label, _Ref.teal),
             ],
           ),
           const SizedBox(height: 30),
-          Center(
-            child: _megaItem("GENDER", gender, _Ref.navy),
-          ),
+          if (g.show)
+            Center(
+              child: _megaItem("GENDER", g.label, _Ref.navy),
+            ),
         ],
       ),
     );
   }
 
   Widget _megaItem(String l, String v, Color c) {
-    return SizedBox(
-      width: 90,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: c.withOpacity(0.3), width: 3.0), color: c.withOpacity(0.05)),
-            child: Icon(Icons.star_rounded, color: c, size: 38), // INCREASED SIZE
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(18), // Increased padding
+          decoration: BoxDecoration(
+            shape: BoxShape.circle, 
+            border: Border.all(color: c.withOpacity(0.3), width: 3.5), 
+            color: c.withOpacity(0.08)
           ),
-          const SizedBox(height: 8),
-          Text(l, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _Ref.slate)),
-          Text(v, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: _Ref.navy)),
-        ],
-      ),
+          child: Icon(Icons.star_rounded, color: c, size: 44), // Larger star icon
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: 85,
+          child: Column(
+            children: [
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  l, 
+                  textAlign: TextAlign.center, 
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _Ref.slate, letterSpacing: 0.5)
+                ),
+              ),
+              const SizedBox(height: 2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  v, 
+                  textAlign: TextAlign.center, 
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: _Ref.navy)
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -315,4 +369,10 @@ class _ClinicCardState extends State<_ClinicCard> {
       ),
     );
   }
+}
+
+class _DResult {
+  final String label;
+  final bool show;
+  const _DResult({required this.label, required this.show});
 }

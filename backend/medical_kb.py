@@ -163,4 +163,4 @@ MEDICAL_KNOWLEDGE = {
     }
 }
 
-DISCLAIMER = "⚠️ NOTE: I am an AI assistant. This information is for educational purposes only. Always consult a professional dermatologist for medical diagnosis."
+DISCLAIMER = "[NOTE]: I am an AI assistant. This information is for educational purposes only. Always consult a professional dermatologist for medical diagnosis."

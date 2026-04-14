@@ -10,6 +10,8 @@ import '../services/api_service.dart';
 import 'chatbot_screen.dart';
 import 'melanoma_results_screen.dart';
 
+import 'custom_scanner_screen.dart';
+
 class MelanomaScreen extends StatefulWidget {
   const MelanomaScreen({Key? key}) : super(key: key);
 
@@ -22,6 +24,28 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
   bool _showDisclaimer = true;
 
   Future<void> _pickImage(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      // Use Custom Raw Camera
+      final File? capturedFile = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const CustomScannerScreen(
+            title: 'Melanoma AI Scanner',
+            helperText: 'Align the mole or mark exactly in the center box.',
+          ),
+        ),
+      );
+      if (capturedFile != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ImagePreviewScreen(imageFile: capturedFile),
+          ),
+        );
+      }
+      return;
+    }
+
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
@@ -29,7 +53,7 @@ class _MelanomaScreenState extends State<MelanomaScreen> {
         preferredCameraDevice: CameraDevice.rear,
       );
 
-      if (pickedFile != null) {
+      if (pickedFile != null && mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(

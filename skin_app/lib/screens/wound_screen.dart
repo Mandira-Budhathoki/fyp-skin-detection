@@ -8,6 +8,7 @@ import 'chatbot_screen.dart';
 import 'wound_faq_screen.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'custom_scanner_screen.dart';
 
 
 class WoundScreen extends StatefulWidget {
@@ -370,6 +371,30 @@ class _WoundScreenState extends State<WoundScreen> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      // Use Custom Raw Camera
+      final File? capturedFile = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const CustomScannerScreen(
+            title: 'Wound AI Scanner',
+            helperText: 'Align the wound clearly within the grid.',
+          ),
+        ),
+      );
+      if (capturedFile != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => _WoundImagePreviewScreen(
+              imageFile: capturedFile,
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,

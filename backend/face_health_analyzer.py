@@ -41,16 +41,16 @@ class FaceHealthAnalyzer:
         for key, folder in self.vit_configs.items():
             path = os.path.join(self.hf_dir, folder)
             try:
-                print(f"  📦 Loading {key} model...")
+                print(f"  [LOAD] Loading {key} model...")
                 self.processors[key] = AutoImageProcessor.from_pretrained(path)
                 self.models[key] = AutoModelForImageClassification.from_pretrained(path).to(self.device)
                 self.models[key].eval()
             except Exception as e:
-                print(f"  ⚠️ Failed to load {key}: {e}")
+                print(f"  [WARNING] Failed to load {key}: {e}")
 
         # 2. Load Spots Model (ResNet with State Map logic)
         try:
-            print("  📦 Loading spots model (ResNet)...")
+            print("  [LOAD] Loading spots model (ResNet)...")
             spots_path = os.path.join(self.hf_dir, "spots")
             import torchvision.models as tv_models
             
@@ -80,7 +80,7 @@ class FaceHealthAnalyzer:
                     clean_state_dict[new_key] = v
                 
                 self.models["spots"].load_state_dict(clean_state_dict, strict=False)
-                print("    ✅ Spots weights mapped and loaded.")
+                print("    [SUCCESS] Spots weights mapped and loaded.")
             
             self.models["spots"] = self.models["spots"].to(self.device)
             self.models["spots"].eval()
@@ -94,11 +94,11 @@ class FaceHealthAnalyzer:
             self.spots_classes = ["Clear", "Mild Spots", "Moderate Spots", "Severe Spots"]
             
         except Exception as e:
-            print(f"  ⚠️ Failed to load spots model: {e}")
+            print(f"  [WARNING] Failed to load spots model: {e}")
 
         # 3. Load Inflammation Model (Keras/Tensorflow)
         try:
-            print("  📦 Loading inflammation model (DermaAI)...")
+            print("  [LOAD] Loading inflammation model (DermaAI)...")
             inf_path = os.path.join(self.hf_dir, "inflammation", "DermaAI.keras")
             self.models["inflammation"] = tf.keras.models.load_model(inf_path, compile=False)
             self.inf_classes = [
@@ -109,11 +109,11 @@ class FaceHealthAnalyzer:
                 'Tinea Ringworm'
             ]
         except Exception as e:
-            print(f"  ⚠️ Failed to load inflammation model: {e}")
+            print(f"  [WARNING] Failed to load inflammation model: {e}")
 
         # 4. Load Face Shape Model (Custom PyTorch)
         try:
-            print("  📦 Loading face shape model...")
+            print("  [LOAD] Loading face shape model...")
             fs_path = os.path.join(self.hf_dir, "face_shape", "model_85_nn_.pth")
             # FIXED: Explicitly set weights_only=False for compatibility with newer PyTorch versions
             # Some models are saved as full objects and require pickling support.
@@ -126,7 +126,7 @@ class FaceHealthAnalyzer:
                 T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
         except Exception as e:
-            print(f"  ⚠️ Failed to load face shape model: {e}")
+            print(f"  [WARNING] Failed to load face shape model: {e}")
 
         # 5. Load Face Detection (OpenCV)
         cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
@@ -226,7 +226,7 @@ class FaceHealthAnalyzer:
             face_crop = img_rgb[y1:y2, x1:x2]
             return Image.fromarray(face_crop), img_rgb, True
         
-        # 🟢 FALLBACK: If no face detected, we return False
+        # [INFO] FALLBACK: If no face detected, we return False
         return None, img_rgb, False
 
     def analyze_stream(self, image_path):
@@ -243,7 +243,7 @@ class FaceHealthAnalyzer:
 
         yield {"progress": "Face verified, starting ensemble..."}
 
-        # 🛡️ FACE INTEGRITY CHECK SCALE
+        # [GUARD] FACE INTEGRITY CHECK SCALE
         # We track how many models are "confused" to detect books/objects
         confused_models = 0
         total_required_models = 3 # Skin type, Gender, Emotion
@@ -291,13 +291,23 @@ class FaceHealthAnalyzer:
                             label = "Inconclusive / Retake"
                         else:
                             label = raw_label
-                            if key == "acne":
-                                mapping = {
-                                    "level -1": "Clear Skin", "level 0": "Occasional Spots",
-                                    "level 1": "Mild Acne", "level 2": "Moderate Acne",
-                                    "level 3": "Severe Acne", "level 4": "Very Severe Acne"
-                                }
-                                label = mapping.get(label, label)
+                        if raw_labels_override := {
+                            "acne": {
+                                "level -1": "Clear Skin", "level 0": "Occasional Spots",
+                                "level 1": "Mild Acne", "level 2": "Moderate Acne",
+                                "level 3": "Severe Acne", "level 4": "Very Severe Acne"
+                            },
+                            "gender": { "woman": "Female", "man": "Male", "female": "Female", "male": "Male" },
+                            "emotion": {
+                                "sad": "Reflective / Sad", "happy": "Radiant / Happy", 
+                                "angry": "Stressed / Angry", "neutral": "Balanced / Neutral",
+                                "disgust": "Irritated", "fear": "Anxious", "surprise": "Alert"
+                            },
+                            "skin_type": { "dry": "Dry", "normal": "Normal", "oily": "Oily" }
+                        }.get(key):
+                            label = raw_labels_override.get(raw_label.lower(), raw_label.title())
+                        else:
+                            label = raw_label.title() if isinstance(raw_label, str) else raw_label
                         
                         results[key] = {"label": label, "confidence": raw_conf}
                 except Exception as e:
@@ -306,13 +316,13 @@ class FaceHealthAnalyzer:
             else:
                 results[key] = {"label": "Not Loaded", "confidence": 0.0}
 
-        # 🛡️ THE FINAL FACE GUARD
+        # [GUARD] THE FINAL FACE GUARD
         # If all major face-identifying models are confused, it's likely an object (like a book)
         if confused_models >= 3:
             yield {"error": "Invalid Face Image", "message": "The AI is unable to verify this is a human face. Please ensure the camera is level and clear.", "status": "fail"}
             return
 
-        # 🟢 NEW: Separate SPOTS logic (Custom ResNet)
+        # [INFO] NEW: Separate SPOTS logic (Custom ResNet)
         if "spots" in self.models:
             try:
                 yield {"progress": "SEARCHING FOR SPOTS & PORES..."}
@@ -376,7 +386,7 @@ class FaceHealthAnalyzer:
 
         yield {"progress": "FINALIZING REPORT..."}
         
-        # 🟢 GENERATE DYNAMIC RECOMMENDATIONS
+        # [INFO] GENERATE DYNAMIC RECOMMENDATIONS
         results["recommendations"] = self.generate_recommendations(results)
         
         yield {"result": results}
@@ -393,7 +403,7 @@ class FaceHealthAnalyzer:
 
         if progress_callback: progress_callback("Face verified, starting ensemble...")
 
-        # 🛡️ FACE INTEGRITY CHECK
+        # [GUARD] FACE INTEGRITY CHECK
         confused_models = 0
         CONF_THRESHOLD = 25.0 
 
@@ -433,24 +443,39 @@ class FaceHealthAnalyzer:
 
                         raw_conf = round(float(conf.item()) * 100, 2)
 
-                        # Counter for non-human object detection
+                        # [INFO] MAP VIT LEVELS TO HUMAN LINGUISTICS
+                        if key == "acne":
+                            mapping = {
+                                "level -1": "Clear Skin", 
+                                "level 0":  "Occasional Spots", 
+                                "level 1":  "Mild Acne", 
+                                "level 2":  "Moderate Acne", 
+                                "level 3":  "Severe Acne"
+                            }
+                            raw_label = mapping.get(raw_label.lower(), raw_label)
+                        
+                        # Use a low 20% gate for most categories to avoid "Inconclusive" as requested
+                        gate = 50 if key == "gender" else 20
+                        
+                        if raw_conf < gate:
+                            label = "Low Clarity"
+                        else:
+                            # Apply Mappings only to high-confidence results
+                            if key == "emotion":
+                                emo_map = {"sad": "Reflective / Sad", "happy": "Radiant / Happy", "angry": "Stressed / Angry", "neutral": "Balanced / Neutral", "disgust": "Irritated", "fear": "Anxious", "surprise": "Alert"}
+                                label = emo_map.get(raw_label.lower(), raw_label.title())
+                            elif key == "skin_type":
+                                label = raw_label.title()
+                            elif key == "gender":
+                                gen_map = {"woman": "Female", "man": "Male", "female": "Female", "male": "Male"}
+                                label = gen_map.get(raw_label.lower(), raw_label.title())
+                            else:
+                                label = raw_label.title() if isinstance(raw_label, str) else raw_label
+
+                        # [INFO] Counter for non-human object detection
                         if key in ["gender", "skin_type", "emotion"] and raw_conf < 35:
                             confused_models += 1
 
-                        # Check Threshold
-                        if raw_conf < CONF_THRESHOLD:
-                            label = "Inconclusive / Retake"
-                        else:
-                            label = raw_label
-                            # Special mapping for Acne Severity levels
-                            if key == "acne":
-                                mapping = {
-                                    "level -1": "Clear Skin", "level 0": "Occasional Spots",
-                                    "level 1": "Mild Acne", "level 2": "Moderate Acne",
-                                    "level 3": "Severe Acne", "level 4": "Very Severe Acne"
-                                }
-                                label = mapping.get(label, label)
-                        
                         results[key] = {
                             "label": label,
                             "confidence": raw_conf
@@ -461,11 +486,11 @@ class FaceHealthAnalyzer:
             else:
                 results[key] = {"label": "Not Loaded", "confidence": 0.0}
 
-        # 🛡️ THE FINAL FACE GUARD
+        # [GUARD] THE FINAL FACE GUARD
         if confused_models >= 3:
             return {"error": "Invalid Face Image", "message": "The AI is unable to verify this is a human face. Please try again with better framing.", "status": "fail"}
 
-        # 🟢 NEW: SPOTS / PORES (Custom ResNet)
+        # [INFO] NEW: SPOTS / PORES (Custom ResNet)
         if "spots" in self.models:
             try:
                 if progress_callback: progress_callback("Searching for spots...")
@@ -533,7 +558,7 @@ class FaceHealthAnalyzer:
         else:
             results["face_shape"] = {"label": "Not Loaded", "confidence": 0.0}
 
-        # 🟢 GENERATE DYNAMIC RECOMMENDATIONS
+        # [INFO] GENERATE DYNAMIC RECOMMENDATIONS
         results["recommendations"] = self.generate_recommendations(results)
 
         return results

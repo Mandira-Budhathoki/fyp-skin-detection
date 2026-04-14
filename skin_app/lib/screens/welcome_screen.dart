@@ -258,16 +258,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                       builder: (context, _) {
                         // Cycles text based on scan progress - No more 'Initializing' word
                         String status = "AI PREPARING...";
-                        if (_scanController.value > 0.33) status = "OPTIMIZING...";
-                        if (_scanController.value > 0.66) status = "ALMOST READY...";
+                        if (_scanController.value > 0.33) status = "ENCRYPTING...";
+                        if (_scanController.value > 0.66) status = "SYSTEM READY";
                         
                         return Text(
                           status.toUpperCase(),
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             color: Colors.teal.shade700,
-                            letterSpacing: 2.0,
+                            letterSpacing: 2.5,
                           ),
                         );
                       },
@@ -290,24 +290,68 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Spacer(),
-          // Big Hero Image
-          Container(
-            width: w * 0.85, 
-            height: 240,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                 BoxShadow(
-                    color: Colors.teal.withValues(alpha: 0.15),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+          const Spacer(flex: 3),
+          // Big Hero Visual with 3D-like Animation
+          Center(
+            child: AnimatedBuilder(
+              animation: _rotationController,
+              builder: (context, child) {
+                // Combine a gentle orbit + a slight wobble for a "3D" feel
+                final double angle = _rotationController.value * 2 * pi;
+                return Transform(
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.001) // perspective
+                    ..rotateX(sin(angle * 0.5) * 0.15)
+                    ..rotateY(cos(angle) * 0.15)
+                    ..rotateZ(sin(angle * 0.2) * 0.05),
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: w * 0.88, 
+                    height: 300,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(36),
+                      boxShadow: [
+                         BoxShadow(
+                            color: Colors.teal.withValues(alpha: 0.2),
+                            blurRadius: 50,
+                            offset: const Offset(0, 20),
+                          ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        // Glassy background layer
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(36),
+                            child: Container(
+                              color: Colors.black.withValues(alpha: 0.05),
+                            ),
+                          ),
+                        ),
+                        // The Hero Image
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(36),
+                            child: Image.asset('assets/images/logo2.png', fit: BoxFit.cover),
+                          ),
+                        ),
+                        // Floating Orbiting Ring over the image
+                        Positioned.fill(
+                          child: AnimatedBuilder(
+                            animation: _rotationController,
+                            builder: (context, _) {
+                              return CustomPaint(
+                                painter: _OrbitPainter(progress: _rotationController.value),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Image.asset('assets/images/logo2.png', fit: BoxFit.cover),
+                );
+              },
             ),
           ),
           const SizedBox(height: 50),
@@ -315,43 +359,89 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
             "Your Personal\nSkin Health Expert",
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3436),
-              height: 1.2,
+              fontSize: 34,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1A1A1A),
+              height: 1.1,
+              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            "Advanced AI scanning technology to help you monitor and understand your skin health anytime, anywhere.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-              height: 1.5,
+          const SizedBox(height: 20),
+          // --- FEATURE CHIPS (Filling the page with project context) ---
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            alignment: WrapAlignment.center,
+            children: [
+              _buildFeatureChip(Icons.biotech, "Melanoma Detection", Colors.redAccent),
+              _buildFeatureChip(Icons.healing, "Wound Analysis", Colors.orangeAccent),
+              _buildFeatureChip(Icons.face_retouching_natural, "Facial Health", Colors.blueAccent),
+              _buildFeatureChip(Icons.analytics_outlined, "AI Diagnostics", Colors.teal),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              "Comprehensive AI-powered suite for precision skin analysis, wound tracking, and personalized skincare routines.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
+                height: 1.5,
+              ),
             ),
           ),
-          const Spacer(),
+          const Spacer(flex: 5),
           // Action Button
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: _navigateToNext,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00BFA5),
-                foregroundColor: Colors.white,
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                shadowColor: const Color(0xFF00BFA5).withValues(alpha: 0.4),
-              ),
-              child: const Text(
-                "Get Started",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 56),
+            child: SizedBox(
+              width: double.infinity,
+              height: 64,
+              child: ElevatedButton(
+                onPressed: _navigateToNext,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00BFA5),
+                  foregroundColor: Colors.white,
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shadowColor: const Color(0xFF00BFA5).withValues(alpha: 0.5),
+                ),
+                child: const Text(
+                  "Get Started",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 48),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureChip(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color.withValues(alpha: 0.9),
+            ),
+          ),
         ],
       ),
     );
@@ -462,4 +552,40 @@ class BioMetricPainter extends CustomPainter {
   bool shouldRepaint(covariant BioMetricPainter oldDelegate) {
      return oldDelegate.rotation != rotation || oldDelegate.scan != scan;
   }
+}
+
+// --- ORBIT PAINTER FOR THE 3D HERO IMAGE ---
+class _OrbitPainter extends CustomPainter {
+  final double progress;
+  _OrbitPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final Paint ringPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // Drawing a decorative tilted orbit ring
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(progress * 2 * pi);
+    
+    // Tilted oval to look 3D
+    Rect oval = Rect.fromCenter(center: Offset.zero, width: size.width * 1.1, height: size.height * 0.4);
+    canvas.drawOval(oval, ringPaint);
+    
+    // Orbiting highlight dot
+    final Paint dotPaint = Paint()..color = Colors.tealAccent.withValues(alpha: 0.6);
+    double angle = progress * 2 * pi;
+    double dx = cos(angle) * (size.width * 1.1 / 2);
+    double dy = sin(angle) * (size.height * 0.4 / 2);
+    canvas.drawCircle(Offset(dx, dy), 4, dotPaint);
+    
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _OrbitPainter oldDelegate) => oldDelegate.progress != progress;
 }
