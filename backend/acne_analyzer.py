@@ -209,7 +209,8 @@ class AcneAnalyzer:
             skin_pixels = int(np.sum(skin_mask > 0))
             skin_ratio = skin_pixels / total_pixels
 
-            return skin_ratio >= 0.15 # Require at least 15% skin pixels
+            print(f"[SKIN GUARD] Skin pixel ratio: {skin_ratio:.2%} (need >= 25%)")
+            return skin_ratio >= 0.25 # Require at least 25% skin pixels
         except:
             return True
 
@@ -263,22 +264,28 @@ class AcneAnalyzer:
             img_prep = tf.keras.applications.efficientnet_v2.preprocess_input(img_raw.copy())
             
             # Predict using the primary strategy (prep/raw)
-            # Most modern models from HuggingFace include the rescaling layer inside.
-            # If so, passing [0, 1] will make it [0, 0.003], which results in "static" low predictions.
-            # Let's try RAW [0-255] first as it's the standard for V2 with internal rescaling.
             preds = self.model.predict(np.expand_dims(img_raw, axis=0), verbose=0)[0]
             
             # --- STRICT Invalid/Random Image Handling (Noise Filter) ---
-            # If the best guess is less than 10% sure, it's likely a random object or a blurry photo
+            # If the best guess is less than 35% sure, it's likely a random object
             target_idx = int(np.argmax(preds))
             top_conf = float(preds[target_idx])
             
-            if top_conf < 0.10:
+            print(f"[SKIN GUARD] Model top confidence: {top_conf:.2%} (need >= 35%)")
+            
+            if top_conf < 0.35:
                 return {
-                    'prediction': 'Unclear Image / Try Again',
-                    'message': 'We could not detect a valid skin condition in this photo. Please ensure the skin is centered, focused, and well-lit.',
+                    'prediction': 'Invalid Image',
+                    'message': 'The AI could not confidently identify any skin condition. Please upload a clearer, well-lit photo of actual skin.',
                     'confidence': float(round(top_conf * 100, 2)),
-                    'status': 'warning'
+                    'status': 'warning',
+                    'other_conditions': [],
+                    'recommendations': [{
+                        'title': 'Low Confidence',
+                        'type': 'urgent',
+                        'icon': 'warning',
+                        'description': 'The uploaded image did not match any known skin conditions with enough certainty. This usually means the image is not a close-up of skin.'
+                    }]
                 }
 
             # 3. ACNE-FIRST ANALYSIS

@@ -207,7 +207,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             child: _isLoading
                 ? _buildLoader()
                 : SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
+                    physics: const ClampingScrollPhysics(),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(children: [
@@ -1277,7 +1277,7 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
     }
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       itemCount: list.length,
       itemBuilder: (context, index) {
         final apt = list[index];
@@ -1479,7 +1479,7 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
   Widget _buildUserList() {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       itemCount: _users.length,
       itemBuilder: (context, index) {
         final user = _users[index];
@@ -1556,7 +1556,7 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
   Widget _buildDoctorList() {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       itemCount: _doctors.length,
       itemBuilder: (context, index) {
         final doc = _doctors[index];

@@ -274,7 +274,7 @@ class _IntroScreenState extends State<IntroScreen>
               controller: _pageController,
               itemCount: _pages.length,
               onPageChanged: _onPageChanged,
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               itemBuilder: (context, index) {
                 final pageData = _pages[index];
                 return SafeArea(

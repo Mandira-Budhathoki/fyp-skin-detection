@@ -1,29 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
+import 'dart:ui';
 import 'dart:math' as math;
+import 'package:intl/intl.dart';
 import '../data/wound_advice_provider.dart';
 import 'wound_treatment_screen.dart';
 
 // ─────────────────────────────────────────────
-//  DESIGN TOKENS (Modern Clinical Pro)
+//  DESIGN TOKENS (Clinical Pathology Pro)
 // ─────────────────────────────────────────────
 class _T {
-  static const bg        = Color(0xFFF6F4E8); // Cream
+  static const bg        = Color(0xFFF8FAFC);
   static const surface   = Colors.white;
-  static const card      = Colors.white;
-  static const cardBorder= Color(0xFFE5EEE4); // Pale Green border
+  static const border    = Color(0xFFE2E8F0);
 
-  static const textPrim  = Color(0xFF2D3436);
-  static const textSub   = Color(0xFF636E72);
-  static const textMuted = Color(0xFFAEB8B8);
+  static const textHeader= Color(0xFF0F172A);
+  static const textSub   = Color(0xFF475569);
+  static const textMuted = Color(0xFF94A3B8);
 
-  static const primary   = Color(0xFFC0E1D2); // Seafoam (Stable)
-  static const emergency = Color(0xFFDC9B9B); // Rose (Urgent)
-  static const warning   = Color(0xFFE2A96F);
-  static const accent    = Color(0xFFE5EEE4); // Pale Green
-
-  static const r20 = Radius.circular(20);
+  static const cyan      = Color(0xFF8CC7C4); // User Requested
+  static const purple    = Color(0xFF2C687B); // User Requested
+  static const critical  = Color(0xFFBE123C); // Deep Clinical Red
+  static const safe      = Color(0xFF10B981); // Emerald Green
 }
 
 class WoundResultsScreen extends StatefulWidget {
@@ -34,134 +33,247 @@ class WoundResultsScreen extends StatefulWidget {
   State<WoundResultsScreen> createState() => _WoundResultsScreenState();
 }
 
-class _WoundResultsScreenState extends State<WoundResultsScreen>
-    with TickerProviderStateMixin {
-
-  late final AnimationController _heroCtrl;
-  late final AnimationController _contentCtrl;
-  late final AnimationController _pulseCtrl;
-
-  late final Animation<double> _heroScale;
-  late final Animation<double> _contentSlide;
-  late final Animation<double> _contentFade;
-  late final Animation<double> _pulse;
-
+class _WoundResultsScreenState extends State<WoundResultsScreen> with TickerProviderStateMixin {
   late final String _prediction;
   late final double _confidence;
   late final String _message;
   late final File?  _imageFile;
   late final bool   _isEmergency;
-  late final Color  _themeColor;
-
-  late final List<Map<String, String>> _timeline;
+  
+  late final AnimationController _entryCtrl;
+  late final Animation<double> _fade;
 
   @override
   void initState() {
     super.initState();
-
-    final advice = WoundAdviceProvider.getAdviceForWound(widget.results['prediction'] ?? '');
-    _timeline = List<Map<String, String>>.from(advice['timeline'] ?? []);
-
-    _prediction  = widget.results['prediction'] ?? 'Unknown';
+    _prediction  = widget.results['prediction'] ?? 'Unknown Lesion';
     _confidence  = (widget.results['confidence'] ?? 0.0).toDouble();
     _message     = widget.results['message'] ?? '';
     _imageFile   = widget.results['imageFile'] as File?;
-    _isEmergency = _prediction.toLowerCase().contains('bleeding') ||
-                   _prediction.toLowerCase().contains('deep') ||
+    _isEmergency = _prediction.toLowerCase().contains('bleeding') || 
+                   _prediction.toLowerCase().contains('deep') || 
                    _prediction.toLowerCase().contains('infected');
-    _themeColor  = _isEmergency ? _T.emergency : _T.primary;
 
-    _heroCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
-    _heroScale = Tween<double>(begin: 1.05, end: 1.0).animate(CurvedAnimation(parent: _heroCtrl, curve: Curves.easeOutCubic));
-
-    _contentCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
-    _contentSlide = Tween<double>(begin: 30, end: 0).animate(CurvedAnimation(parent: _contentCtrl, curve: Curves.easeOutCubic));
-    _contentFade = Tween<double>(begin: 0, end: 1).animate(_contentCtrl);
-
-    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))..repeat(reverse: true);
-    _pulse = Tween<double>(begin: 0.96, end: 1.0).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
-
-    _heroCtrl.forward();
-    Future.delayed(const Duration(milliseconds: 200), () => _contentCtrl.forward());
+    _entryCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _fade = CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut);
+    _entryCtrl.forward();
   }
 
   @override
   void dispose() {
-    _heroCtrl.dispose();
-    _contentCtrl.dispose();
-    _pulseCtrl.dispose();
+    _entryCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);
-
     return Scaffold(
       backgroundColor: _T.bg,
-      extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
-      body: ScrollConfiguration(
-        behavior: _NoGlowBehavior(),
-        child: CustomScrollView(
-          physics: const ClampingScrollPhysics(), // NO BOUNCE
-          slivers: [
-            SliverToBoxAdapter(child: _buildHero(mq)),
-            SliverToBoxAdapter(child: _buildContentSheet()),
-            const SliverToBoxAdapter(child: SizedBox(height: 60)), // Fixed bottom padding
-          ],
+      body: FadeTransition(
+        opacity: _fade,
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildReportHeader(),
+              const SizedBox(height: 20),
+              _buildHeroImageSection(),
+              const SizedBox(height: 24),
+              _buildPathologyCard(),
+              const SizedBox(height: 16),
+              _buildInfectionWatchCard(),
+              const SizedBox(height: 16),
+              _buildDoctorPrescribedProtocol(),
+              const SizedBox(height: 24),
+              _buildClinicalFooter(),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() => AppBar(
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    leading: Padding(
-      padding: const EdgeInsets.all(10),
-      child: GestureDetector(
-        onTap: () => Navigator.pop(context),
-        child: Container(
-          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-          child: const Icon(Icons.arrow_back_ios_new_rounded, color: _T.textPrim, size: 14),
-        ),
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _T.textHeader, size: 20),
+        onPressed: () => Navigator.pop(context),
       ),
-    ),
-  );
+      title: Column(
+        children: [
+          const Text("WOUND PATHOLOGY", style: TextStyle(color: _T.textHeader, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 2)),
+          Text(DateFormat('MMM dd, yyyy | HH:mm').format(DateTime.now()), style: const TextStyle(color: _T.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
 
-  Widget _buildHero(MediaQueryData mq) {
-    return SizedBox(
-      height: mq.size.height * 0.38,
+  // Dynamic data based on wound type
+  Map<String, dynamic> get _woundInfo {
+    final p = _prediction.toLowerCase();
+    if (p.contains('burn')) {
+      return {
+        'emoji': '🔥',
+        'watchTitle': 'BURN WATCH — DANGER SIGNS',
+        'watchColor': const Color(0xFFFF6B35),
+        'watchBg': const Color(0xFFFFF4F0),
+        'flags': [
+          ['Blistering & Peeling', 'Large fluid-filled blisters may signal 2nd-degree or deeper burn'],
+          ['Charred or White Skin', 'Pain-free blackened/white areas = full-thickness (3rd degree) — ER NOW'],
+          ['Chemical Exposure', 'If from chemical contact, flush with water for 20+ min immediately'],
+        ],
+        'steps': [
+          ['💧', 'Cool Running Water', 'Hold under cool (not ice cold) water for 10–20 minutes immediately.'],
+          ['🚫', 'DO NOT Use Ice', 'Ice worsens tissue damage. Avoid butter, toothpaste, or home remedies.'],
+          ['🩹', 'Non-Stick Dressing', 'Cover loosely with sterile non-adherent gauze or cling film.'],
+          ['💊', 'Pain Management', 'Take OTC analgesics (ibuprofen/paracetamol). Seek care for 2nd+ degree burns.'],
+        ],
+      };
+    } else if (p.contains('lacerat') || p.contains('cut')) {
+      return {
+        'emoji': '🩸',
+        'watchTitle': 'LACERATION WATCH — RED FLAGS',
+        'watchColor': const Color(0xFFDC2626),
+        'watchBg': const Color(0xFFFFF1F2),
+        'flags': [
+          ['Uncontrolled Bleeding', 'If bleeding does not stop after 10 min of pressure — go to ER'],
+          ['Deep / Gaping Wound', 'If edges are far apart or you can see fat/muscle, you need stitches'],
+          ['Numbness Near Wound', 'Nerve damage possible — seek immediate evaluation'],
+        ],
+        'steps': [
+          ['✋', 'Direct Pressure', 'Apply firm, constant pressure with a clean cloth for 10–15 minutes.'],
+          ['🧼', 'Irrigate Thoroughly', 'Rinse with clean running water for 5+ min to remove debris.'],
+          ['🩹', 'Closure', 'Small cuts: steri-strips. Large cuts: require professional sutures.'],
+          ['💉', 'Tetanus Check', 'Ensure tetanus vaccination is up to date. Get a booster if unsure.'],
+        ],
+      };
+    } else if (p.contains('abras') || p.contains('graze')) {
+      return {
+        'emoji': '🛡️',
+        'watchTitle': 'ABRASION WATCH — SIGNS TO MONITOR',
+        'watchColor': const Color(0xFFD97706),
+        'watchBg': const Color(0xFFFFFBEB),
+        'flags': [
+          ['Embedded Debris', 'Dirt or gravel not removed can lead to serious infection ("traumatic tattoo")'],
+          ['Increasing Redness', 'Spreading redness around the wound after 24h signals infection'],
+          ['Pus or Foul Odor', 'Any yellow/green discharge means bacterial infection — visit a clinic'],
+        ],
+        'steps': [
+          ['🚿', 'Irrigate Gently', 'Rinse with saline or clean water. Use a soft cloth to remove debris.'],
+          ['🔬', 'Antiseptic', 'Apply dilute antiseptic solution (povidone-iodine or chlorhexidine).'],
+          ['🩹', 'Moist Healing', 'Keep covered with a moist dressing — moist wounds heal 50% faster.'],
+          ['☀️', 'Sun Protection', 'Protect healed skin from UV for 6 months to prevent dark scarring.'],
+        ],
+      };
+    } else if (p.contains('ulcer') || p.contains('diabetic') || p.contains('pressure')) {
+      return {
+        'emoji': '⚠️',
+        'watchTitle': 'ULCER WATCH — CRITICAL FLAGS',
+        'watchColor': const Color(0xFFDC2626),
+        'watchBg': const Color(0xFFFFF1F2),
+        'flags': [
+          ['Black/Dark Tissue', 'Necrotic (dead) tissue = critical. Requires urgent surgical debridement.'],
+          ['Spreading Redness', 'Cellulitis spreading beyond the ulcer border needs IV antibiotics.'],
+          ['Foul Smell + Pus', 'Signs of anaerobic infection — hospital admission may be required.'],
+        ],
+        'steps': [
+          ['🧹', 'Debridement', 'Dead tissue must be removed by a clinician — do not attempt at home.'],
+          ['💧', 'Moist Wound Care', 'Use advanced dressings (hydrocolloid/foam) to maintain a moist environment.'],
+          ['🩺', 'Offloading', 'Redistribute pressure. Use special footwear or repositioning schedules.'],
+          ['🩸', 'BSL Control', 'For diabetic ulcers, strict blood sugar control is #1 priority for healing.'],
+        ],
+      };
+    } else { // Generic / bruise / surgical
+      return {
+        'emoji': '🩺',
+        'watchTitle': 'INFECTION WATCH — RED FLAGS',
+        'watchColor': Colors.orange,
+        'watchBg': const Color(0xFFFFF7ED),
+        'flags': [
+          ['Elevated Local Temp', 'Feeling heat around the site can signal early infection'],
+          ['Unusual Exudate', 'Yellow/Green discharge or foul odor = bacterial infection'],
+          ['Spreading Erythema', 'Expanding redness beyond the wound border'],
+        ],
+        'steps': [
+          ['🧼', 'Irrigation', 'Clean the area with sterile saline solution twice daily.'],
+          ['💊', 'Antiseptic Ointment', 'Apply prescribed antibiotic ointment as directed.'],
+          ['🩹', 'Sterile Dressing', 'Keep covered with clean, non-adherent sterile gauze.'],
+          ['📅', 'Monitor Progress', 'Track healing daily. Swelling/redness worsening after 48h = seek care.'],
+        ],
+      };
+    }
+  }
+
+  Widget _buildReportHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [_T.cyan, _T.purple], begin: Alignment.centerLeft, end: Alignment.centerRight),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.verified_rounded, color: Colors.white, size: 16),
+          const SizedBox(width: 8),
+          const Text("STATUS: SCAN COMPLETE", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 2)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroImageSection() {
+    return Container(
+      height: 220,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10))],
+      ),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Hero(
-            tag: 'wound_image',
-            child: AnimatedBuilder(
-              animation: _heroCtrl,
-              builder: (_, child) => Transform.scale(scale: _heroScale.value, child: child),
-              child: _imageFile != null ? Image.file(_imageFile!, fit: BoxFit.cover) : Container(color: _themeColor.withOpacity(0.1)),
-            ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: _imageFile != null 
+              ? Image.file(_imageFile!, fit: BoxFit.cover) 
+              : Container(color: _T.cyan.withOpacity(0.1)),
           ),
           Container(
             decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
               gradient: LinearGradient(
-                begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                colors: [Colors.black.withOpacity(0.2), Colors.transparent, _T.bg],
-                stops: const [0, 0.5, 1],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
               ),
             ),
           ),
           Positioned(
-            left: 24, bottom: 10,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _StatusPill(label: _isEmergency ? "URGENT ACTION" : "STABLE", color: _themeColor, pulse: _isEmergency ? _pulse : null),
-                const SizedBox(height: 8),
-                Text(_prediction.toUpperCase(), style: TextStyle(color: _T.textPrim, fontSize: _prediction.length > 15 ? 24 : 30, fontWeight: FontWeight.w900)),
-              ],
+            bottom: 20, right: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _T.cyan),
+              ),
+              child: Row(
+                children: [
+                  Text(_woundInfo['emoji'], style: const TextStyle(fontSize: 16)),
+                  const SizedBox(width: 8),
+                  const Text("AI ANALYSIS COMPLETE", style: TextStyle(color: _T.textHeader, fontWeight: FontWeight.w900, fontSize: 11)),
+                ],
+              ),
             ),
           ),
         ],
@@ -169,369 +281,221 @@ class _WoundResultsScreenState extends State<WoundResultsScreen>
     );
   }
 
-  Widget _buildContentSheet() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: AnimatedBuilder(
-        animation: _contentCtrl,
-        builder: (_, child) => Transform.translate(offset: Offset(0, _contentSlide.value), child: Opacity(opacity: _contentFade.value, child: child)),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            _StatsRow(confidence: _confidence, color: _themeColor),
-            const SizedBox(height: 16),
-            _ObservationCard(message: _message, color: _themeColor),
-            const SizedBox(height: 24),
-
-            if (widget.results['recommendations'] != null && (widget.results['recommendations'] as List).isNotEmpty) ...[
-              _SectionTitle("AI CARE RECOMMENDATIONS"),
-              const SizedBox(height: 16),
-              ...(widget.results['recommendations'] as List).map((rec) => _RecommendationTile(rec: rec)).toList(),
-              const SizedBox(height: 24),
-            ],
-            
-            // ─────────────────────────────────────────────
-            //  NEW FEATURE: HEALING TIMELINE
-            // ─────────────────────────────────────────────
-            if (!_prediction.contains("Uncertain") && _timeline.isNotEmpty) ...[
-              _SectionTitle("RECOVERY TIMELINE"),
-              const SizedBox(height: 16),
-              _HealingTimeline(color: _themeColor, timeline: _timeline),
-              const SizedBox(height: 32),
-            ],
-
-            // ─────────────────────────────────────────────
-            //  COMPACT ACTION TILES (REPLACED BIG BUTTONS)
-            // ─────────────────────────────────────────────
-            _SectionTitle("QUICK ACTIONS"),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _CompactAction(
-                  icon: Icons.medical_services_rounded,
-                  label: "Care Plan",
-                  color: _themeColor,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => WoundTreatmentScreen(prediction: _prediction, message: _message))),
-                ),
-                const SizedBox(width: 12),
-                _CompactAction(
-                  icon: Icons.local_hospital_rounded,
-                  label: "Consult",
-                  color: _T.textSub,
-                  onTap: () => Navigator.pushNamed(context, '/appointment'),
-                ),
-                const SizedBox(width: 12),
-                _CompactAction(icon: Icons.share_rounded, label: "Share", color: _T.accent, onTap: () {}),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            if (widget.results['ensemble'] != null && !_prediction.contains("Uncertain") && !_prediction.contains("Unclear"))
-              _EnsembleCard(ensemble: widget.results['ensemble']!, color: _themeColor),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _SectionTitle(String text) => Align(
-    alignment: Alignment.centerLeft,
-    child: Text(text, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: _T.textMuted, letterSpacing: 1.5)),
-  );
-}
-
-// ─────────────────────────────────────────────
-//  COMPACT WIDGETS
-// ─────────────────────────────────────────────
-
-class _HealingTimeline extends StatelessWidget {
-  final Color color;
-  final List<Map<String, String>> timeline;
-  const _HealingTimeline({required this.color, required this.timeline});
-
-  @override
-  Widget build(BuildContext context) {
-    if (timeline.isEmpty) return const SizedBox.shrink();
-    
+  Widget _buildPathologyCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: _T.cardBorder)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          for (int i = 0; i < timeline.length; i++) ...[
-            _TimelineNode(
-              day: timeline[i]['day']!,
-              task: timeline[i]['task']!,
-              color: i == 0 ? color : _T.textMuted,
-              isDone: i == 0,
-            ),
-            if (i < timeline.length - 1) _TimelineArrow(),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _TimelineNode extends StatelessWidget {
-  final String day, task;
-  final Color color;
-  final bool isDone;
-  const _TimelineNode({required this.day, required this.task, required this.color, required this.isDone});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 36, height: 36,
-          decoration: BoxDecoration(color: isDone ? color : Colors.transparent, shape: BoxShape.circle, border: Border.all(color: isDone ? color : _T.cardBorder, width: 2)),
-          child: Center(child: Text(day, style: TextStyle(color: isDone ? Colors.white : _T.textMuted, fontWeight: FontWeight.bold, fontSize: 12))),
-        ),
-        const SizedBox(height: 8),
-        Text(task, style: TextStyle(color: isDone ? _T.textPrim : _T.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
-      ],
-    );
-  }
-}
-
-class _TimelineArrow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return const Icon(Icons.arrow_forward_rounded, color: _T.cardBorder, size: 16);
-  }
-}
-
-class _CompactAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  const _CompactAction({required this.icon, required this.label, required this.color, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: _T.cardBorder)),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(height: 8),
-              Text(label, style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 11)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  final String label;
-  final Color color;
-  final Animation<double>? pulse;
-  const _StatusPill({required this.label, required this.color, this.pulse});
-
-  @override
-  Widget build(BuildContext context) {
-    Widget pill = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30), boxShadow: [BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 10)]),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5)),
-        ],
-      ),
-    );
-    return pulse != null ? AnimatedBuilder(animation: pulse!, builder: (_, child) => Transform.scale(scale: pulse!.value, child: child), child: pill) : pill;
-  }
-}
-
-class _StatsRow extends StatelessWidget {
-  final double confidence;
-  final Color color;
-  const _StatsRow({required this.confidence, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _StatTile(icon: Icons.analytics_rounded, label: "CONFIDENCE", value: "${confidence.toStringAsFixed(1)}%", color: color),
-        const SizedBox(width: 12),
-        _StatTile(icon: Icons.speed_rounded, label: "ANALYSIS", value: "2-Phase", color: _T.warning),
-      ],
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  final IconData icon;
-  final String label, value;
-  final Color color;
-  const _StatTile({required this.icon, required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: _T.cardBorder)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(height: 12),
-            Text(value, style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 15)),
-            Text(label, style: const TextStyle(color: _T.textMuted, fontWeight: FontWeight.bold, fontSize: 8)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ObservationCard extends StatelessWidget {
-  final String message;
-  final Color color;
-  const _ObservationCard({required this.message, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: _T.cardBorder)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Icon(Icons.auto_awesome_rounded, color: color, size: 18),
-            const SizedBox(width: 10),
-            const Text("AI OBSERVATION", style: TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
-          ]),
-          const SizedBox(height: 16),
-          Text(message.isNotEmpty ? message : "Our AI suggests normal recovery. Monitor daily for changes.", style: const TextStyle(color: _T.textSub, fontSize: 14, height: 1.5, fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-}
-
-class _EnsembleCard extends StatelessWidget {
-  final Map<String, dynamic> ensemble;
-  final Color color;
-  const _EnsembleCard({required this.ensemble, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    final p = ensemble['primary'];
-    final s = ensemble['secondary'];
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: _T.cardBorder)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(children: [
-            Icon(Icons.verified_rounded, color: _T.accent, size: 18),
-            SizedBox(width: 10),
-            Text("VERIFICATION LAYERS", style: TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
-          ]),
-          const SizedBox(height: 20),
-          if (p != null) _buildP(p, "P1", color),
-          if (s != null) ...[const SizedBox(height: 16), _buildP(s, "P2", _T.accent)],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildP(dynamic d, String t, Color c) {
-    double s = (d['score'] as num).toDouble();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(t, style: TextStyle(color: c, fontWeight: FontWeight.w900, fontSize: 10)),
-          Text("${s.toStringAsFixed(1)}%", style: TextStyle(color: c, fontWeight: FontWeight.w900, fontSize: 11)),
-        ]),
-        const SizedBox(height: 4),
-        Text(d['label'] ?? 'Unknown', style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.bold, fontSize: 12)),
-        const SizedBox(height: 8),
-        ClipRRect(borderRadius: BorderRadius.circular(10), child: LinearProgressIndicator(value: s / 100, backgroundColor: _T.cardBorder, valueColor: AlwaysStoppedAnimation<Color>(c), minHeight: 4)),
-      ],
-    );
-  }
-}
-
-class _NoGlowBehavior extends ScrollBehavior {
-  @override
-  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) => child;
-}
-class _RecommendationTile extends StatelessWidget {
-  final Map<String, dynamic> rec;
-  const _RecommendationTile({required this.rec});
-
-  @override
-  Widget build(BuildContext context) {
-    final title = rec['title'] ?? 'Care Suggestion';
-    final desc = rec['description'] ?? '';
-    final type = rec['type'] ?? 'info';
-    final iconKey = rec['icon'] ?? 'star';
-
-    Color color = _T.primary;
-    IconData icon = Icons.auto_awesome_rounded;
-
-    if (type == 'urgent') color = _T.emergency;
-    else if (type == 'treatment') color = _T.warning;
-    else if (type == 'health') color = _T.accent;
-
-    if (iconKey == 'warning') icon = Icons.warning_rounded;
-    else if (iconKey == 'medical') icon = Icons.medical_services_rounded;
-    else if (iconKey == 'sunny') icon = Icons.wb_sunny_rounded;
-    else if (iconKey == 'fire') icon = Icons.local_fire_department_rounded;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: _T.border),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("PRIMARY DIAGNOSIS", style: TextStyle(color: _T.textMuted, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              _buildUrgencyBadge(),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(_prediction.toUpperCase(), style: const TextStyle(color: _T.textHeader, fontSize: 24, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          const Text("AI OBSERVATION NOTES", style: TextStyle(color: _T.textHeader, fontSize: 12, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 8),
+          Text(
+            _message.isNotEmpty ? _message : "Automated analysis detected wound tissue with characteristic features. Monitor wound boundaries and tissue response daily for optimal healing.",
+            style: const TextStyle(color: _T.textSub, fontSize: 13, height: 1.5, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUrgencyBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: _isEmergency ? _T.critical.withOpacity(0.1) : _T.safe.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _isEmergency ? _T.critical.withOpacity(0.3) : _T.safe.withOpacity(0.3)),
+      ),
+      child: Text(
+        _isEmergency ? "HIGH RISK" : "OBSERVATION",
+        style: TextStyle(color: _isEmergency ? _T.critical : _T.safe, fontSize: 9, fontWeight: FontWeight.w900),
+      ),
+    );
+  }
+
+  Widget _buildInfectionWatchCard() {
+    final info = _woundInfo;
+    final Color watchColor = info['watchColor'] as Color;
+    final Color watchBg = info['watchBg'] as Color;
+    final List flags = info['flags'] as List;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: watchBg,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _T.cardBorder),
+        border: Border.all(color: watchColor.withOpacity(0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-                child: Icon(icon, color: color, size: 18),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(type.toString().toUpperCase(), style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 1)),
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: _T.textPrim)),
-                  ],
-                ),
-              ),
+              Icon(Icons.warning_amber_rounded, color: watchColor, size: 18),
+              const SizedBox(width: 10),
+              Text(info['watchTitle'], style: TextStyle(color: watchColor, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
             ],
           ),
-          const SizedBox(height: 14),
-          Text(desc, style: const TextStyle(color: _T.textSub, fontSize: 13, height: 1.5)),
+          const SizedBox(height: 12),
+          ...flags.map<Widget>((f) => _buildInfectionTile(f[0], f[1], watchColor)).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfectionTile(String title, String desc, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(margin: const EdgeInsets.only(top: 5), width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(desc, style: TextStyle(color: color.withOpacity(0.75), fontSize: 11, fontWeight: FontWeight.w500, height: 1.4)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDoctorPrescribedProtocol() {
+    final steps = (_woundInfo['steps'] as List).cast<List>();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: _T.border),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.assignment_turned_in_rounded, color: _T.purple, size: 20),
+              const SizedBox(width: 12),
+              const Text("CLINICAL PROTOCOL", style: TextStyle(color: _T.textHeader, fontSize: 14, fontWeight: FontWeight.w900)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text("Tailored for: ${_prediction}", style: const TextStyle(color: _T.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 20),
+          ...steps.asMap().entries.map((e) => _protocolStep("${e.key + 1}", e.value[0], e.value[1], e.value[2])).toList(),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                 Navigator.push(context, MaterialPageRoute(builder: (context) => WoundTreatmentScreen(prediction: _prediction, message: _message)));
+              },
+              icon: const Icon(Icons.medical_services_rounded, size: 18),
+              label: const Text("VIEW FULL CARE PLAN", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _T.purple,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _protocolStep(String num, String emoji, String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(color: _T.cyan.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+            child: Center(child: Text(emoji, style: const TextStyle(fontSize: 18))),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: _T.textHeader, fontSize: 13, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 2),
+                Text(desc, style: const TextStyle(color: _T.textSub, fontSize: 12, height: 1.4)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClinicalFooter() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _T.border),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.verified_user_rounded, color: _T.cyan, size: 28),
+          const SizedBox(height: 12),
+          const Text(
+            "AI-GENERATED PATHOLOGY REPORT",
+            style: TextStyle(color: _T.textHeader, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "This report is generated by a clinical-grade ensemble model. For definitive medical diagnosis, please present this data to a certified healthcare professional.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: _T.textMuted, fontSize: 10, height: 1.5, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.pushNamed(context, '/appointment'),
+            icon: const Icon(Icons.local_hospital_rounded, size: 18),
+            label: const Text("VISIT DOCTOR"),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _T.purple,
+              side: const BorderSide(color: _T.purple),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
         ],
       ),
     );
   }
 }
+

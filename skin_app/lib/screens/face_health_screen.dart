@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:async';
+import 'dart:ui';
 import 'dart:math';
 import 'chatbot_screen.dart';
 import 'appointment_screen.dart';
@@ -137,6 +138,8 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> with TickerProvider
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        title: const Text('FACE DETECTION', style: TextStyle(color: Color(0xFF2D3436), fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.5)),
         leading: Padding(
           padding: const EdgeInsets.only(left: 16),
           child: GestureDetector(
@@ -206,13 +209,13 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> with TickerProvider
                   ),
                 ),
 
-                const Spacer(),
+                const SizedBox(height: 12),
 
                 // 3. SCANNER DASHBOARD (Big & Premium again)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 22),
                   child: Container(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(32),
@@ -240,7 +243,7 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> with TickerProvider
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
                         const LinearProgressIndicator(
                           value: 0.85,
                           backgroundColor: Color(0xFFF1F5F9),
@@ -248,57 +251,65 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> with TickerProvider
                           minHeight: 8,
                           borderRadius: BorderRadius.all(Radius.circular(10)),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
                         Text(_intelligenceNote, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: Color(0xFFDC9B9B), fontWeight: FontWeight.w900, letterSpacing: 1)),
                       ],
                     ),
                   ),
                 ),
 
-                const Spacer(flex: 2),
+                const SizedBox(height: 20),
 
-                // 4. MAIN ACTION BUTTONS
+                // 4. MAIN ACTION BUTTONS (Camera + Gallery — free, no card)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 22),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('START ANALYSIS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 1)),
-                      const SizedBox(height: 12),
+                      const Text('START ANALYSIS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 1)),
+                      const SizedBox(height: 16),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _mainBtn(Icons.camera_front_rounded, 'Live Scan', const Color(0xFFDC9B9B), () => _pickImage(ImageSource.camera)),
-                          const SizedBox(width: 14),
-                          _mainBtn(Icons.photo_library_rounded, 'Import', const Color(0xFFDC9B9B), () => _pickImage(ImageSource.gallery)),
+                          _mainBtn('📷', 'Live Scan', Colors.white, const Color(0xFFDC9B9B), () => _pickImage(ImageSource.camera)),
+                          _mainBtn('🖼️', 'Gallery', Colors.white, const Color(0xFFDC9B9B), () => _pickImage(ImageSource.gallery)),
                         ],
                       ),
                     ],
                   ),
                 ),
+                const Spacer(),
 
-                const Spacer(), // Added spacer here to separate the sections
-
-                // 5. SECONDARY TRIO
+                // 5. SECONDARY TRIO — wrapped in a card
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text('RESOURCES & SUPPORT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 1)),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          _trio(Icons.local_hospital_rounded, 'Visit Doctor', const Color(0xFFC0E1D2), () => Navigator.pushNamed(context, '/appointment')),
-                          const SizedBox(width: 10),
-                          _trio(Icons.chat_bubble_rounded, 'AI Chat', const Color(0xFFC0E1D2), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatbotScreen(category: 'skin')))),
-                          const SizedBox(width: 10),
-                          _trio(Icons.help_outline_rounded, 'FAQs', const Color(0xFFC0E1D2), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FaceFaqScreen()))),
-                        ],
-                      ),
-                    ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 12, offset: const Offset(0, 4))],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('RESOURCES & SUPPORT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 1)),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _trio(Icons.local_hospital_rounded, 'Visit Doctor', const Color(0xFFC0E1D2), () => Navigator.pushNamed(context, '/appointment')),
+                            _trio(Icons.chat_bubble_rounded, 'AI Chat', const Color(0xFFC0E1D2), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatbotScreen(category: 'skin')))),
+                            _trio(Icons.help_outline_rounded, 'FAQs', const Color(0xFFC0E1D2), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FaceFaqScreen()))),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 28),
+
               ],
             ),
           ),
@@ -329,53 +340,46 @@ class _FaceHealthScreenState extends State<FaceHealthScreen> with TickerProvider
 
   Widget _glow(double s, Color c) => Container(width: s, height: s, decoration: BoxDecoration(color: c, shape: BoxShape.circle));
 
-  Widget _mainBtn(IconData i, String l, Color c, VoidCallback t) => Expanded(
-    child: Material(
-      color: c,
-      elevation: 6,
-      shadowColor: c.withOpacity(0.5),
-      borderRadius: BorderRadius.circular(22),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: t,
-        splashColor: Colors.white.withOpacity(0.2),
-        highlightColor: Colors.white.withOpacity(0.1),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 24),
-          child: Column(
-            children: [
-              Icon(i, color: Colors.white, size: 28), 
-              const SizedBox(height: 8), 
-              Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Colors.white)),
-            ],
+  // App-icon style: rounded square + label below
+  Widget _mainBtn(String emoji, String l, Color bg, Color borderCol, VoidCallback t) => GestureDetector(
+    onTap: t,
+    child: Column(
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: borderCol.withOpacity(0.4), width: 2),
+            boxShadow: [BoxShadow(color: borderCol.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))],
           ),
+          child: Center(child: Text(emoji, style: const TextStyle(fontSize: 32))),
         ),
-      ),
+        const SizedBox(height: 8),
+        Text(l, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.5, color: Color(0xFF2D3436))),
+      ],
     ),
   );
 
-  Widget _trio(IconData i, String l, Color c, VoidCallback t) => Expanded(
-    child: Material(
-      color: c,
-      elevation: 4,
-      shadowColor: c.withOpacity(0.4),
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: t,
-        splashColor: Colors.black.withOpacity(0.05),
-        highlightColor: Colors.black.withOpacity(0.02),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            children: [
-              Icon(i, color: const Color(0xFF2D3436), size: 18), 
-              const SizedBox(height: 6), 
-              Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF2D3436))),
-            ],
+  // App-icon style for bottom trio
+  Widget _trio(IconData i, String l, Color c, VoidCallback t) => GestureDetector(
+    onTap: t,
+    child: Column(
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: c,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [BoxShadow(color: c.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
           ),
+          child: Center(child: Icon(i, color: const Color(0xFF2D3436), size: 26)),
         ),
-      ),
+        const SizedBox(height: 7),
+        Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF2D3436))),
+      ],
     ),
   );
 }
@@ -446,8 +450,11 @@ class _FaceHealthPreviewScreenState extends State<_FaceHealthPreviewScreen> with
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Dialog(
+          backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         child: Container(
           padding: const EdgeInsets.all(28),
@@ -524,6 +531,7 @@ class _FaceHealthPreviewScreenState extends State<_FaceHealthPreviewScreen> with
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -539,10 +547,44 @@ class _FaceHealthPreviewScreenState extends State<_FaceHealthPreviewScreen> with
           Positioned(top: 50, left: 16, child: IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.pop(context))),
           Positioned(
             bottom: 40, left: 24, right: 24,
-            child: ElevatedButton(
-              onPressed: _isAnalyzing ? null : _analyzeImage,
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC9B9B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), padding: const EdgeInsets.all(22)),
-              child: Text(_isAnalyzing ? _currentStatus : 'CONFIRM SCAN', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.2)),
+            child: GestureDetector(
+              onTap: _isAnalyzing ? null : _analyzeImage,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: 75,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFDC9B9B), Color(0xFFCD8686)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(color: const Color(0xFFDC9B9B).withOpacity(0.4), blurRadius: 25, offset: const Offset(0, 10)),
+                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5)),
+                  ],
+                  border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (!_isAnalyzing)
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.25),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 24),
+                      ),
+                    if (!_isAnalyzing) const SizedBox(width: 16),
+                    Text(
+                      _isAnalyzing ? _currentStatus.toUpperCase() : 'INITIATE FACE SCAN',
+                      style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1.5, fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

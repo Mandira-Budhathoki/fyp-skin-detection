@@ -322,7 +322,7 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
         ],
       ),
       body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -224,7 +224,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> with Single
 
     return ListView.builder(
       padding: const EdgeInsets.all(20),
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final apt = items[index];

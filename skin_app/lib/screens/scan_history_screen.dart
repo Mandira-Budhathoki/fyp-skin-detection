@@ -19,6 +19,17 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
   List<dynamic> _scans = [];
   String? _userName;
 
+  // Pagination Variables
+  int _currentPage = 1;
+  final int _itemsPerPage = 5;
+
+  // Theme Palette
+  static const Color creamBg = Color(0xFFF2EAE0);
+  static const Color cyan = Color(0xFFB4D3D9);
+  static const Color softPurple = Color(0xFFBDA6CE);
+  static const Color deepPurple = Color(0xFF9B8EC7);
+  static const Color textDark = Color(0xFF333333);
+
   @override
   void initState() {
     super.initState();
@@ -40,9 +51,32 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
       setState(() {
         if (result['history'] != null) {
           _scans = result['history'];
+          // Sort newest first
+          _scans.sort((a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
         }
         _isLoading = false;
       });
+    }
+  }
+
+  int get _totalPages => (_scans.length / _itemsPerPage).ceil();
+
+  List<dynamic> get _currentScans {
+    final int startIndex = (_currentPage - 1) * _itemsPerPage;
+    final int endIndex = startIndex + _itemsPerPage;
+    if (startIndex >= _scans.length) return [];
+    return _scans.sublist(startIndex, endIndex > _scans.length ? _scans.length : endIndex);
+  }
+
+  void _nextPage() {
+    if (_currentPage < _totalPages) {
+      setState(() => _currentPage++);
+    }
+  }
+
+  void _prevPage() {
+    if (_currentPage > 1) {
+      setState(() => _currentPage--);
     }
   }
 
@@ -212,7 +246,6 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
     return PdfColors.red700;
   }
 
-  // ── Color helpers ──
   Color _confidenceColor(double c) {
     if (c >= 85) return const Color(0xFF00B894);
     if (c >= 60) return const Color(0xFFFFAB2E);
@@ -228,44 +261,113 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FB),
+      backgroundColor: creamBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: 1,
-        surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 18, color: Color(0xFF1A2340)),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: textDark),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           "My Reports",
           style: TextStyle(
-            color: Color(0xFF1A2340),
-            fontWeight: FontWeight.w800,
-            fontSize: 17,
-            letterSpacing: -0.3,
+            color: textDark,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+            letterSpacing: -0.5,
           ),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: const Color(0xFFE5EAF4)),
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(
-              color: Color(0xFF7C6FF7), strokeWidth: 2.5))
+          ? const Center(child: CircularProgressIndicator(color: deepPurple, strokeWidth: 3))
           : _scans.isEmpty
               ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  itemCount: _scans.length,
-                  itemBuilder: (context, index) {
-                    final scan = _scans[index];
-                    return _buildScanCard(scan, index);
-                  },
+              : Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        physics: const ClampingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        itemCount: _currentScans.length,
+                        itemBuilder: (context, index) {
+                          return _buildPremiumScanCard(_currentScans[index], index);
+                        },
+                      ),
+                    ),
+                    _buildPaginationControls(),
+                  ],
                 ),
+    );
+  }
+
+  Widget _buildPaginationControls() {
+    if (_totalPages <= 1) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, -5))],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _pageButton(
+              icon: Icons.chevron_left_rounded,
+              label: 'Prev',
+              onTap: _currentPage > 1 ? _prevPage : null,
+              isActive: _currentPage > 1,
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: creamBg,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                'Page $_currentPage of $_totalPages',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: deepPurple, fontSize: 13),
+              ),
+            ),
+            _pageButton(
+              icon: Icons.chevron_right_rounded,
+              label: 'Next',
+              onTap: _currentPage < _totalPages ? _nextPage : null,
+              isActive: _currentPage < _totalPages,
+              isRight: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _pageButton({required IconData icon, required String label, required VoidCallback? onTap, required bool isActive, bool isRight = false}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? deepPurple : Colors.grey.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isRight) Icon(icon, color: isActive ? Colors.white : Colors.grey, size: 18),
+            if (!isRight) const SizedBox(width: 4),
+            Text(label, style: TextStyle(color: isActive ? Colors.white : Colors.grey, fontWeight: FontWeight.bold, fontSize: 13)),
+            if (isRight) const SizedBox(width: 4),
+            if (isRight) Icon(icon, color: isActive ? Colors.white : Colors.grey, size: 18),
+          ],
+        ),
+      ),
     );
   }
 
@@ -275,167 +377,147 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 80, height: 80,
-            decoration: BoxDecoration(
-              color: const Color(0xFF7C6FF7).withOpacity(0.08),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.insert_chart_outlined_rounded,
-                size: 36, color: const Color(0xFF7C6FF7).withOpacity(0.4)),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: softPurple.withOpacity(0.2), blurRadius: 20)]),
+            child: const Icon(Icons.description_outlined, size: 48, color: cyan),
           ),
-          const SizedBox(height: 20),
-          const Text(
-            "No reports yet",
-            style: TextStyle(
-              color: Color(0xFF1A2340),
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          const SizedBox(height: 24),
+          const Text("No Premium Reports", style: TextStyle(color: textDark, fontSize: 20, fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
-          const Text(
-            "Your AI scan results will show up here\nonce you complete your first analysis.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF6B7A99),
-              fontSize: 13,
-              height: 1.5,
-            ),
-          ),
+          const Text("Complete your first AI analysis to\ngenerate a clinical report.", textAlign: TextAlign.center, style: TextStyle(color: Colors.black54, fontSize: 14, height: 1.5)),
         ],
       ),
     );
   }
 
-  Widget _buildScanCard(dynamic scan, int index) {
+  Widget _buildPremiumScanCard(dynamic scan, int index) {
     final date = DateTime.parse(scan['timestamp']);
     final formattedDate = DateFormat('MMM dd, yyyy').format(date);
     final formattedTime = DateFormat('hh:mm a').format(date);
     final confidence = (scan['confidence'] ?? 0.0).toDouble();
     final prediction = scan['prediction'] ?? "Unknown";
-    final confColor = _confidenceColor(confidence);
-    final confLabel = _confidenceLabel(confidence);
 
-    // Alternate icon colors for visual variety
-    final iconColors = [
-      const Color(0xFF7C6FF7),
-      const Color(0xFF00B894),
-      const Color(0xFFFF6FA8),
-      const Color(0xFFFFAB2E),
-      const Color(0xFFFF6B6B),
+    final confColor = _confidenceColor(confidence);
+    
+    // Gradient accent logic based on the provided colors
+    final gradients = [
+      [cyan, const Color(0xFF90B9BF)],
+      [softPurple, const Color(0xFFA58CB8)],
+      [deepPurple, const Color(0xFF8172AD)],
     ];
-    final cardColor = iconColors[index % iconColors.length];
+    final gradient = gradients[index % gradients.length];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5EAF4)),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: gradient[0].withOpacity(0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            // Left icon
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: cardColor.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Icon(Icons.analytics_rounded, color: cardColor, size: 22),
-            ),
-            const SizedBox(width: 12),
-
-            // Middle info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    prediction,
-                    style: const TextStyle(
-                      color: Color(0xFF1A2340),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.calendar_today_rounded,
-                          size: 11, color: const Color(0xFF6B7A99).withOpacity(0.6)),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$formattedDate  ·  $formattedTime',
-                        style: TextStyle(
-                          color: const Color(0xFF6B7A99).withOpacity(0.8),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  // Confidence badge
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: confColor.withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 5, height: 5,
-                              decoration: BoxDecoration(
-                                color: confColor,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${confidence.toStringAsFixed(1)}%  $confLabel',
-                              style: TextStyle(
-                                color: confColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // PDF button
-            GestureDetector(
-              onTap: () => _generatePdf(scan),
-              child: Container(
-                width: 38, height: 38,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              // Left color tab
+              Container(
+                width: 5,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF6B6B).withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(
+                    colors: gradient,
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
                 ),
-                child: const Icon(Icons.picture_as_pdf_rounded,
-                    color: Color(0xFFFF6B6B), size: 18),
               ),
-            ),
-          ],
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              prediction,
+                              style: const TextStyle(
+                                color: textDark,
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.3,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _generatePdf(scan),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: creamBg,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: cyan.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: const [
+                                  Icon(Icons.download_rounded, size: 12, color: deepPurple),
+                                  SizedBox(width: 4),
+                                  Text("PDF", style: TextStyle(color: deepPurple, fontWeight: FontWeight.w800, fontSize: 10.5)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(color: creamBg, borderRadius: BorderRadius.circular(8)),
+                            child: Icon(Icons.event_note_rounded, size: 13, color: gradient[0]),
+                          ),
+                          const SizedBox(width: 8),
+                          Text('$formattedDate  •  $formattedTime', style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: confColor.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.verified_rounded, size: 13, color: confColor),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${confidence.toStringAsFixed(1)}% Confidence',
+                                  style: TextStyle(color: confColor, fontWeight: FontWeight.w800, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

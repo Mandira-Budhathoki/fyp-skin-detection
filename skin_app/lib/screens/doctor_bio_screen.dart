@@ -90,7 +90,7 @@ class _DoctorBioScreenState extends State<DoctorBioScreen> with SingleTickerProv
       ),
       body: SingleChildScrollView(
         controller: _scrollController,
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         child: Column(
           children: [
             _buildHero(name, spec, rating, reviews, docImage),

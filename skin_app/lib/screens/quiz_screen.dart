@@ -353,7 +353,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
   // ══════════════════════════════════════════════
   Widget _buildCategoryPicker() {
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,7 +549,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
           child: SlideTransition(
             position: _slideAnim,
             child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -737,7 +737,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
     else { grade = 'D'; msg = 'Keep learning! Retake the quiz after reviewing the topics. 💪'; icon = Icons.refresh_rounded; }
 
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

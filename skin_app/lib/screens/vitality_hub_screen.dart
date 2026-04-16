@@ -172,71 +172,57 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
       backgroundColor: bg,
       body: FadeTransition(
         opacity: _fadeAnim,
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(), // Changed from BouncingScrollPhysics to prevent overscrolling
-          slivers: [
-            // ── Hero SliverAppBar ──
-            SliverAppBar(
-              expandedHeight: 200, // Reduced from 220 to give more space below
-              floating: false,
-              pinned: true,
-              backgroundColor: navy,
-              leading: Padding(
-                padding: EdgeInsets.only(top: safeTop > 0 ? 0 : 0),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-              flexibleSpace: FlexibleSpaceBar(
-                background: _buildHeroHeader(safeTop),
-                collapseMode: CollapseMode.parallax,
-              ),
-              title: const Text('Holistic Health Hub',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
-            ),
+        child: Column(
+          children: [
+            // ── Static Interactive Header (Does not shrink) ──
+            _buildHeroHeader(safeTop, context),
 
-            // ── Vitality snapshot strip ──
-            SliverToBoxAdapter(child: _buildSnapshotStrip()),
-
-            // ── Section header ──
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-              sliver: SliverToBoxAdapter(
-                child: Row(
+            // ── Scrollable Content below the static header ──
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
                   children: [
-                    Container(width: 4, height: 20, decoration: BoxDecoration(color: teal, borderRadius: BorderRadius.circular(4))),
-                    const SizedBox(width: 10),
-                    const Text('Your Wellness Tools', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: navy)),
+                    // ── Section header ──
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(20, 24, 20, 16),
+                      child: Center(
+                        child: Text(
+                          'Interactive Health Tools',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: navy, letterSpacing: 0.5),
+                        ),
+                      ),
+                    ),
+
+                    // ── Feature grid (3 items per row) ──
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: GridView.builder(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3, 
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 24,
+                          childAspectRatio: 0.9, // Shorter/smaller buttons
+                        ),
+                        itemCount: _features.length,
+                        itemBuilder: (_, i) => _buildFeatureCard(_features[i], i),
+                      ),
+                    ),
+
+                    // ── Tips banner ──
+                    _buildTipsBanner(),
+
+                    // ── Quick stats row (Benchmarks) ──
+                    _buildQuickStats(),
+
+                    SizedBox(height: safeBottom + 30),
                   ],
                 ),
               ),
             ),
-
-            // ── Feature grid ──
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10, // Reduced from 12
-                  mainAxisSpacing: 10,   // Reduced from 12
-                  childAspectRatio: 0.77, // Increased from 0.76 for tighter fit
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (_, i) => _buildFeatureCard(_features[i], i),
-                  childCount: _features.length,
-                ),
-              ),
-            ),
-
-            // ── Tips banner ──
-            SliverToBoxAdapter(child: _buildTipsBanner()),
-
-            // ── Quick stats row ──
-            SliverToBoxAdapter(child: _buildQuickStats()),
-
-            SliverToBoxAdapter(child: SizedBox(height: safeBottom + 24)),
           ],
         ),
       ),
@@ -244,50 +230,94 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
   }
 
   // ──────────────────────────────────────────────
-  //  HERO HEADER
+  //  STATIC HEADER WITH INTERACTIVE CARD
   // ──────────────────────────────────────────────
-  Widget _buildHeroHeader(double safeTop) {
+  Widget _buildHeroHeader(double safeTop, BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF1B263B), Color(0xFF2D4263)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: navy,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
         ),
       ),
       child: Stack(
         children: [
-          // Decorative circles
-          Positioned(top: -40, right: -40, child: _decCircle(180, Colors.white, 0.03)),
-          Positioned(bottom: -20, left: -30, child: _decCircle(140, teal, 0.08)),
-          Positioned(top: 40, right: 30, child: _decCircle(60, purple, 0.15)),
-
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.05,
+              child: Image.network(
+                'https://www.transparenttextures.com/patterns/cubes.png',
+                repeat: ImageRepeat.repeat,
+              ),
+            ),
+          ),
           Padding(
-            padding: EdgeInsets.fromLTRB(20, safeTop + 50, 20, 10), // Reduced top and bottom padding
+            padding: EdgeInsets.fromLTRB(20, safeTop + 10, 20, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center, // Changed from end to center for stability
               children: [
-                Text('$_greeting, $_userName 👋',
-                    style: const TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w500)), // Reduced from 13
-                const SizedBox(height: 4), // Reduced from 6
-                const Text('Holistic Health Hub',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5)), // Reduced from 28
-                const SizedBox(height: 4), // Reduced from 6
-                const Text('Track, learn, and improve your wellness.',
-                    maxLines: 1, overflow: TextOverflow.ellipsis, // Added constraints
-                    style: TextStyle(fontSize: 12, color: Colors.white54, height: 1.2)), // Reduced from 13
-                const SizedBox(height: 12), // Reduced from 16
-                SingleChildScrollView( // Added to prevent horizontal overflow just in case
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _heroPill(Icons.hub_rounded, '6 Tools'),
-                      const SizedBox(width: 8),
-                      _heroPill(Icons.article_outlined, 'Articles'),
-                      const SizedBox(width: 8),
-                      _heroPill(Icons.quiz_rounded, 'Quiz'),
-                    ],
+                // Minimal AppBar Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                      padding: EdgeInsets.zero,
+                      alignment: Alignment.centerLeft,
+                    ),
+                    const Text('Holistic Health Hub', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
+                    const SizedBox(width: 40), // Balances the row
+                  ],
+                ),
+                const SizedBox(height: 16),
+                
+                // Interactive Welcome Card
+                Material(
+                  color: const Color(0xFFFAFDD6),
+                  borderRadius: BorderRadius.circular(20),
+                  child: InkWell(
+                    onTap: () {},
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFAED6C1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.maps_ugc_rounded, color: navy, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('$_greeting, $_userName!', style: TextStyle(fontSize: 12, color: navy.withOpacity(0.7), fontWeight: FontWeight.w700)),
+                                    const SizedBox(height: 2),
+                                    const Text('Your Wellness Tools', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: navy, letterSpacing: -0.5)),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.touch_app_rounded, color: navy.withOpacity(0.3), size: 20),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            'Explore your wellness journey! Use these 6 interactive tools to measure your BMI, track daily vitality, test your knowledge, and read medical insights.',
+                            style: TextStyle(fontSize: 12, color: navy.withOpacity(0.8), height: 1.5, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -298,202 +328,53 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
     );
   }
 
-  Widget _decCircle(double size, Color color, double opacity) {
-    return Container(
-      width: size, height: size,
-      decoration: BoxDecoration(color: color.withOpacity(opacity), shape: BoxShape.circle),
-    );
-  }
-
-  Widget _heroPill(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: Colors.white70),
-          const SizedBox(width: 5),
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-
   // ──────────────────────────────────────────────
-  //  SNAPSHOT STRIP
-  // ──────────────────────────────────────────────
-  Widget _buildSnapshotStrip() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(child: _snapItem(Icons.monitor_weight_outlined, 'BMI', '--', Colors.grey, () => _push(const BmiScreen()))),
-          _snapDivider(),
-          Expanded(child: _snapItem(Icons.bolt_rounded, 'Vitality', '--', blue, () => _push(const VitalityScreen()))),
-          _snapDivider(),
-          Expanded(child: _snapItem(Icons.edit_note_rounded, 'Entries', '--', orange, () => _push(const JournalScreen()))),
-          _snapDivider(),
-          Expanded(child: _snapItem(Icons.quiz_rounded, 'Quiz', 'Start', navy, () => _push(const QuizScreen()))),
-        ],
-      ),
-    );
-  }
-
-  Widget _snapItem(IconData icon, String label, String value, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min, // Added to prevent expansion
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8), // Reduced from 10
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, color: color, size: 18), // Reduced from 20
-          ),
-          const SizedBox(height: 4), // Reduced from 6
-          Text(value, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: color)), // Reduced from 15
-          Text(label, style: const TextStyle(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.w500)), // Reduced from 10
-        ],
-      ),
-    );
-  }
-
-  Widget _snapDivider() => Container(width: 1, height: 40, color: Colors.grey.shade100, margin: const EdgeInsets.symmetric(horizontal: 4));
-
-  // ──────────────────────────────────────────────
-  //  FEATURE CARD
+  //  FEATURE BUTTONS (Real tactile button feel, 3-column)
   // ──────────────────────────────────────────────
   Widget _buildFeatureCard(Map<String, dynamic> f, int index) {
-    final List<Color> grad = List<Color>.from(f['gradient']);
-    final Color color      = f['color'] as Color;
-    final String? badge    = f['badge'] as String?;
+    final Color color = f['color'] as Color;
 
-    return GestureDetector(
-      onTap: () => _push(f['screen'] as Widget),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4)),
-            BoxShadow(color: color.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10)),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            children: [
-              // Background decoration
-              Positioned(
-                right: -10,
-                bottom: -10,
-                child: Opacity(
-                  opacity: 0.05,
-                  child: Icon(f['icon'] as IconData, size: 80, color: color),
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Icon container
-                    Container(
-                      width: 48, height: 48,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: grad,
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: grad.last.withOpacity(0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          )
-                        ],
-                      ),
-                      child: Icon(f['icon'] as IconData, color: Colors.white, size: 22),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    Text(
-                      f['title'],
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5, color: navy, height: 1.1, letterSpacing: -0.2),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4), // Reduced from 6
-                    Expanded(
-                      child: Text(
-                        f['subtitle'],
-                        style: TextStyle(fontSize: 10.0, color: Colors.grey[600], height: 1.25, fontWeight: FontWeight.w500),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Tag pill
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: color.withOpacity(0.1)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(width: 4, height: 4, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-                          const SizedBox(width: 6),
-                          Text(f['tag'], style: TextStyle(fontSize: 9.5, color: color, fontWeight: FontWeight.w800, letterSpacing: 0.2)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Badge (LIVE / NEW)
-              if (badge != null)
-                Positioned(
-                  top: 14,
-                  right: 14,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: badge == 'LIVE' ? const Color(0xFFFF4D4D) : teal,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (badge == 'LIVE' ? Colors.red : teal).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        )
-                      ],
-                    ),
-                    child: Text(
-                      badge,
-                      style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 0.8),
-                    ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // The real button part
+        Expanded(
+          child: AspectRatio(
+            aspectRatio: 1.0,
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              elevation: 4,
+              shadowColor: color.withOpacity(0.2),
+              child: InkWell(
+                onTap: () => _push(f['screen'] as Widget),
+                borderRadius: BorderRadius.circular(22),
+                splashColor: color.withOpacity(0.1),
+                highlightColor: color.withOpacity(0.05),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: color.withOpacity(0.15), width: 1.5),
+                  ),
+                  child: Center(
+                    child: Icon(f['icon'] as IconData, color: color, size: 36),
                   ),
                 ),
-            ],
+              ),
+            ),
           ),
         ),
-      ),
+        const SizedBox(height: 12),
+        // The label below
+        Text(
+          f['title'],
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: navy, height: 1.2),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 
@@ -502,16 +383,16 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
   // ──────────────────────────────────────────────
   Widget _buildTipsBanner() {
     final tips = [
-      {'icon': '💧', 'tip': 'Drink a glass of water right now — hydration directly improves skin elasticity.'},
-      {'icon': '☀️', 'tip': 'Apply SPF 30+ every morning, even on cloudy days — UV causes 80% of skin aging.'},
-      {'icon': '🥑', 'tip': 'Add avocado or salmon to today\'s meal for omega-3s that reduce skin inflammation.'},
-      {'icon': '😴', 'tip': 'Aim for 7-9 hours tonight — sleep is when your skin repairs at the cellular level.'},
-      {'icon': '🌿', 'tip': 'A 10-minute mindfulness session can lower cortisol (skin stress hormone) by 20%.'},
+      {'icon': Icons.water_drop_outlined, 'tip': 'Drink a glass of water right now — hydration directly improves skin elasticity.'},
+      {'icon': Icons.wb_sunny_outlined, 'tip': 'Apply SPF 30+ every morning, even on cloudy days — UV causes 80% of skin aging.'},
+      {'icon': Icons.restaurant_menu_rounded, 'tip': 'Add avocado or salmon to today\'s meal for omega-3s that reduce skin inflammation.'},
+      {'icon': Icons.bedtime_outlined, 'tip': 'Aim for 7-9 hours tonight — sleep is when your skin repairs at the cellular level.'},
+      {'icon': Icons.self_improvement_rounded, 'tip': 'A 10-minute mindfulness session can lower cortisol (skin stress hormone) by 20%.'},
     ];
     final tip = tips[DateTime.now().minute % tips.length];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      padding: const EdgeInsets.fromLTRB(20, 30, 20, 0),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -521,15 +402,15 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
         ),
         child: Row(
           children: [
-            Text(tip['icon']!, style: const TextStyle(fontSize: 32)),
-            const SizedBox(width: 14),
+            Icon(tip['icon'] as IconData, size: 32, color: teal),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Daily Wellness Tip', style: TextStyle(fontWeight: FontWeight.bold, color: teal, fontSize: 12, letterSpacing: 0.5)),
-                  const SizedBox(height: 4),
-                  Text(tip['tip']!, style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.4)),
+                  const Text('Daily Wellness Tip', style: TextStyle(fontWeight: FontWeight.w900, color: teal, fontSize: 13, letterSpacing: 0.5)),
+                  const SizedBox(height: 6),
+                  Text(tip['tip'] as String, style: TextStyle(fontSize: 13, color: Colors.grey[800], height: 1.4, fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
@@ -540,18 +421,18 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
   }
 
   // ──────────────────────────────────────────────
-  //  QUICK STATS
+  //  QUICK STATS / HEALTH BENCHMARKS 
   // ──────────────────────────────────────────────
   Widget _buildQuickStats() {
     final stats = [
-      {'label': 'BMI Range', 'value': '18.5 – 24.9', 'sub': 'Healthy target', 'color': teal, 'icon': Icons.check_circle_outline_rounded},
-      {'label': 'Daily Water', 'value': '2 – 3 Liters', 'sub': 'Recommended', 'color': blue, 'icon': Icons.water_drop_outlined},
-      {'label': 'Sleep Goal', 'value': '7 – 9 Hours', 'sub': 'Per night', 'color': purple, 'icon': Icons.bedtime_outlined},
-      {'label': 'SPF Daily', 'value': 'SPF 30+', 'sub': 'Broad spectrum', 'color': gold, 'icon': Icons.wb_sunny_outlined},
+      {'label': 'BMI Range', 'value': '18.5 – 24.9', 'sub': 'Healthy target', 'color': teal, 'icon': Icons.fitness_center_rounded},
+      {'label': 'Daily Water', 'value': '2 – 3 Liters', 'sub': 'Recommended', 'color': blue, 'icon': Icons.local_drink_rounded},
+      {'label': 'Sleep Goal', 'value': '7 – 9 Hours', 'sub': 'Per night', 'color': purple, 'icon': Icons.nights_stay_rounded},
+      {'label': 'SPF Daily', 'value': 'SPF 30+', 'sub': 'Broad spectrum', 'color': gold, 'icon': Icons.shield_outlined},
     ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -562,19 +443,19 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
               const Text('Health Benchmarks', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: navy)),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 1.9,
+              crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 2.0,
             ),
             itemCount: stats.length,
             itemBuilder: (_, i) {
               final s = stats[i];
               final c = s['color'] as Color;
               return Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -584,18 +465,18 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: c.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                      child: Icon(s['icon'] as IconData, color: c, size: 18),
+                      decoration: BoxDecoration(color: c.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                      child: Icon(s['icon'] as IconData, color: c, size: 20),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(s['value'] as String, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: c)),
-                          Text(s['label'] as String, style: const TextStyle(fontSize: 10, color: navy, fontWeight: FontWeight.w600)),
-                          Text(s['sub'] as String, style: TextStyle(fontSize: 9, color: Colors.grey[400])),
+                          Text(s['value'] as String, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: c)),
+                          Text(s['label'] as String, style: const TextStyle(fontSize: 10, color: navy, fontWeight: FontWeight.w700)),
+                          Text(s['sub'] as String, style: TextStyle(fontSize: 9, color: Colors.grey[500])),
                         ],
                       ),
                     ),

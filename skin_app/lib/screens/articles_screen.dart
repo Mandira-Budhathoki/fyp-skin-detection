@@ -270,7 +270,7 @@ class _ArticlesScreenState extends State<ArticlesScreen> with SingleTickerProvid
     )['color'] as Color);
 
     return ListView.builder(
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: _articles.length,
       itemBuilder: (_, i) {

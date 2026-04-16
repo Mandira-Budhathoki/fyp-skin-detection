@@ -262,7 +262,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(20),
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 return _buildMessageBubble(_messages[index], index);

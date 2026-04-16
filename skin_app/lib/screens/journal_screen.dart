@@ -254,7 +254,7 @@ class _JournalScreenState extends State<JournalScreen> with TickerProviderStateM
       ),
       body: TabBarView(
         controller: _tabController,
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         children: [
           _buildWriteTab(),
           _buildCalendarTab(),
@@ -269,7 +269,7 @@ class _JournalScreenState extends State<JournalScreen> with TickerProviderStateM
   // ══════════════════════════════════════════════
   Widget _buildWriteTab() {
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -680,7 +680,7 @@ class _JournalScreenState extends State<JournalScreen> with TickerProviderStateM
     final startOffset = (firstDay.weekday % 7); // Sun=0
 
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -864,7 +864,7 @@ class _JournalScreenState extends State<JournalScreen> with TickerProviderStateM
     final done = _todos.where((t) => t['done'] as bool).toList();
 
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -5,7 +5,7 @@ import '../data/wound_advice_provider.dart';
 //  DESIGN TOKENS (Modern Clinical Pro)
 // ─────────────────────────────────────────────
 class _T {
-  static const bg        = Color(0xFFF8FAFC);
+  static const bg        = Color(0xFFF1F8F8);
   static const surface   = Colors.white;
   static const cardBorder= Color(0xFFE2E8F0);
 
@@ -13,10 +13,10 @@ class _T {
   static const textSub   = Color(0xFF475569);
   static const textMuted = Color(0xFF94A3B8);
 
-  static const primary   = Color(0xFF0066FF);
+  static const primary   = Color(0xFF8CC7C4); // Teal
+  static const deep      = Color(0xFF2C687B); // Deep Teal
   static const emergency = Color(0xFFE11D48);
   static const warning   = Color(0xFFF59E0B);
-  static const violet    = Color(0xFF7C3AED);
 }
 
 class WoundTreatmentScreen extends StatelessWidget {
@@ -112,25 +112,18 @@ class WoundTreatmentScreen extends StatelessWidget {
 
                     const SizedBox(height: 40),
 
-                    // COMPACT ACTION
                     SizedBox(
                       width: double.infinity,
                       height: 56,
-                      child: ElevatedButton(
+                      child: ElevatedButton.icon(
                         onPressed: () => Navigator.pushNamed(context, '/appointment'),
+                        icon: const Icon(Icons.local_hospital_rounded, size: 18),
+                        label: const Text("VISIT DOCTOR", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _T.textPrim,
+                          backgroundColor: _T.deep,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           elevation: 0,
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.local_hospital_rounded, size: 18),
-                            SizedBox(width: 12),
-                            Text("SCHEDULE HOSPITAL VISIT", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1)),
-                          ],
                         ),
                       ),
                     ),
@@ -182,16 +175,61 @@ class _InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF8CC7C4), Color(0xFF2C687B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _T.cardBorder),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: const Color(0xFF8CC7C4).withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 8))],
       ),
-      child: Text(
-        message.isNotEmpty ? message : "Our analysis suggests following standard recovery protocols for $prediction. Maintain hygiene and monitor the area daily.",
-        style: const TextStyle(fontSize: 14.5, color: _T.textSub, height: 1.6, fontWeight: FontWeight.w500),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top section
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.biotech_rounded, color: Colors.white, size: 22),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'AI CLINICAL OBSERVATION',
+                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5),
+                ),
+              ],
+            ),
+          ),
+          // Observation text
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              message.isNotEmpty
+                  ? message
+                  : 'Analysis indicates a $prediction-type wound pattern. Standard healing protocols should be initiated. Monitor daily for changes in appearance, exudate, or pain levels.',
+              style: const TextStyle(
+                fontSize: 13.5,
+                color: Color(0xFF2C687B),
+                height: 1.65,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

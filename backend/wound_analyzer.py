@@ -3,6 +3,7 @@ import io
 import torch
 import numpy as np
 import traceback
+import cv2
 from PIL import Image
 from transformers import pipeline
 
@@ -98,11 +99,56 @@ class WoundAnalyzerEngine:
 
         return recommendations
 
+    def _detect_unwanted_objects(self, image_bytes: bytes) -> bool:
+        """
+        Uses OpenCV to perform a quick sanity check before passing the image to transformers.
+        If a prominent human face is detected, we reject it (it's not a wound).
+        Returns True if the image is REJECTED (e.g. contains a full face).
+        """
+        try:
+            # Convert bytes to numpy array for cv2
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            if img is None: return False
+            
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            
+            # Load Haar Cascade for frontal face
+            face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+            if face_cascade.empty(): return False
+            
+            # Detect faces
+            faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(60, 60))
+            
+            # If a face is found, calculate its size relative to the image
+            for (x, y, w, h) in faces:
+                face_area = w * h
+                image_area = img.shape[0] * img.shape[1]
+                ratio = face_area / image_area
+                # If a face takes up a very noticeable portion of the frame (e.g., > 35%), reject it.
+                if ratio > 0.35:
+                    print(f"[WOUND GUARD] Rejected: Prominent face detected (ratio: {ratio:.2%})")
+                    return True
+            return False
+        except Exception as e:
+            print(f"[WOUND GUARD ERROR] {e}")
+            return False
+
     def analyze(self, image_bytes: bytes) -> dict:
         """
         Runs the ensemble on the image bytes and consolidates the results.
         Returns a dictionary suitable for NDJSON streaming.
         """
+        # 1. IMMEDIATE SANITY CHECK
+        if self._detect_unwanted_objects(image_bytes):
+            return {
+                "status": "fail",
+                "error": "Not a valid wound image",
+                "message": "A full face was detected. If you have a wound on your face, please zoom in and take a close-up strictly of the wound itself.",
+                "primary": {"label": "Unclear Image / Not a Wound", "score": 0.0},
+                "secondary": {"label": "Unclear Image / Not a Wound", "score": 0.0},
+            }
+
         results = {
             "primary": None,
             "secondary": None,
@@ -111,7 +157,7 @@ class WoundAnalyzerEngine:
         }
         
         try:
-            # 1. Load and Optimize Image for ViT (224x224 Center Crop)
+            # 2. Load and Optimize Image for ViT (224x224 Center Crop)
             # This is the 'optimum best' preprocessing for these specific models.
             image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
             

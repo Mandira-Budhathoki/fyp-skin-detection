@@ -21,10 +21,10 @@ class _T {
   static const textSub   = Color(0xFF636E72);
   static const textMuted = Color(0xFFAEB8B8);
 
-  static const primary   = Color(0xFFC0E1D2); // Seafoam (Benign)
-  static const highRisk  = Color(0xFFDC9B9B); // Rose (Melanoma)
-  static const warning   = Color(0xFFE2A96F); // Keeping a soft orange for warnings
-  static const accent    = Color(0xFFDC9B9B);
+  static const primary   = Color(0xFF10B981); // Bright Emerald (Benign)
+  static const highRisk  = Color(0xFFE11D48); // Vivid Crimson (Melanoma)
+  static const warning   = Color(0xFFF59E0B); // Amber
+  static const accent    = Color(0xFFE11D48);
 }
 
 class MelanomaResultsScreen extends StatefulWidget {
@@ -106,7 +106,7 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
           child: ScrollConfiguration(
             behavior: _NoGlowBehavior(),
             child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(child: _buildHero(mq)),
                 SliverToBoxAdapter(child: _buildContentSheet()),
@@ -246,6 +246,8 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
   }
 
   Widget _buildContentSheet() {
+    final infoData = MelanomaInfoProvider.getInfoForClass(widget.results['raw_class'] ?? (_isMelanoma ? 'Melanoma' : 'Benign'));
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: AnimatedBuilder(
@@ -262,11 +264,16 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
               const SizedBox(height: 16),
               ...List.generate(_top3.length, (index) {
                 final item = _top3[index];
+                final List<Color> rankColors = [
+                  _themeColor,
+                  const Color(0xFF3B82F6), // Vivid Blue
+                  const Color(0xFF8B5CF6), // Vivid Purple
+                ];
                 return _ProbabilityCard(
                   rank: index + 1,
                   label: item['label'],
                   value: (item['confidence'] as num).toDouble(),
-                  color: index == 0 ? _themeColor : _T.textMuted,
+                  color: index < rankColors.length ? rankColors[index] : _T.textSub,
                 );
               }),
               const SizedBox(height: 24),
@@ -294,7 +301,7 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
               children: [
                 _CompactAction(
                   icon: Icons.assignment_rounded,
-                  label: "Report",
+                  label: "View Report",
                   color: Colors.white,
                   bgColor: const Color(0xFF0066FF),
                   onTap: () {
@@ -306,8 +313,8 @@ class _MelanomaResultsScreenState extends State<MelanomaResultsScreen>
                 ),
                 const SizedBox(width: 12),
                 _CompactAction(
-                  icon: Icons.chat_bubble_rounded,
-                  label: "Consult",
+                  icon: Icons.local_hospital_rounded,
+                  label: "Visit Doctor",
                   color: _T.textPrim,
                   bgColor: Colors.white,
                   onTap: () => Navigator.pushNamed(context, '/appointment'),
@@ -525,24 +532,47 @@ class _CompactAction extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: BoxDecoration(
-            color: bgColor, 
-            borderRadius: BorderRadius.circular(20), 
-            border: Border.all(color: _T.cardBorder),
-            boxShadow: bgColor != Colors.white ? [
-              BoxShadow(color: bgColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
-            ] : null,
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 24),
-              const SizedBox(height: 8),
-              Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 13)),
-            ],
-          ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: bgColor, 
+                shape: BoxShape.circle,
+                border: Border.all(color: _T.cardBorder),
+                boxShadow: bgColor != Colors.white ? [
+                  BoxShadow(color: bgColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
+                ] : [
+                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 4))
+                ],
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 10),
+            Text(label, style: const TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 11)),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _DetailCard extends StatelessWidget {
+  final String title, desc;
+  const _DetailCard({required this.title, required this.desc});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: _T.cardBorder)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: _T.textPrim, fontSize: 13, letterSpacing: 0.5)),
+          const SizedBox(height: 8),
+          Text(desc, style: const TextStyle(color: _T.textSub, fontSize: 13.5, height: 1.6, fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }

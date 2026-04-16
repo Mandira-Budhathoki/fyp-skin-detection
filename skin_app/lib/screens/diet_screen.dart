@@ -168,7 +168,7 @@ class _DietScreenState extends State<DietScreen> with TickerProviderStateMixin {
       ),
       body: TabBarView(
         controller: _tabController,
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         children: [
           _buildMealPlansTab(),
           _buildSuperfoodsTab(),
@@ -216,7 +216,7 @@ class _DietScreenState extends State<DietScreen> with TickerProviderStateMixin {
 
         Expanded(
           child: ListView.builder(
-            physics: const BouncingScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             padding: const EdgeInsets.all(16),
             itemCount: _filteredPlans.length,
             itemBuilder: (_, i) => _buildMealCard(_filteredPlans[i]),
@@ -348,7 +348,7 @@ class _DietScreenState extends State<DietScreen> with TickerProviderStateMixin {
 
   Widget _buildSuperfoodsTab() {
     return ListView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
         // Hero banner
@@ -411,7 +411,7 @@ class _DietScreenState extends State<DietScreen> with TickerProviderStateMixin {
 
   Widget _buildAvoidTab() {
     return ListView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
         Container(

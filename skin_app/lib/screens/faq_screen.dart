@@ -51,7 +51,7 @@ class _FaqScreenState extends State<FaqScreen> with SingleTickerProviderStateMix
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         slivers: [
           _buildSliverAppBar(),
           SliverToBoxAdapter(child: _buildSearchAndFilter()),

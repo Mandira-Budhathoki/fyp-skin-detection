@@ -136,7 +136,7 @@ class _ScanTipsScreenState extends State<ScanTipsScreen>
                         Expanded(
                           child: ListView.builder(
                             itemCount: tips.length,
-                            physics: const BouncingScrollPhysics(),
+                            physics: const ClampingScrollPhysics(),
                             padding: const EdgeInsets.only(bottom: 20),
                             itemBuilder: (context, i) => _buildAdvancedTipCard(tips[i], i),
                           ),
