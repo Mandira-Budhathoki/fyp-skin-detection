@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class BmiScreen extends StatefulWidget {
   const BmiScreen({Key? key}) : super(key: key);
@@ -16,7 +17,9 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
   static const Color navy = Color(0xFF1B263B);
   static const Color teal = Color(0xFF2A9D8F);
   static const Color orange = Color(0xFFE76F51);
-  static const Color purple = Color(0xFF6D597A);
+  static const Color purp1 = Color(0xFFBDA6CE);
+  static const Color purp2 = Color(0xFF9B8EC7);
+  static const Color purple = Color(0xFF9B8EC7);
   static const Color bg = Color(0xFFF8FAFB);
 
   // Units
@@ -59,21 +62,9 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
     _inchesController = TextEditingController(text: '$_inches');
     _weightLbsController = TextEditingController(text: _weightLbs.toStringAsFixed(1));
 
-    _loadUser();
+    _loadData();
   }
 
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    _heightController.dispose();
-    _weightController.dispose();
-    _feetController.dispose();
-    _inchesController.dispose();
-    _weightLbsController.dispose();
-    super.dispose();
-  }
-
-  // Helper to sync text field with state
   void _updateFromText(String val, String type) {
     double? d = double.tryParse(val);
     if (d == null) return;
@@ -86,9 +77,22 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
     });
   }
 
-  Future<void> _loadUser() async {
+  List<Map<String, dynamic>> _history = [];
+  bool _showResults = false;
+
+  Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() => _userId = prefs.getString('userId'));
+    setState(() {
+      _userId = prefs.getString('userId');
+      final raw = prefs.getString('bmi_history');
+      if (raw != null) {
+        _history = List<Map<String, dynamic>>.from(jsonDecode(raw));
+        // Filter: Keep only last 30 days
+        final monthAgo = DateTime.now().subtract(const Duration(days: 30));
+        _history = _history.where((e) => DateTime.parse(e['date']).isAfter(monthAgo)).toList();
+        _history.sort((a,b) => b['date'].compareTo(a['date']));
+      }
+    });
   }
 
   double get _bmi {
@@ -254,34 +258,40 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _save() async {
-    if (_userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in first.')));
-      return;
+    final b = _bmi;
+    if (b <= 0) return;
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _isSaving = true;
+      _showResults = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final entry = {
+      'bmi': double.parse(b.toStringAsFixed(1)),
+      'status': _status,
+      'date': now.toIso8601String(),
+      'weight': _useCm ? _weightKg : _weightLbs,
+      'unit': _useCm ? 'kg' : 'lbs'
+    };
+
+    _history.insert(0, entry);
+    // Keep max 30 entries (or more if needed)
+    if (_history.length > 30) _history = _history.sublist(0, 30);
+
+    await prefs.setString('bmi_history', jsonEncode(_history));
+
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: purp2,
+        content: const Text('Saved to your private history! ✨'),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ));
     }
-    setState(() => _isSaving = true);
-    try {
-      final heightCm = _useCm ? _heightCm : ((_feet * 12 + _inches) * 2.54);
-      final weightKg = _useCm ? _weightKg : (_weightLbs * 0.453592);
-      await ApiService.analyzeVitality({
-        'userId': _userId,
-        'height': heightCm,
-        'weight': weightKg,
-        'sleepHours': 7,
-        'waterIntake': 2,
-        'stressLevel': 5,
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          backgroundColor: teal,
-          content: const Text('BMI & health stats saved!'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
-      }
-    } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to save. Check connection.')));
-    }
-    if (mounted) setState(() => _isSaving = false);
   }
 
   @override
@@ -323,7 +333,7 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
       ),
       body: SingleChildScrollView(
         physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 60),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -473,6 +483,35 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
 
             const SizedBox(height: 28),
 
+            // ── Save Button ──
+            GestureDetector(
+              onTap: _isSaving ? null : _save,
+              child: Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [purp1, purp2]),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [BoxShadow(color: purp2.withOpacity(0.4), blurRadius: 16, offset: const Offset(0, 6))],
+                ),
+                child: Center(
+                  child: _isSaving
+                      ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.history_toggle_off_rounded, color: Colors.white, size: 20),
+                            const SizedBox(width: 10),
+                            Text('SAVE HEALTH STATS TO SEE LATER', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 40),
+
+            const SizedBox(height: 24),
+
             // ── Personalized Advice ──
             Container(
               padding: const EdgeInsets.all(22),
@@ -492,7 +531,7 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
                         child: Icon(Icons.lightbulb_outline_rounded, color: color, size: 20),
                       ),
                       const SizedBox(width: 12),
-                      const Text('Personalized Plan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: navy)),
+                      const Text('Personalized Advice', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: navy)),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -510,17 +549,14 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
                           child: Icon(item['icon'] as IconData, color: item['color'] as Color, size: 18),
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (item['title'] != null)
-                                Text(item['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: navy)),
-                              if (item['title'] != null) const SizedBox(height: 2),
-                              Text(item['text'] as String, style: TextStyle(fontSize: 13, color: Colors.grey[600], height: 1.4)),
-                            ],
-                          ),
-                        ),
+                        Expanded(child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (item['title'] != null) Text(item['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: navy)),
+                            if (item['title'] != null) const SizedBox(height: 2),
+                            Text(item['text'] as String, style: TextStyle(fontSize: 13, color: Colors.grey[600], height: 1.4)),
+                          ],
+                        )),
                       ],
                     ),
                   )),
@@ -528,37 +564,16 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+
+            // ── History List ──
+            if (_history.isNotEmpty) _buildHistoryList(),
+
+            const SizedBox(height: 32),
 
             // ── Ideal Weight Card ──
             if (bmi > 0) _buildIdealWeightCard(),
-
-            const SizedBox(height: 28),
-
-            // ── Save Button ──
-            GestureDetector(
-              onTap: _isSaving ? null : _save,
-              child: Container(
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [BoxShadow(color: color.withOpacity(0.4), blurRadius: 16, offset: const Offset(0, 6))],
-                ),
-                child: Center(
-                  child: _isSaving
-                      ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.save_outlined, color: Colors.white, size: 20),
-                            SizedBox(width: 10),
-                            Text('SAVE HEALTH STATS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 0.5)),
-                          ],
-                        ),
-                ),
-              ),
-            ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -693,5 +708,40 @@ class _BmiScreenState extends State<BmiScreen> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+  Widget _buildHistoryList() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 12),
+          child: Text('LAST 30 DAYS PROGRESS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: navy, letterSpacing: 1)),
+        ),
+        ..._history.take(5).map((e) {
+          final dt = DateTime.parse(e['date']);
+          final dateStr = '${dt.day}/${dt.month}';
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade100)),
+            child: Row(
+              children: [
+                Text(dateStr, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(width: 16),
+                Expanded(child: Text('BMI: ${e['bmi']}', style: const TextStyle(fontWeight: FontWeight.w900, color: navy))),
+                Text(e['status'], style: TextStyle(color: _getColorForStatus(e['status']), fontWeight: FontWeight.bold, fontSize: 12)),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  Color _getColorForStatus(String s) {
+    if (s.contains('Under')) return const Color(0xFFFFB347);
+    if (s.contains('Normal')) return teal;
+    if (s.contains('Over')) return orange;
+    return Colors.red;
   }
 }

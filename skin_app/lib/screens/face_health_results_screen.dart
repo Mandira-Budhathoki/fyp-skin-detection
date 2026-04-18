@@ -215,7 +215,7 @@ class _FaceHealthResultsScreenState extends State<FaceHealthResultsScreen> {
             children: [
               if (s.show) _megaItem("SKIN TYPE", s.label, const Color(0xFF76D7EA)),
               if (a.show) _megaItem("ACNE", a.label, _Ref.trackBlue),
-              if (f.show) _megaItem("SHAPE", f.label, _Ref.purple),
+              if (f.show) _megaItem("FACE SHAPE", f.label, _Ref.purple),
             ],
           ),
           const SizedBox(height: 30),
@@ -223,7 +223,7 @@ class _FaceHealthResultsScreenState extends State<FaceHealthResultsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               if (e.show) _megaItem("MOOD", e.label, _Ref.trackBlue),
-              if (i.show) _megaItem("INFLAM.", i.label, _Ref.trackOrg),
+              if (i.show) _megaItem("INFLAMMATION", i.label, _Ref.trackOrg),
               if (p.show) _megaItem("PORES", p.label, _Ref.teal),
             ],
           ),
@@ -251,7 +251,7 @@ class _FaceHealthResultsScreenState extends State<FaceHealthResultsScreen> {
         ),
         const SizedBox(height: 10),
         SizedBox(
-          width: 85,
+          width: 95, // Increased width to ensure "INFLAMMATION" and "FACE SHAPE" are fully visible
           child: Column(
             children: [
               FittedBox(

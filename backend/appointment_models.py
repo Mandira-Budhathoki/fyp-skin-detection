@@ -164,9 +164,10 @@ class VitalityData(mongoengine.DynamicDocument):
     userId = mongoengine.StringField(required=True)
     height = mongoengine.FloatField() # in cm
     weight = mongoengine.FloatField() # in kg
+    steps = mongoengine.IntField(default=0)
     sleepHours = mongoengine.FloatField()
     waterIntake = mongoengine.FloatField() # in liters
-    stressLevel = mongoengine.IntField() # 1-10
+    sunExposure = mongoengine.FloatField() # in hours
     timestamp = mongoengine.DateTimeField(default=datetime.utcnow)
 
     meta = {'collection': 'vitality_data', 'ordering': ['-timestamp']}
@@ -177,8 +178,9 @@ class VitalityData(mongoengine.DynamicDocument):
             'userId': self.userId,
             'height': self.height,
             'weight': self.weight,
+            'steps': getattr(self, 'steps', 0),
             'sleepHours': self.sleepHours,
             'waterIntake': self.waterIntake,
-            'stressLevel': self.stressLevel,
+            'sunExposure': getattr(self, 'sunExposure', 2.0),
             'timestamp': self.timestamp
         })

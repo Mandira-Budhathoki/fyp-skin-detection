@@ -34,6 +34,7 @@ class ApiService {
   static const String analyzeAcneUrl = '$serviceBase/analyze/acne';
   static const String analyzeFaceHealthUrl = '$serviceBase/analyze/face-health';
   static const String analyzeWoundUrl = '$serviceBase/analyze/wound';
+  static const String vitalityUrl = '$serviceBase/vitality';
   static const String chatbotUrl = '$serviceBase/chatbot';
   static const String appointmentUrl = '$serviceBase/appointments';
 
@@ -412,6 +413,27 @@ class ApiService {
     }
   }
 
+  static const String analyzeMelanomaStreamUrl = '$serviceBase/analyze/melanoma-stream';
+
+  static Stream<Map<String, dynamic>> analyzeMelanomaStream(String imagePath, String? token) async* {
+    final url = Uri.parse(analyzeMelanomaStreamUrl);
+    var request = http.MultipartRequest('POST', url);
+    request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+    
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    request.headers['Bypass-Tunnel-Reminder'] = 'true';
+
+    final streamedResponse = await request.send();
+    
+    await for (final chunk in streamedResponse.stream.transform(utf8.decoder).transform(const LineSplitter())) {
+      if (chunk.trim().isNotEmpty) {
+        yield jsonDecode(chunk);
+      }
+    }
+  }
+
   static const String analyzeFaceHealthStreamUrl = '$serviceBase/analyze/face-health-stream';
 
   static Stream<Map<String, dynamic>> analyzeFaceHealthStream(String imagePath, String? token) async* {
@@ -433,14 +455,7 @@ class ApiService {
       }
     }
   }
-  static Future<Map<String, dynamic>> analyzeVitality(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$serviceBase/vitality/analyze'),
-      headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
-      body: json.encode(data),
-    );
-    return json.decode(response.body);
-  }
+
 
   static Future<Map<String, dynamic>> addJournalEntry(String userId, String content, String mood) async {
     final response = await http.post(
@@ -474,6 +489,39 @@ class ApiService {
   }
 
   // --- QUIZ METHODS ---
+  static Future<Map<String, dynamic>> submitQuiz(Map<String, dynamic> results) async {
+    return {"success": true, "message": "Quiz logged offline."};
+  }
+
+  // ---------------- VITALITY METHODS ----------------
+
+  static Future<Map<String, dynamic>> analyzeVitality(Map<String, dynamic> data) async {
+    final url = Uri.parse('$vitalityUrl/analyze');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
+        body: jsonEncode(data),
+      ).timeout(const Duration(seconds: 20));
+      return response.statusCode == 200 ? jsonDecode(response.body) : {"error": "Failed"};
+    } catch (_) {
+      return {"error": "Connection error"};
+    }
+  }
+
+  static Future<List<dynamic>> getVitalityHistory(String userId) async {
+    final url = Uri.parse('$vitalityUrl/history/$userId');
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
+      ).timeout(const Duration(seconds: 15));
+      return response.statusCode == 200 ? jsonDecode(response.body) : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
   static Future<Map<String, dynamic>> saveQuizResult(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$serviceBase/quiz/results'),
@@ -506,6 +554,15 @@ class ApiService {
 
   static Future<Map<String, dynamic>> deleteQuizQuestion(String qid) async {
     final response = await http.delete(Uri.parse('$serviceBase/quiz/questions/$qid'), headers: {'Bypass-Tunnel-Reminder': 'true'});
+    return json.decode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> updateQuizQuestion(String qid, Map<String, dynamic> qData) async {
+    final response = await http.put(
+      Uri.parse('$serviceBase/quiz/questions/$qid'),
+      headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
+      body: json.encode(qData),
+    );
     return json.decode(response.body);
   }
 }

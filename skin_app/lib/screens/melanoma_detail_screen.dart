@@ -30,117 +30,117 @@ class MelanomaDetailScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final info = MelanomaInfoProvider.getInfoForClass(conditionName);
-    final Color themeColor = isHighRisk ? _T.highRisk : _T.primary;
-
-    return Scaffold(
-      backgroundColor: _T.bg,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text("PATHOLOGY GUIDE", style: TextStyle(color: _T.textPrim, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.5)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _T.textPrim, size: 18),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: ScrollConfiguration(
-        behavior: _NoGlowBehavior(),
-        child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(), // NO BOUNCE
-          child: Column(
-            children: [
-              // 🧪 HEADER DOSSIER
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))],
+    Widget build(BuildContext context) {
+      final info = MelanomaInfoProvider.getInfoForClass(conditionName);
+      final Color themeColor = isHighRisk ? _T.highRisk : _T.primary;
+  
+      return Scaffold(
+        backgroundColor: _T.bg,
+        body: ScrollConfiguration(
+          behavior: _NoGlowBehavior(),
+          child: CustomScrollView(
+            physics: const ClampingScrollPhysics(),
+            slivers: [
+              // 🧪 PREMIUM CLINICAL HEADER
+              SliverAppBar(
+                expandedHeight: 220,
+                pinned: true,
+                elevation: 0,
+                backgroundColor: themeColor,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                  onPressed: () => Navigator.pop(context),
                 ),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(color: themeColor.withOpacity(0.1), shape: BoxShape.circle),
-                      child: Icon(isHighRisk ? Icons.warning_amber_rounded : Icons.info_outline_rounded, color: themeColor, size: 48),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      conditionName.split(' (').first.toUpperCase(),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: _T.textPrim, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
-                    ),
-                    const SizedBox(height: 12),
-                    _StatusTag(label: isHighRisk ? "URGENT PROTOCOL" : "CARE PROTOCOL", color: themeColor),
-                  ],
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isHighRisk 
+                              ? [const Color(0xFFE11D48), const Color(0xFF9F1239)] 
+                              : [const Color(0xFF0066FF), const Color(0xFF1E40AF)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                      ),
+                      Positioned(right: -20, bottom: -20, child: Icon(isHighRisk ? Icons.warning_amber_rounded : Icons.shield_rounded, size: 180, color: Colors.white.withOpacity(0.1))),
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 40),
+                            Text("PATHOLOGY DOSSIER", style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2)),
+                            const SizedBox(height: 8),
+                            Text(conditionName.toUpperCase(), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withOpacity(0.3))),
+                              child: Text(isHighRisk ? "URGENT ACTIONS REQUIRED" : "STANDARD CARE PROTOCOL", style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (isHighRisk) ...[
-                      _AlertCard(message: "The parameters detect high-risk features. Immediate board-certified dermatological biopsy is required."),
-                      const SizedBox(height: 32),
-                    ],
-
-                    _SectionTitle("CLINICAL DETAILS"),
-                    const SizedBox(height: 16),
-                    if (info != null) ...[
-                      _DetailTile(title: 'Medical Type', content: info['Type']!, icon: Icons.biotech_rounded, color: _T.accent),
-                      _DetailTile(title: 'Common Causes', content: info['Cause']!, icon: Icons.wb_sunny_rounded, color: _T.warning),
-                      _DetailTile(title: 'Symptoms', content: info['Symptoms']!, icon: Icons.search_rounded, color: Colors.blue),
-                      _DetailTile(title: 'Treatment', content: info['Treatment']!, icon: Icons.medical_services_rounded, color: Colors.green),
-                    ] else
-                      const Center(child: Text('No dossier data available.', style: TextStyle(color: _T.textMuted))),
-
-                    const SizedBox(height: 40),
-
-                    // COMPACT ACTION
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
+  
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isHighRisk) ...[
+                        _AlertCard(message: "Immediate board-certified dermatological biopsy is required for high-risk features."),
+                        const SizedBox(height: 32),
+                      ],
+  
+                      _SectionTitle("CLINICAL ANALYSIS"),
+                      const SizedBox(height: 16),
+                      if (info != null) ...[
+                        _DetailTile(title: 'Medical Classification', content: info['Type']!, icon: Icons.biotech_rounded, color: _T.accent),
+                        _DetailTile(title: 'Primary Etiology', content: info['Cause']!, icon: Icons.wb_sunny_rounded, color: _T.warning),
+                        _DetailTile(title: 'Diagnostic Symptoms', content: info['Symptoms']!, icon: Icons.troubleshoot_rounded, color: Colors.blue),
+                        _DetailTile(title: 'Recommended Therapy', content: info['Treatment']!, icon: Icons.medical_services_rounded, color: Colors.green),
+                      ] else
+                        const Center(child: Text('No dossier data available.', style: TextStyle(color: _T.textMuted))),
+  
+                      const SizedBox(height: 40),
+  
+                      // PRIMARY CTA
+                      ElevatedButton(
                         onPressed: () => Navigator.pushNamed(context, '/appointment'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _T.textPrim,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 0,
+                          minimumSize: const Size(double.infinity, 64),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          elevation: 8,
+                          shadowColor: _T.textPrim.withOpacity(0.3),
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.location_on_rounded, size: 18),
-                            SizedBox(width: 12),
-                            Text("FIND SPECIALIST CLINIC", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1)),
+                            Icon(Icons.calendar_month_rounded, size: 20, color: Colors.white),
+                            const SizedBox(width: 12),
+                            Text("BOOK CLINICAL EVALUATION", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1, color: Colors.white)),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Center(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text("RETURN TO REPORT", style: TextStyle(color: _T.textMuted, fontWeight: FontWeight.bold, fontSize: 11)),
-                      ),
-                    ),
-                    const SizedBox(height: 60),
-                  ],
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
   Widget _SectionTitle(String text) => Text(
     text,

@@ -296,7 +296,7 @@ class _WoundResultsScreenState extends State<WoundResultsScreen> with TickerProv
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("PRIMARY DIAGNOSIS", style: TextStyle(color: _T.textMuted, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              const Expanded(child: Text("PRIMARY DIAGNOSIS", style: TextStyle(color: _T.textMuted, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2))),
               _buildUrgencyBadge(),
             ],
           ),

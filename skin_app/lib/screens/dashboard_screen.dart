@@ -91,7 +91,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     if (token != null) {
       // 1. Fetch REAL-TIME Scan History for Count & Streak
       final historyData = await ApiService.getScanHistory(token);
-      if (historyData['success'] == true) {
+      if (historyData['history'] != null) {
         final history = historyData['history'] as List;
         final count = history.length;
         
@@ -217,6 +217,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
             // ── HEADER ──
             _buildHeader(),
+            const SizedBox(height: 4),
             
             // ── STREAK & STATS BAR ──
             _buildEngagementBar(),
@@ -226,64 +227,61 @@ class _DashboardScreenState extends State<DashboardScreen>
             _buildHorizontalMenu(),
             const Divider(height: 1, color: _C.border, thickness: 1),
 
-            // ── FITTED CONTENT ──
+            // ── CONTENT AREA (Static & Non-Scrollable) ──
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 1),
 
-                    const SizedBox(height: 12),
+                    // 1. APPOINTMENT NOTIFICATION (If active)
+                    if (_upcomingAppointments.isNotEmpty && !_notifDismissed) ...[
+                      _buildAppointmentNotification(),
+                    ],
 
-                    // Primary Action Card
-                    Expanded(
-                      flex: 3,
-                      child: _buildWideCard(
-                        title: 'Comprehensive Face Scan',
-                        subtitle: 'Skin type, expression, face type and more',
-                        bg: _C.cardLightBlue,
-                        iconLabel: Icons.document_scanner_rounded,
-                        onTap: () => _push(const FaceHealthScreen()),
-                      ),
+                    // 2. PRIMARY ACTION CARDS
+                    _buildWideCard(
+                      title: 'Comprehensive Face Scan',
+                      subtitle: 'Full analysis of skin type, expression, and face architecture',
+                      buttonLabel: 'Face Scan',
+                      bg: _C.cardLightBlue,
+                      iconLabel: Icons.document_scanner_rounded,
+                      onTap: () => _push(const FaceHealthScreen()),
                     ),
 
-                    const SizedBox(height: 12),
-
-                    // Main Wide Card
-                    Expanded(
-                      flex: 3,
-                      child: _buildWideCard(
-                        title: 'Skin Condition Detection',
-                        subtitle: 'Analyze acne, eczema, milia & more',
-                        bg: _C.cardLightGray,
-                        iconLabel: Icons.face_retouching_natural_rounded,
-                        onTap: () => _push(const SkinScreen()),
-                      ),
+                    _buildWideCard(
+                      title: 'Skin Condition Detection',
+                      subtitle: 'Analyze acne, eczema, and 12+ other conditions',
+                      buttonLabel: 'Skin Scan',
+                      bg: _C.cardLightGray,
+                      iconLabel: Icons.face_retouching_natural_rounded,
+                      onTap: () => _push(const SkinScreen()),
                     ),
 
-                    const SizedBox(height: 12),
-
-                    // Grid Row 1
-                    Expanded(
-                      flex: 4,
+                    // 3. SECONDARY GRID CARDS
+                    IntrinsicHeight(
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Expanded(
                             child: _buildGridItem(
                               title: 'Melanoma',
-                              subtitle: 'Early detection &\nrisk assessment',
+                              subtitle: 'Early Detection &\nReduce Risk',
+                              buttonLabel: 'Scan Mole',
                               bg: _C.cardLightCyan,
                               iconLabel: Icons.biotech_rounded,
                               onTap: () => _push(const MelanomaScreen()),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 18),
                           Expanded(
                             child: _buildGridItem(
                               title: 'Wound Scan',
-                              subtitle: 'AI recovery &\nhealing tracking',
+                              subtitle: 'Wound Recovery &\nTreatment',
+                              buttonLabel: 'Wound',
                               bg: _C.cardLightRed,
                               iconLabel: Icons.healing_rounded,
                               onTap: () => _push(const WoundScreen()),
@@ -292,26 +290,27 @@ class _DashboardScreenState extends State<DashboardScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    // Grid Row 2
-                    Expanded(
-                      flex: 4,
+
+                    IntrinsicHeight(
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Expanded(
                             child: _buildGridItem(
                               title: 'Health Hub',
-                              subtitle: 'Vitality index &\nwellness insights',
+                              subtitle: 'Track Wellness &\nHealth Insights',
+                              buttonLabel: 'View Hub',
                               bg: _C.cardLightCyan,
                               iconLabel: Icons.hub_rounded,
                               onTap: () => _push(const VitalityHubScreen()),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 18),
                           Expanded(
                             child: _buildGridItem(
                               title: 'History',
-                              subtitle: 'View all past\nscan reports',
+                              subtitle: 'View All Past\nScan Reports',
+                              buttonLabel: 'Reports',
                               bg: _C.cardLightGray,
                               iconLabel: Icons.history_rounded,
                               onTap: () => _push(const ScanHistoryScreen()),
@@ -321,12 +320,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 16),
-
-                    // Bottom Gradient Banner
+                    // 4. BOTTOM BANNER
                     _buildBottomBanner(),
-                    
-                    SizedBox(height: safeBottom > 0 ? safeBottom : 16),
+
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -337,12 +334,14 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
+
+
   // ─────────────────────────────────────────────
   //  HEADER
   // ─────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       color: _C.bg,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -351,7 +350,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             children: [
               // Build profile avatar directly next to greeting
               Container(
-                width: 36, height: 36,
+                width: 32, height: 32,
                 decoration: const BoxDecoration(
                   color: _C.primary,
                   shape: BoxShape.circle,
@@ -359,7 +358,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 child: Center(
                   child: Text(
                     _firstNameOnly.isNotEmpty ? _firstNameOnly[0].toUpperCase() : 'U',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                   )
                 ),
               ),
@@ -371,7 +370,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     '$_greeting!',
                     style: const TextStyle(
                       color: _C.textSec,
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -379,7 +378,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     _firstNameOnly,
                     style: const TextStyle(
                       color: _C.primary,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       letterSpacing: -0.5,
                     ),
@@ -405,7 +404,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   // ─────────────────────────────────────────────
   Widget _buildHorizontalMenu() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -443,6 +442,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget _buildWideCard({
     required String title,
     required String subtitle,
+    required String buttonLabel,
     required Color bg,
     required IconData iconLabel,
     required VoidCallback onTap,
@@ -467,7 +467,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -476,20 +476,23 @@ class _DashboardScreenState extends State<DashboardScreen>
                     title,
                     style: const TextStyle(
                       color: _C.textPri,
-                      fontSize: 18,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: const TextStyle(
                       color: _C.textSec,
-                      fontSize: 12,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w400,
+                      height: 1.2,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  _internalTactileButton(buttonLabel, _C.primary, compact: true),
                 ],
               ),
             ),
@@ -502,6 +505,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget _buildGridItem({
     required String title,
     required String subtitle,
+    required String buttonLabel,
     required Color bg,
     required IconData iconLabel,
     required VoidCallback onTap,
@@ -526,7 +530,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -535,25 +539,66 @@ class _DashboardScreenState extends State<DashboardScreen>
                     title,
                     style: const TextStyle(
                       color: _C.textPri,
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 5),
                   Text(
                     subtitle,
                     style: const TextStyle(
                       color: _C.textSec,
-                      fontSize: 11,
+                      fontSize: 10,
                       height: 1.3,
                     ),
                   ),
+                  const SizedBox(height: 10),
+                  _internalTactileButton(buttonLabel, _C.primary, compact: true),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _internalTactileButton(String label, Color color, {bool compact = false}) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16, vertical: compact ? 4 : 8),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.white.withOpacity(0.1),
+            blurRadius: 1,
+            offset: const Offset(0, -2),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: compact ? 8 : 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(Icons.arrow_forward_rounded, color: Colors.white, size: compact ? 10 : 12),
+        ],
       ),
     );
   }
@@ -710,29 +755,30 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildEngagementBar() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
       color: _C.bg,
       child: Row(
         children: [
-          _statItem("🔥", "$_currentStreak day streak", const Color(0xFFFF9F1C)),
+          _statItem(Icons.local_fire_department_rounded, "$_currentStreak day streak", const Color(0xFFFF9F1C)),
           const SizedBox(width: 12),
-          _statItem("📸", "$_totalScans scans", const Color(0xFF00D1FF)),
+          _statItem(Icons.camera_alt_rounded, "$_totalScans scans", const Color(0xFF00D1FF)),
         ],
       ),
     );
   }
 
-  Widget _statItem(String emoji, String text, Color color) {
+  Widget _statItem(IconData icon, String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.15)),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 12)),
+          Icon(icon, size: 14, color: color),
           const SizedBox(width: 6),
           Text(
             text,
@@ -785,9 +831,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _statItem("🔥", "$_currentStreak streak", const Color(0xFFFF9F1C))),
+                    Expanded(child: _statItem(Icons.local_fire_department_rounded, "$_currentStreak day streak", const Color(0xFFFF9F1C))),
                     const SizedBox(width: 8),
-                    Expanded(child: _statItem("📸", "$_totalScans scans", const Color(0xFF00D1FF))),
+                    Expanded(child: _statItem(Icons.camera_alt_rounded, "$_totalScans total scans", const Color(0xFF00D1FF))),
                   ],
                 ),
               ],
@@ -822,7 +868,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 16),
                     Text(
                       docDetails,
                       maxLines: 1,

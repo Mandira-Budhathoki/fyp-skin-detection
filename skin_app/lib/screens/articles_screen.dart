@@ -16,6 +16,12 @@ class _ArticlesScreenState extends State<ArticlesScreen> with SingleTickerProvid
   static const Color purple = Color(0xFF7C5CBF);
   static const Color bg = Color(0xFFF8FAFB);
 
+  // Coastal Sage Palette for Articles
+  final List<Color> _articlePalette = [
+    const Color(0xFF708993), // Slate Grey
+    const Color(0xFFA1C2BD), // Soft Sage
+  ];
+
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
 
@@ -190,8 +196,12 @@ class _ArticlesScreenState extends State<ArticlesScreen> with SingleTickerProvid
                         child: Container(
                           margin: const EdgeInsets.all(6),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(color: navy, borderRadius: BorderRadius.circular(12)),
-                          child: const Text('Search', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE7F2EF), 
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF708993).withOpacity(0.2)),
+                          ),
+                          child: const Text('Search', style: TextStyle(color: Color(0xFF708993), fontWeight: FontWeight.w900, fontSize: 13)),
                         ),
                       ),
                     ],
@@ -230,9 +240,9 @@ class _ArticlesScreenState extends State<ArticlesScreen> with SingleTickerProvid
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: teal, strokeWidth: 3),
+            const CircularProgressIndicator(color: Color(0xFF708993), backgroundColor: Color(0xFFE7F2EF), strokeWidth: 3),
             const SizedBox(height: 16),
-            Text('Fetching articles from PubMed...', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+            Text('Fetching medical insights...', style: TextStyle(color: const Color(0xFF708993).withOpacity(0.8), fontSize: 14, fontWeight: FontWeight.w600)),
           ],
         ),
       );
@@ -275,7 +285,8 @@ class _ArticlesScreenState extends State<ArticlesScreen> with SingleTickerProvid
       itemCount: _articles.length,
       itemBuilder: (_, i) {
         final article = _articles[i];
-        return _buildArticleCard(article, catColor, i);
+        final paletteColor = _articlePalette[i % _articlePalette.length];
+        return _buildArticleCard(article, paletteColor, i);
       },
     );
   }
@@ -285,9 +296,9 @@ class _ArticlesScreenState extends State<ArticlesScreen> with SingleTickerProvid
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: catColor,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: catColor.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 6))],
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -297,19 +308,21 @@ class _ArticlesScreenState extends State<ArticlesScreen> with SingleTickerProvid
               _fetchAbstract(article['id']);
             }
           },
-          tilePadding: const EdgeInsets.fromLTRB(18, 6, 18, 6),
+          tilePadding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
           childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
           leading: Container(
             width: 42,
             height: 42,
-            decoration: BoxDecoration(color: catColor.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
             child: Center(
-              child: Text('${index + 1}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: catColor)),
+              child: Text('${index + 1}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white)),
             ),
           ),
+          iconColor: Colors.white,
+          collapsedIconColor: Colors.white70,
           title: Text(
             article['title'],
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: navy, height: 1.3),
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Colors.white, height: 1.3),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),
@@ -317,12 +330,12 @@ class _ArticlesScreenState extends State<ArticlesScreen> with SingleTickerProvid
             padding: const EdgeInsets.only(top: 6),
             child: Row(
               children: [
-                Icon(Icons.article_outlined, size: 13, color: Colors.grey[400]),
+                const Icon(Icons.article_outlined, size: 13, color: Colors.white70),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     '${article['source']} • ${article['date']}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    style: const TextStyle(fontSize: 12, color: Colors.white60, fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -335,19 +348,19 @@ class _ArticlesScreenState extends State<ArticlesScreen> with SingleTickerProvid
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Row(
                   children: [
-                    const Icon(Icons.person_outline_rounded, size: 14, color: Colors.grey),
+                    const Icon(Icons.person_outline_rounded, size: 14, color: Colors.white70),
                     const SizedBox(width: 6),
-                    Expanded(child: Text(article['authors'], style: const TextStyle(fontSize: 12, color: Colors.grey))),
+                    Expanded(child: Text(article['authors'], style: const TextStyle(fontSize: 12, color: Colors.white70))),
                   ],
                 ),
               ),
             hasAbstract
-                ? Text(article['abstract'], style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.5))
+                ? Text(article['abstract'], style: const TextStyle(fontSize: 13, color: Colors.white, height: 1.5, fontWeight: FontWeight.w500))
                 : const Row(
                     children: [
-                      SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: teal)),
+                      SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
                       SizedBox(width: 10),
-                      Text('Loading abstract...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                      Text('Loading abstract...', style: TextStyle(color: Colors.white70, fontSize: 13)),
                     ],
                   ),
             const SizedBox(height: 14),
@@ -364,16 +377,16 @@ class _ArticlesScreenState extends State<ArticlesScreen> with SingleTickerProvid
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                 decoration: BoxDecoration(
-                  color: catColor.withOpacity(0.1),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: catColor.withOpacity(0.25)),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.open_in_new_rounded, size: 16, color: catColor),
-                    const SizedBox(width: 8),
-                    Text('Read on PubMed', style: TextStyle(color: catColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Icon(Icons.open_in_new_rounded, size: 16, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text('Read on PubMed', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
                   ],
                 ),
               ),

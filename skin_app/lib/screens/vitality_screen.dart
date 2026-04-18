@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pedometer/pedometer.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
+import 'dart:async';
 import 'dart:math' as math;
+import '../services/api_service.dart';
 
 class VitalityScreen extends StatefulWidget {
   const VitalityScreen({Key? key}) : super(key: key);
@@ -10,69 +15,223 @@ class VitalityScreen extends StatefulWidget {
   State<VitalityScreen> createState() => _VitalityScreenState();
 }
 
-class _VitalityScreenState extends State<VitalityScreen>
-    with TickerProviderStateMixin {
-  static const Color navy = Color(0xFF1B263B);
-  static const Color teal = Color(0xFF2A9D8F);
-  static const Color orange = Color(0xFFE76F51);
-  static const Color purple = Color(0xFF7C5CBF);
-  static const Color blue = Color(0xFF3A86FF);
+class _VitalityScreenState extends State<VitalityScreen> with TickerProviderStateMixin {
+  // Balanced Earthy Palette
+  static const Color cDarkTeal = Color(0xFF1F6F5F);
+  static const Color cOlive = Color(0xFF9AB17A);
+  static const Color cSage = Color(0xFFC3CC9B);
+  static const Color cPale = Color(0xFFE4DFB5);
   static const Color bg = Color(0xFFF8FAFB);
 
-  double _sleep = 7.0;
-  double _water = 2.0;
-  int _stress = 5;
+  // States
+  DateTime _selectedDate = DateTime.now();
+  int _steps = 0;
+  int _stepGoal = 8000;
+  String _pedestrianStatus = 'stopped';
+  int _waterGlasses = 0; // 1 glass = 250ml
+  int _waterGoal = 10; // 2.5L
 
   bool _isSaving = false;
+  bool _isLoadingHistory = true;
   String? _userId;
 
-  late AnimationController _ringController;
-  late Animation<double> _ringAnim;
+  // Chart
+  List<FlSpot> _waterSpots = [];
+  List<FlSpot> _stepSpots = [];
+  List<String> _chartDays = [];
+  List<dynamic> _backendHistory = [];
+
+  // Streams
+  StreamSubscription<StepCount>? _stepSub;
+  StreamSubscription<PedestrianStatus>? _pedStatusSub;
+  late AnimationController _waterAnimCtrl;
 
   @override
   void initState() {
     super.initState();
-    _ringController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
-    _ringAnim = CurvedAnimation(parent: _ringController, curve: Curves.easeOutCubic);
-    _ringController.forward();
-    _loadUser();
+    _waterAnimCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _initPedometer();
+    _loadUserAndHistory();
   }
 
   @override
   void dispose() {
-    _ringController.dispose();
+    _stepSub?.cancel();
+    _pedStatusSub?.cancel();
+    _waterAnimCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _loadUser() async {
+  Future<void> _loadUserAndHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() => _userId = prefs.getString('userId'));
+    final uid = prefs.getString('userId');
+    setState(() => _userId = uid);
+
+    if (uid != null) {
+      _backendHistory = await ApiService.getVitalityHistory(uid);
+      _processHistoryChart();
+    } else {
+      if (mounted) setState(() => _isLoadingHistory = false);
+    }
+    _loadDataForSelectedDate();
   }
 
-  double get _score {
-    final s = (_sleep / 8.0).clamp(0.0, 1.0) * 33.3;
-    final w = (_water / 3.0).clamp(0.0, 1.0) * 33.3;
-    final st = ((11 - _stress) / 10.0).clamp(0.0, 1.0) * 33.4;
-    return s + w + st;
+  // Parses historical data and maps it to the currently selected Date
+  void _loadDataForSelectedDate() {
+    final selStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    // Look for records matching selStr in backend
+    bool found = false;
+    for (var h in _backendHistory.reversed) {
+      if (h['timestamp'] != null && h['timestamp'].startsWith(selStr)) {
+        setState(() {
+          _waterGlasses = ((h['waterIntake'] ?? 0) / 0.25).round();
+          _steps = h['steps'] ?? 0;
+        });
+        found = true;
+        break; // take most recent of that day
+      }
+    }
+
+    if (!found) {
+      setState(() {
+        _waterGlasses = 0;
+        if (selStr != todayStr) {
+          _steps = 0; // Past day without record
+        }
+      });
+    }
+
+    // If viewing TODAY, try applying local live stats for water & sun if backend is stale
+    if (selStr == todayStr) {
+      _loadLocalLiveStats();
+    }
   }
 
-  Color get _scoreColor {
-    final sc = _score;
-    if (sc >= 85) return teal;
-    if (sc >= 65) return blue;
-    if (sc >= 45) return purple;
-    return orange;
+  Future<void> _loadLocalLiveStats() async {
+    final prefs = await SharedPreferences.getInstance();
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    if (prefs.getString('vit_date') == todayStr) {
+      setState(() {
+        _waterGlasses = math.max(_waterGlasses, prefs.getInt('vit_water') ?? 0);
+      });
+    }
   }
 
-  String get _scoreLabel {
-    final sc = _score;
-    if (sc >= 85) return 'Excellent';
-    if (sc >= 65) return 'Good';
-    if (sc >= 45) return 'Moderate';
-    return 'Needs Work';
+  Future<void> _saveLocalStats() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('vit_date', DateFormat('yyyy-MM-dd').format(DateTime.now()));
+    await prefs.setInt('vit_water', _waterGlasses);
   }
 
-  Future<void> _save() async {
+  // --- REVISED PEDOMETER LOGIC ---
+  void _initPedometer() async {
+    if (await Permission.activityRecognition.request().isGranted) {
+      // 1. Pedestrian Status
+      _pedStatusSub = Pedometer.pedestrianStatusStream.listen((event) {
+        if (mounted) setState(() => _pedestrianStatus = event.status);
+      }, onError: (e) => setState(() => _pedestrianStatus = 'unknown'));
+
+      // 2. Step Count (Smart baseline subtraction)
+      _stepSub = Pedometer.stepCountStream.listen((event) async {
+        final prefs = await SharedPreferences.getInstance();
+        final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+        final savedDate = prefs.getString('ped_date') ?? '';
+        final lastRebootSteps = prefs.getInt('ped_last_reboot') ?? 0;
+
+        // Phone rebooted since last event?
+        int baseline = prefs.getInt('ped_baseline') ?? event.steps;
+        if (event.steps < lastRebootSteps) {
+            baseline = 0;
+        }
+
+        // New day? Reset baseline
+        if (savedDate != todayStr) {
+          baseline = event.steps;
+          await prefs.setInt('ped_baseline', baseline);
+          await prefs.setString('ped_date', todayStr);
+        }
+        
+        await prefs.setInt('ped_last_reboot', event.steps);
+        int realSteps = event.steps - baseline;
+
+        // Apply to UI if viewing "Today"
+        if (_selectedDate.day == DateTime.now().day) {
+           if (mounted) {
+             setState(() => _steps = math.max(_steps, realSteps)); // Don't shrink if backend has more
+           }
+        }
+      }, onError: (e) {
+        print('Pedometer block: $e');
+      });
+    } else {
+      if (mounted) setState(() => _pedestrianStatus = 'Permission denied');
+    }
+  }
+
+  void _processHistoryChart() {
+    List<FlSpot> wSpots = [];
+    List<FlSpot> sSpots = [];
+    List<String> days = [];
+    
+    if (_backendHistory.isEmpty) {
+      wSpots = const [FlSpot(0, 0), FlSpot(1, 0), FlSpot(2, 0)];
+      sSpots = const [FlSpot(0, 0), FlSpot(1, 0), FlSpot(2, 0)];
+      days = ['Mon', 'Tue', 'Wed'];
+    } else {
+      for (int i = 0; i < _backendHistory.length; i++) {
+        var h = _backendHistory[i];
+        double w = (h['waterIntake'] ?? 0) / 2.5 * 100; // Normalize 0 - 100%
+        double s = (h['steps'] ?? 0) / _stepGoal * 100; // Normalize 0 - 100%
+        
+        wSpots.add(FlSpot(i.toDouble(), w.clamp(0.0, 100.0)));
+        sSpots.add(FlSpot(i.toDouble(), s.clamp(0.0, 100.0)));
+        try {
+          DateTime dt = DateTime.parse(h['timestamp']).toLocal();
+          days.add(DateFormat('E').format(dt)); // 'Mon', 'Tue'
+        } catch (_) { days.add('-'); }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _waterSpots = wSpots;
+        _stepSpots = sSpots;
+        _chartDays = days;
+        _isLoadingHistory = false;
+      });
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(primary: cDarkTeal),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _isLoadingHistory = true; // Temporary UX blink
+      });
+      Future.delayed(const Duration(milliseconds: 300), () {
+        _loadDataForSelectedDate();
+        setState(() => _isLoadingHistory = false);
+      });
+    }
+  }
+
+  Future<void> _saveToBackend() async {
     if (_userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in first.')));
       return;
@@ -81,263 +240,151 @@ class _VitalityScreenState extends State<VitalityScreen>
     try {
       await ApiService.analyzeVitality({
         'userId': _userId,
+        'date': _selectedDate.toIso8601String(), // Send custom date
         'height': 170.0,
         'weight': 70.0,
-        'sleepHours': _sleep,
-        'waterIntake': _water,
-        'stressLevel': _stress,
+        'steps': _steps,
+        'sleepHours': 8.0,
+        'waterIntake': _waterGlasses * 0.25,
       });
       if (mounted) {
+        _loadUserAndHistory(); // Refresh chart
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          backgroundColor: teal,
-          content: const Text('Vitality stats saved!'),
+          backgroundColor: cOlive,
+          content: Text('Saved history for ${DateFormat('MMM dd').format(_selectedDate)}!'),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ));
       }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to save. Check connection.')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sync failed. Check connection.')));
     }
     if (mounted) setState(() => _isSaving = false);
   }
 
-  Widget _metricStepper({
-    required String label,
-    required String value,
-    required String unit,
-    required String target,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onInc,
-    required VoidCallback onDec,
-    required double progress,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(14)),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600)),
-                    RichText(
-                      text: TextSpan(children: [
-                        TextSpan(text: value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: color)),
-                        TextSpan(text: '  $unit', style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                      ]),
-                    ),
-                    Text('Target: $target', style: TextStyle(fontSize: 11, color: color.withOpacity(0.7), fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
-              Column(
-                children: [
-                  _stepBtn(Icons.add_rounded, color, onInc),
-                  const SizedBox(height: 6),
-                  _stepBtn(Icons.remove_rounded, color, onDec),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 7,
-              backgroundColor: color.withOpacity(0.1),
-              valueColor: AlwaysStoppedAnimation(color),
-            ),
-          ),
-        ],
-      ),
-    );
+  void _addWater() {
+    if (_waterGlasses < 20) {
+      setState(() => _waterGlasses++);
+      if (_selectedDate.day == DateTime.now().day) _saveLocalStats();
+      _waterAnimCtrl.forward(from: 0.0);
+    }
   }
-
-  Widget _stepBtn(IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-        child: Icon(icon, color: color, size: 20),
-      ),
-    );
+  void _removeWater() {
+    if (_waterGlasses > 0) {
+      setState(() => _waterGlasses--);
+      if (_selectedDate.day == DateTime.now().day) _saveLocalStats();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final sc = _score;
-    final sColor = _scoreColor;
+    bool isToday = _selectedDate.day == DateTime.now().day;
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        title: GestureDetector(
+          onTap: _selectDate,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.calendar_month_rounded, color: cOlive, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  isToday ? 'Today' : DateFormat('MMM dd, yyyy').format(_selectedDate),
+                  style: const TextStyle(color: cDarkTeal, fontWeight: FontWeight.w900, fontSize: 16),
+                ),
+                const Icon(Icons.arrow_drop_down_rounded, color: cDarkTeal),
+              ],
+            ),
+          ),
+        ),
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: navy, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: cDarkTeal, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Vitality Tracker', style: TextStyle(color: navy, fontWeight: FontWeight.w900, fontSize: 20)),
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
         physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 60),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Score Ring
+            // ── 0. INSTRUCTION BANNER ──
             Container(
-              padding: const EdgeInsets.all(28),
+              margin: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [sColor.withOpacity(0.1), sColor.withOpacity(0.03)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: sColor.withOpacity(0.15)),
+                color: cPale.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Column(
+              child: Row(
                 children: [
-                  const Text('VITALITY SCORE', style: TextStyle(fontSize: 12, letterSpacing: 1.5, color: Colors.grey, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  AnimatedBuilder(
-                    animation: _ringAnim,
-                    builder: (_, __) => Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: 160,
-                          height: 160,
-                          child: CircularProgressIndicator(
-                            value: (sc / 100) * _ringAnim.value,
-                            strokeWidth: 14,
-                            backgroundColor: sColor.withOpacity(0.1),
-                            valueColor: AlwaysStoppedAnimation(sColor),
-                          ),
-                        ),
-                        Column(
-                          children: [
-                            Text('${sc.toInt()}%', style: TextStyle(fontSize: 46, fontWeight: FontWeight.w900, color: sColor)),
-                            Text(_scoreLabel, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: sColor)),
-                          ],
-                        ),
-                      ],
+                  const Icon(Icons.touch_app_rounded, color: cOlive, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Tap the date above to jump back and view your 7-day step and hydration history!',
+                      style: TextStyle(color: cDarkTeal.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w600, height: 1.4),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  _buildScoreMessage(),
                 ],
               ),
             ),
 
-            const SizedBox(height: 28),
-
-            // Metric Steppers
-            _metricStepper(
-              label: 'Sleep',
-              value: _sleep.toStringAsFixed(1),
-              unit: 'hours',
-              target: '8h/day',
-              icon: Icons.bedtime_rounded,
-              color: purple,
-              progress: (_sleep / 8.0).clamp(0.0, 1.0),
-              onInc: () => setState(() => _sleep = math.min(_sleep + 0.5, 14)),
-              onDec: () => setState(() => _sleep = math.max(_sleep - 0.5, 0)),
+            // ── 1. REAL-TIME PEDOMETER ──
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Expanded(child: Text('EVERY STEP COUNTS! KEEP WALKING FOR BETTER HEALTH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: cOlive, letterSpacing: 1.0))),
+                if (!isToday) 
+                  const Text('HISTORY MODE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: cSage, letterSpacing: 1)),
+              ],
             ),
+            const SizedBox(height: 12),
+            _buildStepCounter(isToday),
 
-            _metricStepper(
-              label: 'Water Intake',
-              value: _water.toStringAsFixed(1),
-              unit: 'liters',
-              target: '3L/day',
-              icon: Icons.water_drop_rounded,
-              color: blue,
-              progress: (_water / 3.0).clamp(0.0, 1.0),
-              onInc: () => setState(() => _water = math.min(_water + 0.25, 6)),
-              onDec: () => setState(() => _water = math.max(_water - 0.25, 0)),
-            ),
+            const SizedBox(height: 32),
 
-            _metricStepper(
-              label: 'Stress Level',
-              value: '$_stress',
-              unit: '/ 10',
-              target: 'Below 4',
-              icon: Icons.self_improvement_rounded,
-              color: orange,
-              progress: ((11 - _stress) / 10.0).clamp(0.0, 1.0),
-              onInc: () => setState(() => _stress = math.min(_stress + 1, 10)),
-              onDec: () => setState(() => _stress = math.max(_stress - 1, 1)),
-            ),
+            // ── 2. INTERACTIVE WATER TRACKER ──
+            const Text('STAY HYDRATED! TAP THE + TO LOG A GLASS OF WATER', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: cOlive, letterSpacing: 1.0)),
+            const SizedBox(height: 12),
+            _buildWaterTracker(),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 36),
 
-            // Tips Section
-            _buildTipsSection(),
+            // ── 3. HISTORICAL CHART ──
+            const Text('WEEKLY PROGRESS: WATER INTAKE vs. ACTIVE STEPS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: cOlive, letterSpacing: 1.2)),
+            const SizedBox(height: 12),
+            _buildHistoryChart(),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 30),
 
-            // Breakdown
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16)],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Score Breakdown', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: navy)),
-                  const SizedBox(height: 16),
-                  _bar('Sleep Efficiency', (_sleep / 8.0).clamp(0.0, 1.0), purple),
-                  const SizedBox(height: 12),
-                  _bar('Hydration Level', (_water / 3.0).clamp(0.0, 1.0), blue),
-                  const SizedBox(height: 12),
-                  _bar('Stress Management', ((11 - _stress) / 10.0).clamp(0.0, 1.0), orange),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Save Button
+            // ── SAVE BUTTON ──
             GestureDetector(
-              onTap: _isSaving ? null : _save,
+              onTap: _isSaving ? null : _saveToBackend,
               child: Container(
                 height: 56,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF7C5CBF), Color(0xFF3A86FF)]),
+                  gradient: const LinearGradient(colors: [cOlive, cDarkTeal]),
                   borderRadius: BorderRadius.circular(18),
-                  boxShadow: [BoxShadow(color: purple.withOpacity(0.4), blurRadius: 16, offset: const Offset(0, 6))],
+                  boxShadow: [BoxShadow(color: cDarkTeal.withOpacity(0.2), blurRadius: 16, offset: const Offset(0, 6))],
                 ),
                 child: Center(
                   child: _isSaving
                       ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Row(
+                      : Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
-                            SizedBox(width: 10),
-                            Text('SAVE VITALITY STATS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 0.5)),
+                            const Icon(Icons.cloud_sync_rounded, color: Colors.white, size: 20),
+                            const SizedBox(width: 10),
+                            Text('SYNC FOR ${DateFormat('MMM dd').format(_selectedDate).toUpperCase()}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
                           ],
                         ),
                 ),
@@ -349,96 +396,172 @@ class _VitalityScreenState extends State<VitalityScreen>
     );
   }
 
-  Widget _buildScoreMessage() {
-    final sc = _score;
-    IconData icon;
-    String msg;
-    Color color;
-
-    if (sc >= 85) {
-      icon = Icons.auto_awesome_rounded;
-      msg = 'Outstanding! Your habits are giving your skin a radiant, healthy glow.';
-      color = teal;
-    } else if (sc >= 65) {
-      icon = Icons.thumb_up_alt_rounded;
-      msg = 'Great! Tweak one area (try drinking more water) to push past 85%.';
-      color = blue;
-    } else if (sc >= 45) {
-      icon = Icons.nights_stay_rounded;
-      msg = 'Moderate. Your skin may look tired. Prioritize 7-8h of quality sleep tonight.';
-      color = purple;
-    } else {
-      icon = Icons.warning_amber_rounded;
-      msg = 'Action needed! High stress + low hydration are major triggers for skin issues.';
-      color = orange;
-    }
-
+  // -----------------------------------------------------------------
+  // COMPONENTS
+  // -----------------------------------------------------------------
+  
+  Widget _buildStepCounter(bool isToday) {
+    double progress = (_steps / _stepGoal).clamp(0.0, 1.0);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(14)),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16)],
+      ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(width: 12),
-          Expanded(child: Text(msg, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13, height: 1.4))),
+          SizedBox(
+            width: 80, height: 80,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 8,
+                  backgroundColor: cPale,
+                  valueColor: const AlwaysStoppedAnimation(cOlive),
+                ),
+                Icon(
+                  (!isToday) ? Icons.history_rounded : (_pedestrianStatus == 'walking' ? Icons.directions_walk_rounded : Icons.accessibility_new_rounded),
+                  color: cOlive,
+                  size: 32,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(isToday ? 'Live Sensor Data' : 'Archived Record', style: TextStyle(color: isToday ? cSage : cSage, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                const SizedBox(height: 4),
+                Text('$_steps', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: cDarkTeal, height: 1.0)),
+                Text('/ $_stepGoal steps goal', style: const TextStyle(fontSize: 13, color: cSage, fontWeight: FontWeight.w600)),
+                if (isToday) ...[
+                  const SizedBox(height: 8),
+                  Text('Sensor: $_pedestrianStatus', style: TextStyle(fontSize: 11, color: cDarkTeal.withOpacity(0.5), fontWeight: FontWeight.w500)),
+                ]
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTipsSection() {
-    final tips = [
-      if (_sleep < 7) {'icon': Icons.bedtime_outlined, 'color': purple, 'tip': 'Try the 4-7-8 breathing technique before bed for faster sleep onset.'},
-      if (_water < 2) {'icon': Icons.water_drop_outlined, 'color': blue, 'tip': 'Keep a water bottle visible at your desk — visual cues increase intake by 30%.'},
-      if (_stress > 6) {'icon': Icons.spa_outlined, 'color': orange, 'tip': 'A 10-minute mindfulness session can lower cortisol by up to 20%.'},
-      if (_sleep >= 7) {'icon': Icons.star_rounded, 'color': teal, 'tip': 'Great sleep! Consistent sleep times improve skin repair cycle efficiency.'},
-      if (_water >= 2.5) {'icon': Icons.water_drop_rounded, 'color': blue, 'tip': 'Well hydrated! This supports collagen production and skin elasticity.'},
-    ];
-
-    if (tips.isEmpty) return const SizedBox();
-
-    return Column(
-      children: tips.take(3).map((t) => Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: (t['color'] as Color).withOpacity(0.06),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: (t['color'] as Color).withOpacity(0.15)),
-        ),
-        child: Row(
-          children: [
-            Icon(t['icon'] as IconData, color: t['color'] as Color, size: 20),
-            const SizedBox(width: 12),
-            Expanded(child: Text(t['tip'] as String, style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.4))),
-          ],
-        ),
-      )).toList(),
+  Widget _buildWaterTracker() {
+    double progress = (_waterGlasses / _waterGoal).clamp(0.0, 1.0);
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16)],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Water Goal', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: cDarkTeal)),
+                  Text('${(_waterGlasses * 250)} ml intakes', style: const TextStyle(fontSize: 12, color: cSage, fontWeight: FontWeight.w600)),
+                ],
+              ),
+              Row(
+                children: [
+                  IconButton(onPressed: _removeWater, icon: Icon(Icons.remove_circle_outline_rounded, color: cSage.withOpacity(0.8))),
+                  Text('$_waterGlasses / $_waterGoal', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: cOlive)),
+                  IconButton(onPressed: _addWater, icon: const Icon(Icons.add_circle_rounded, color: cOlive, size: 32)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          AnimatedBuilder(
+            animation: _waterAnimCtrl,
+            builder: (context, child) {
+              return Wrap(
+                spacing: 8, runSpacing: 8, alignment: WrapAlignment.center,
+                children: List.generate(math.max(_waterGoal, _waterGlasses), (i) {
+                  bool isFilled = i < _waterGlasses;
+                  bool isAnimating = isFilled && i == _waterGlasses - 1 && _waterAnimCtrl.isAnimating;
+                  return Transform.scale(
+                    scale: isAnimating ? 1.0 + (_waterAnimCtrl.value * 0.2) : 1.0,
+                    child: Container(
+                      width: 24, height: 32,
+                      decoration: BoxDecoration(
+                        color: isFilled ? cSage : cPale,
+                        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(8), bottomRight: Radius.circular(8)),
+                      ),
+                    ),
+                  );
+                }),
+              );
+            }
+          ),
+          const SizedBox(height: 20),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(value: progress, minHeight: 6, backgroundColor: cPale, valueColor: const AlwaysStoppedAnimation(cSage)),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _bar(String label, double value, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey)),
-            Text('${(value * 100).toInt()}%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color)),
+  Widget _buildHistoryChart() {
+    if (_isLoadingHistory) {
+      return Container(height: 220, alignment: Alignment.center, child: const CircularProgressIndicator(color: cOlive));
+    }
+    
+    return Container(
+      height: 220, padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16)]),
+      child: LineChart(
+        LineChartData(
+          gridData: const FlGridData(show: false),
+          titlesData: FlTitlesData(
+            show: true,
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  int index = value.toInt();
+                  if (index >= 0 && index < _chartDays.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(_chartDays[index], style: const TextStyle(color: cSage, fontSize: 11, fontWeight: FontWeight.bold)),
+                    );
+                  }
+                  return const Text('');
+                },
+              ),
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          minX: 0, maxX: math.max(2.0, _chartDays.length - 1.0), minY: 0, maxY: 120,
+          lineBarsData: [
+            // Water Line (Sage mapping)
+            LineChartBarData(
+              spots: _waterSpots, isCurved: true, color: cSage, barWidth: 4, isStrokeCapRound: true,
+              belowBarData: BarAreaData(show: true, color: cSage.withOpacity(0.2)),
+            ),
+            // Steps Line (Olive mapping)
+            LineChartBarData(
+              spots: _stepSpots, isCurved: true, color: cOlive, barWidth: 4, isStrokeCapRound: true,
+              belowBarData: BarAreaData(show: true, color: cOlive.withOpacity(0.2)),
+            ),
           ],
         ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: value,
-            minHeight: 8,
-            backgroundColor: color.withOpacity(0.1),
-            valueColor: AlwaysStoppedAnimation(color),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

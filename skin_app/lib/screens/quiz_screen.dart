@@ -349,369 +349,150 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
   }
 
   // ══════════════════════════════════════════════
-  //  CATEGORY PICKER
+  //  CATEGORY PICKER (REVERTED TO SIMPLE UI)
   // ══════════════════════════════════════════════
   Widget _buildCategoryPicker() {
-    return SingleChildScrollView(
-      physics: const ClampingScrollPhysics(),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF1B263B), Color(0xFF2D3B55)]),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.quiz_rounded, color: Colors.white, size: 40),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Test Your Knowledge', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
-                          IconButton(
-                            onPressed: _loadAllQuestions,
-                            icon: const Icon(Icons.refresh_rounded, color: Colors.white70, size: 20),
-                            tooltip: 'Refresh Questions',
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      const Text('Multiple categories · Real-time updates\nScience-backed answers with explanations',
-                          style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-          const Text('Choose a Category', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: navy)),
-          const SizedBox(height: 14),
-
-          ..._categories.entries.map((entry) {
-            final cat = entry.value;
-            final List<Color> gradient = List<Color>.from(cat['gradient']);
-            final color = cat['color'] as Color;
-            final questions = _questions[entry.key]!;
-
-            return GestureDetector(
-              onTap: () => _startQuiz(entry.key),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 16, offset: const Offset(0, 4))],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44, // Reduced from 52
-                      height: 44, // Reduced from 52
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: gradient),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(cat['icon'] as IconData, color: Colors.white, size: 22), // Reduced from 26
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(entry.key, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: navy)), // Reduced from 16
-                          const SizedBox(height: 2),
-                          Text(cat['description'], style: TextStyle(fontSize: 11, color: Colors.grey[600], height: 1.2)), // Reduced from 12 and 1.3
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              _pill('${questions.length} Questions', color),
-                              const SizedBox(width: 6),
-                              _pill('Answers included', teal),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey[400]),
-                  ],
-                ),
-              ),
-            );
-          }),
-          const SizedBox(height: 24),
-          GestureDetector(
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: GestureDetector(
             onTap: _showHistory,
             child: Container(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
-                color: blue.withOpacity(0.08),
+                color: navy,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: blue.withOpacity(0.2)),
+                boxShadow: [BoxShadow(color: navy.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
               ),
               child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.history_rounded, color: blue, size: 24),
-                  SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('View Previous Scores', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: navy)),
-                        Text('Track your learning progress', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 16, color: blue),
+                  Icon(Icons.history_rounded, color: Colors.white, size: 20),
+                  SizedBox(width: 12),
+                  Text("VIEW PREVIOUS SCORE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1)),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
-  }
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: _categories.length,
+            itemBuilder: (context, index) {
+              final key = _categories.keys.elementAt(index);
+              final cat = _categories[key]!;
+              final icon = cat['icon'] as IconData;
+              final color = cat['color'] as Color;
+              final desc = cat['description'] as String;
 
-  Widget _pill(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(text, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+                    child: Icon(icon, color: color, size: 24),
+                  ),
+                  title: Text(key, style: const TextStyle(fontWeight: FontWeight.w900, color: navy, fontSize: 16)),
+                  subtitle: Text(desc, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+                  onTap: () => _startQuiz(key),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
   // ══════════════════════════════════════════════
-  //  QUIZ SCREEN
+  //  QUIZ SCREEN (REVERTED TO SIMPLE UI)
   // ══════════════════════════════════════════════
   Widget _buildQuizScreen() {
     final questions = _questions[_selectedCategory!]!;
     final q = questions[_currentIndex];
     final answers = List<String>.from(q['a']);
     final correctIdx = q['c'] as int;
-    final catData = _categories[_selectedCategory!]!;
-    final catColor = catData['color'] as Color;
     final progress = (_currentIndex + 1) / questions.length;
 
     return Column(
       children: [
-        // Progress header
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12), // Reduced padding
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), // Compact
-                    decoration: BoxDecoration(color: catColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                    child: Text(_selectedCategory!, style: TextStyle(color: catColor, fontWeight: FontWeight.bold, fontSize: 11)),
-                  ),
-                  Text('${_currentIndex + 1}/${questions.length}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: navy, fontSize: 13)),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: teal.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                    child: Text('Score: $_score', style: const TextStyle(color: teal, fontWeight: FontWeight.bold, fontSize: 11)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 6, // Reduced height
-                  backgroundColor: catColor.withOpacity(0.1),
-                  valueColor: AlwaysStoppedAnimation(catColor),
-                ),
-              ),
-            ],
-          ),
+        LinearProgressIndicator(
+          value: progress,
+          backgroundColor: Colors.grey[200],
+          valueColor: AlwaysStoppedAnimation(_categories[_selectedCategory!]!['color'] as Color),
+          minHeight: 6,
         ),
-
         Expanded(
-          child: SlideTransition(
-            position: _slideAnim,
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Question
-                  Container(
-                    padding: const EdgeInsets.all(18), // Reduced from 22
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12)],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: List<Color>.from(catData['gradient'])),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(catData['icon'] as IconData, color: Colors.white, size: 16),
-                            ),
-                            const SizedBox(width: 8),
-                            Text('Question ${_currentIndex + 1}',
-                                style: TextStyle(color: catColor, fontWeight: FontWeight.bold, fontSize: 13)),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(q['q'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: navy, height: 1.3)), // Reduced font size
-                      ],
-                    ),
-                  ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text("Question ${_currentIndex + 1}/${questions.length}", 
+                  style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
+                const SizedBox(height: 12),
+                Text(q['q'], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: navy)),
+                const SizedBox(height: 32),
+                ...answers.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final ans = entry.value;
+                  bool isCorrect = _revealed && i == correctIdx;
+                  bool isWrong = _revealed && i == _selectedAnswer && i != correctIdx;
+                  bool isSelected = i == _selectedAnswer;
 
-                  const SizedBox(height: 18),
-
-                  // Answer options
-                  ...answers.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final ans = entry.value;
-                    Color bgColor = Colors.white;
-                    Color borderColor = Colors.grey.shade200;
-                    Widget? trailingIcon;
-
-                    if (_revealed) {
-                      if (i == correctIdx) {
-                        bgColor = const Color(0xFFE8F8F5);
-                        borderColor = teal;
-                        trailingIcon = Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(color: teal, shape: BoxShape.circle),
-                          child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
-                        );
-                      } else if (i == _selectedAnswer && i != correctIdx) {
-                        bgColor = const Color(0xFFFFF0ED);
-                        borderColor = orange;
-                        trailingIcon = Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(color: orange, shape: BoxShape.circle),
-                          child: const Icon(Icons.close_rounded, color: Colors.white, size: 14),
-                        );
-                      }
-                    } else if (i == _selectedAnswer) {
-                      bgColor = catColor.withOpacity(0.08);
-                      borderColor = catColor;
-                    }
-
-                    return GestureDetector(
-                      onTap: () => _selectAnswer(i),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(12), // Reduced from 16
-                        decoration: BoxDecoration(
-                          color: bgColor,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: borderColor, width: _revealed && (i == correctIdx || i == _selectedAnswer) ? 2 : 1),
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6)],
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 28, height: 28, // Reduced from 32
-                              decoration: BoxDecoration(
-                                color: _revealed && i == correctIdx ? teal : borderColor.withOpacity(0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  String.fromCharCode(65 + i),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12, // Reduced
-                                    color: _revealed && i == correctIdx ? Colors.white : Colors.grey[700],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(child: Text(ans, style: const TextStyle(fontSize: 13, color: navy, fontWeight: FontWeight.w500))), // Reduced from 14
-                            if (trailingIcon != null) trailingIcon,
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-
-                  // Explanation
-                  if (_revealed) ...[
-                    const SizedBox(height: 16),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.all(18),
+                  return GestureDetector(
+                    onTap: () => _selectAnswer(i),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: navy.withOpacity(0.04),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: navy.withOpacity(0.1)),
+                        color: isCorrect ? Colors.green.withOpacity(0.1) : (isWrong ? Colors.red.withOpacity(0.1) : Colors.white),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isCorrect ? Colors.green : (isWrong ? Colors.red : (isSelected ? navy : Colors.black12)),
+                          width: isSelected || isCorrect || isWrong ? 2 : 1,
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.lightbulb_rounded, color: Color(0xFFFFB700), size: 20),
-                              const SizedBox(width: 8),
-                              const Text('Explanation', style: TextStyle(fontWeight: FontWeight.bold, color: navy, fontSize: 14)),
-                              const Spacer(),
-                              if (_selectedAnswer == correctIdx)
-                                const Row(children: [
-                                  Icon(Icons.star_rounded, color: Color(0xFFFFB700), size: 18),
-                                  Text(' +1 point', style: TextStyle(color: Color(0xFFFFB700), fontWeight: FontWeight.bold, fontSize: 12)),
-                                ]),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(q['exp'], style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.5)),
+                          Text(String.fromCharCode(65 + i), style: const TextStyle(fontWeight: FontWeight.bold, color: navy)),
+                          const SizedBox(width: 16),
+                          Expanded(child: Text(ans, style: const TextStyle(fontSize: 15, color: navy))),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    GestureDetector(
-                      onTap: _nextQuestion,
-                      child: Container(
-                        height: 52,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: List<Color>.from(catData['gradient'])),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [BoxShadow(color: catColor.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 4))],
-                        ),
-                        child: Center(
-                          child: Text(
-                            _currentIndex < questions.length - 1 ? 'NEXT QUESTION →' : 'SEE RESULTS →',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+                  );
+                }),
+                if (_revealed) ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(color: navy.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
+                    child: Text(q['exp'], style: const TextStyle(fontSize: 13, height: 1.5, color: navy)),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: _nextQuestion,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: navy,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Text(_currentIndex < questions.length - 1 ? "Next Question" : "Finish Quiz", 
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ],
+              ],
             ),
           ),
         ),
@@ -720,219 +501,105 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
   }
 
   // ══════════════════════════════════════════════
-  //  RESULT SCREEN
+  //  RESULT SCREEN (PREMIUM CLINICAL REPORT)
   // ══════════════════════════════════════════════
   Widget _buildResultScreen() {
     final questions = _questions[_selectedCategory!]!;
-    final pct = (_score / questions.length * 100).round();
-    final catData = _categories[_selectedCategory!]!;
-    final List<Color> gradient = List<Color>.from(catData['gradient']);
-    final catColor = catData['color'] as Color;
-
-    String grade, msg;
-    IconData icon;
-    if (pct >= 90) { grade = 'A+'; msg = 'Outstanding! You\'re a skin health expert! 🏆'; icon = Icons.emoji_events_rounded; }
-    else if (pct >= 70) { grade = 'B'; msg = 'Great job! Review the explanations for perfect score. ⭐'; icon = Icons.thumb_up_rounded; }
-    else if (pct >= 50) { grade = 'C'; msg = 'Not bad! Check the explanations to strengthen your knowledge. 📚'; icon = Icons.menu_book_rounded; }
-    else { grade = 'D'; msg = 'Keep learning! Retake the quiz after reviewing the topics. 💪'; icon = Icons.refresh_rounded; }
+    final double percent = (_score / questions.length) * 100;
+    
+    String status; Color color; IconData icon; String note;
+    if (percent >= 80) {
+      status = "EXPERT"; color = teal; icon = Icons.workspace_premium_rounded;
+      note = "Exceptional! Your knowledge of skin health is outstanding.";
+    } else if (percent >= 50) {
+      status = "PRACTITIONER"; color = blue; icon = Icons.verified_user_rounded;
+      note = "Solid performance! You have a good grasp of the fundamentals.";
+    } else {
+      status = "LEARNER"; color = orange; icon = Icons.menu_book_rounded;
+      note = "Keep studying! Review the explanations to improve.";
+    }
 
     return SingleChildScrollView(
-      physics: const ClampingScrollPhysics(),
-      padding: const EdgeInsets.all(20),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Score card
-          Screenshot(
-            controller: _screenshotController,
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                children: [
-                  Icon(icon, color: Colors.white, size: 44),
-                  const SizedBox(height: 10),
-                  ScaleTransition(
-                    scale: _scoreAnim,
-                    child: Text(grade, style: const TextStyle(fontSize: 60, fontWeight: FontWeight.w900, color: Colors.white)),
-                  ),
-                  Text('$_score / ${questions.length} correct', style: const TextStyle(fontSize: 16, color: Colors.white70, fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 6),
-                  Text('$pct% Score', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
-                    child: Text(msg, textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.3)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Stats breakdown
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12)],
+              borderRadius: BorderRadius.circular(40),
+              boxShadow: [BoxShadow(color: navy.withOpacity(0.06), blurRadius: 30, offset: const Offset(0, 10))],
+              border: Border.all(color: navy.withOpacity(0.03)),
             ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                const Text("QUIZ EVALUATION", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 2)),
+                const SizedBox(height: 32),
+                Stack(
+                  alignment: Alignment.center,
                   children: [
-                    _statChip('Correct', '$_score', teal, Icons.check_circle_outline_rounded),
-                    _statChip('Wrong', '${questions.length - _score}', orange, Icons.cancel_outlined),
-                    _statChip('Accuracy', '$pct%', catColor, Icons.analytics_outlined),
+                    SizedBox(width: 160, height: 160, child: CircularProgressIndicator(value: percent / 100, strokeWidth: 10, backgroundColor: bg, valueColor: AlwaysStoppedAnimation(color))),
+                    Column(
+                      children: [
+                        Text("$_score", style: const TextStyle(fontSize: 60, fontWeight: FontWeight.w900, color: navy, letterSpacing: -2)),
+                        Text("OUT OF ${questions.length}", style: TextStyle(color: Colors.grey[400], fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
                   ],
                 ),
+                const SizedBox(height: 32),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                  child: Text(status, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1)),
+                ),
+                const SizedBox(height: 20),
+                Text(note, textAlign: TextAlign.center, style: const TextStyle(color: navy, fontSize: 15, height: 1.5, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          // Retake button
-          GestureDetector(
-            onTap: () => _startQuiz(_selectedCategory!),
-            child: Container(
-              height: 52,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: gradient),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: catColor.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 4))],
-              ),
-              child: const Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text('RETAKE QUIZ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Share results button
-          GestureDetector(
-            onTap: _shareResults,
-            child: Container(
-              height: 52,
-              decoration: BoxDecoration(
-                color: blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: blue.withOpacity(0.3)),
-              ),
-              child: const Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.share_rounded, color: blue, size: 20),
-                    SizedBox(width: 8),
-                    Text('SHARE SCORE', style: TextStyle(color: blue, fontWeight: FontWeight.w900, fontSize: 15)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Back to categories
-          GestureDetector(
-            onTap: () => setState(() { _selectedCategory = null; _quizDone = false; }),
-            child: Container(
-              height: 52,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: navy.withOpacity(0.15)),
-              ),
-              child: const Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.grid_view_rounded, color: navy, size: 20),
-                    SizedBox(width: 8),
-                    Text('CHANGE CATEGORY', style: TextStyle(color: navy, fontWeight: FontWeight.w900, fontSize: 15)),
-                  ],
-                ),
-              ),
-            ),
+          const SizedBox(height: 48),
+          
+          _actionBtn(onTap: _shareResults, label: 'SHARE PERFORMANCE', color: navy, icon: Icons.share_rounded, primary: true),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(child: _actionBtn(onTap: () => _startQuiz(_selectedCategory!), label: 'RETAKE', color: Colors.blueGrey, icon: Icons.replay_rounded)),
+              const SizedBox(width: 16),
+              Expanded(child: _actionBtn(onTap: () => setState(() { _selectedCategory = null; _quizDone = false; }), label: 'QUIT', color: Colors.grey, icon: Icons.close_rounded)),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Future<void> _shareResults() async {
-    final questions = _questions[_selectedCategory!]!;
-    final pct = (_score / questions.length * 100).round();
-    final text = 'I scored $_score/${questions.length} ($pct%) on the Skin Health Quiz (${_selectedCategory!})! 🧬\n\nCheck your skin health with the Skin Detection App! #SkinHealth #Quiz';
-
-    try {
-      // Show loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Generating shareable result...'), duration: Duration(seconds: 1)),
-      );
-
-      final image = await _screenshotController.capture(
-        delay: const Duration(milliseconds: 10),
-        pixelRatio: 2.0, // High quality
-      );
-
-      if (image != null) {
-        final directory = await getTemporaryDirectory();
-        final imagePath = await File('${directory.path}/quiz_result.png').create();
-        await imagePath.writeAsBytes(image);
-
-        // Share Image + Text
-        await Share.shareXFiles(
-          [XFile(imagePath.path)],
-          text: text,
-          subject: 'My Skin Health Quiz Score',
-        );
-      } else {
-        // Fallback to text copy if image fail
-        Clipboard.setData(ClipboardData(text: text));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Couldn\'t generate image. Result copied to clipboard.')),
-        );
-      }
-    } catch (e) {
-      print("Share error: $e");
-      // Fallback
-      Clipboard.setData(ClipboardData(text: text));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error sharing. Result copied to clipboard.')),
-      );
-    }
+  Widget _actionBtn({required VoidCallback onTap, required String label, required Color color, required IconData icon, bool primary = false}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: primary ? color : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: primary ? null : Border.all(color: Colors.black12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: primary ? Colors.white : color, size: 20),
+            const SizedBox(width: 10),
+            Text(label, style: TextStyle(color: primary ? Colors.white : navy, fontWeight: FontWeight.w900, fontSize: 13)),
+          ],
+        ),
+      ),
+    );
   }
 
-  Widget _statChip(String label, String value, Color color, IconData icon) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-          child: Icon(icon, color: color, size: 24),
-        ),
-        const SizedBox(height: 8),
-        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color)),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500)),
-      ],
-    );
+  void _shareResults() async {
+    final questions = _questions[_selectedCategory!]!;
+    final text = 'I scored $_score/${questions.length} in the $_selectedCategory Quiz on Skin Health! 🧬🦾 Try it yourself!';
+    Share.share(text, subject: 'My Skin Health Score');
   }
 }

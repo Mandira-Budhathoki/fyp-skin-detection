@@ -227,7 +227,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                     ],
                   ),
                   padding: const EdgeInsets.all(20),
-                  child: Image.asset('assets/images/logo.png'),
+                  child: ClipOval(child: Image.asset('assets/images/skin_splash.png', fit: BoxFit.contain)),
                 ),
               ),
             ),
@@ -306,15 +306,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                     ..rotateZ(sin(angle * 0.2) * 0.05),
                   alignment: Alignment.center,
                   child: Container(
-                    width: w * 0.88, 
-                    height: 300,
+                    width: w * 0.75, 
+                    height: w * 0.75,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(36),
+                      shape: BoxShape.circle,
                       boxShadow: [
                          BoxShadow(
                             color: Colors.teal.withValues(alpha: 0.2),
-                            blurRadius: 50,
-                            offset: const Offset(0, 20),
+                            blurRadius: 40,
+                            offset: const Offset(0, 15),
                           ),
                       ],
                     ),
@@ -331,9 +331,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                         ),
                         // The Hero Image
                         Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(36),
-                            child: Image.asset('assets/images/logo2.png', fit: BoxFit.cover),
+                          child: ClipOval(
+                            child: Image.asset('assets/images/skin_hero.png', fit: BoxFit.cover),
                           ),
                         ),
                         // Floating Orbiting Ring over the image

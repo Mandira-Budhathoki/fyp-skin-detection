@@ -1,79 +1,163 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../data/faq_data.dart';
+import '../data/face_faq_data.dart';
+import 'face_faq_detail_screen.dart';
 
-class FaceFaqScreen extends StatelessWidget {
+class FaceFaqScreen extends StatefulWidget {
   const FaceFaqScreen({super.key});
+
+  @override
+  State<FaceFaqScreen> createState() => _FaceFaqScreenState();
+}
+
+class _FaceFaqScreenState extends State<FaceFaqScreen> with TickerProviderStateMixin {
+  late AnimationController _mainController;
+  String _searchQuery = '';
+  int _selectedCategoryIndex = -1;
+
+  // New 'Organic Earth' Palette (Sage, Cognac, Sand, Parchment)
+  static const Color navy     = Color(0xFFB87C4C); // Cognac
+  static const Color azure    = Color(0xFFA8BBA3); // Sage
+  static const Color slate    = Color(0xFFC4A484); // Sand
+  static const Color bg       = Color(0xFFF7F1DE); // Parchment
+  static const Color surface  = Colors.white;
+
+  @override
+  void initState() {
+    super.initState();
+    _mainController = AnimationController(vsync: this, duration: const Duration(milliseconds: 3000));
+    _mainController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _mainController.dispose();
+    super.dispose();
+  }
+
+  List<FaqCategory> get _filtered {
+    List<FaqCategory> list = _selectedCategoryIndex == -1
+        ? faceFaqData
+        : [faceFaqData[_selectedCategoryIndex]];
+
+    if (_searchQuery.isNotEmpty) {
+      list = list.map((cat) {
+        final items = cat.items.where((i) =>
+            i.question.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            i.answer.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+        return FaqCategory(title: cat.title, icon: cat.icon, gradient: cat.gradient, items: items);
+      }).where((cat) => cat.items.isNotEmpty).toList();
+    }
+    return list;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2D3436), size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Face Scan FAQs',
-          style: TextStyle(color: Color(0xFF2D3436), fontWeight: FontWeight.w900, fontSize: 18),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Everything you need to know about Face Faz Intelligence.',
-              style: TextStyle(fontSize: 14, color: Color(0xFF636E72), height: 1.5, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 32),
-            
-            _faqTile(
-              'How accurate is the Face Faz analysis?',
-              'Our AI uses an ensemble of 7 specialized deep learning models. It achieves over 94% accuracy in identifying skin types and common facial markers like acne or inflammation when photos are taken in good lighting.'
-            ),
-            _faqTile(
-              'How should I take the photo for best results?',
-              'For the best analysis, ensure your face is well-lit (natural daylight is best), remove glasses or heavy makeup, and keep a neutral expression about 12 inches away from the camera.'
-            ),
-            _faqTile(
-              'Are my photos being stored on the server?',
-              'Privacy is our priority. Your photos are processed in real-time for analysis and are not permanently stored on our servers unless you explicitly choose to save them to your health journal.'
-            ),
-            _faqTile(
-              'Can this detect specific medical conditions?',
-              'While Face Faz is highly advanced at identifying skin patterns, it is a screening tool, not a medical device. It should used to track skin health trends, not for final medical diagnoses.'
-            ),
-            _faqTile(
-              'Should I see a doctor after a scan?',
-              'If the analysis highlights "High Inflammation" or "Severe Acne," we recommend using the "Visit Doctor" button in the hub to schedule a professional consultation.'
-            ),
-            _faqTile(
-              'What does "Biometric Health" mean?',
-              'It refers to the structural health of your face, including facial symmetry, pore density, and skin elasticity markers that help track aging and vitality over time.'
-            ),
-            
-            const SizedBox(height: 40),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDC3A1).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFFDC3A1).withOpacity(0.3)),
+      backgroundColor: bg,
+      body: Stack(
+        children: [
+          // Dynamic Pulsating Background (Twists & Turns)
+          Positioned.fill(child: _buildDynamicBackground()),
+          
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildModernSliverHeader(),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _buildNeoSearchBar(),
+                    _buildScrollableCategories(),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
-              child: const Row(
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: _filtered.isEmpty
+                    ? SliverToBoxAdapter(child: _buildEmptyState())
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (ctx, i) => _buildTwistedFaceCard(_filtered[i], i),
+                          childCount: _filtered.length,
+                        ),
+                      ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDynamicBackground() {
+    return AnimatedBuilder(
+      animation: _mainController,
+      builder: (context, _) {
+        return Stack(
+          children: [
+            Positioned(
+              top: -100 + (_mainController.value * 50),
+              right: -50 + (_mainController.value * 30),
+              child: _blurCircle(azure.withOpacity(0.15), 350),
+            ),
+            Positioned(
+              bottom: 100 - (_mainController.value * 40),
+              left: -80 + (_mainController.value * 20),
+              child: _blurCircle(navy.withOpacity(0.1), 400),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _blurCircle(Color c, double s) => Container(width: s, height: s, decoration: BoxDecoration(color: c, shape: BoxShape.circle));
+
+  Widget _buildModernSliverHeader() {
+    return SliverAppBar(
+      expandedHeight: 280,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: navy,
+      leading: Padding(
+        padding: const EdgeInsets.all(12),
+        child: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(16)),
+            child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
+          ),
+        ),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFB87C4C), Color(0xFFC4A484)], begin: Alignment.bottomRight, end: Alignment.topLeft))),
+            Positioned(
+              right: -40, top: -20,
+              child: Transform.rotate(
+                angle: -0.2,
+                child: Container(width: 200, height: 350, decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(80))),
+              ),
+            ),
+            Positioned(left: 24, bottom: 50, right: 24,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline_rounded, color: Color(0xFFFB9B8F)),
-                  SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      'Still have questions? Chat with our AI Health Assistant for real-time help.',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF2D3436), fontWeight: FontWeight.w600, height: 1.4),
-                    ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(30), border: Border.all(color: Colors.white30)),
+                    child: const Text("FACIAL SCIENCE", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2)),
                   ),
+                  const SizedBox(height: 16),
+                  const Text("Intelligent\nCosmetology", style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.w900, height: 1.0, letterSpacing: -2)),
+                  const SizedBox(height: 10),
+                  Text("Clinical wisdom for the modern face.", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 16, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
@@ -83,36 +167,121 @@ class FaceFaqScreen extends StatelessWidget {
     );
   }
 
-  Widget _faqTile(String question, String answer) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.only(top: 4),
-                child: Icon(Icons.help_rounded, size: 16, color: Color(0xFFF57799)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  question,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Color(0xFF2D3436), letterSpacing: -0.2),
+  Widget _buildNeoSearchBar() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, -30, 20, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: slate.withOpacity(0.2)),
+        boxShadow: [BoxShadow(color: navy.withOpacity(0.12), blurRadius: 30, offset: const Offset(0, 15))],
+      ),
+      child: TextField(
+        onChanged: (v) => setState(() => _searchQuery = v),
+        decoration: InputDecoration(
+          hintText: "Explore face health reports...",
+          hintStyle: const TextStyle(color: Color(0xFFA8BBA3), fontSize: 15, fontWeight: FontWeight.w600),
+          prefixIcon: const Icon(Icons.search_rounded, color: navy, size: 26),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 22),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScrollableCategories() {
+    return SizedBox(
+      height: 52,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: faceFaqData.length + 1,
+        itemBuilder: (ctx, i) {
+          final isSelected = _selectedCategoryIndex == i - 1;
+          final label = i == 0 ? "General Care" : faceFaqData[i - 1].title;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 14),
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedCategoryIndex = i - 1),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                decoration: BoxDecoration(
+                  color: isSelected ? navy : Colors.white70,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: isSelected ? Colors.transparent : slate.withOpacity(0.3)),
                 ),
+                child: Text(label, style: TextStyle(color: isSelected ? Colors.white : navy, fontWeight: FontWeight.w800, fontSize: 13)),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 28),
-            child: Text(
-              answer,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF636E72), height: 1.6),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTwistedFaceCard(FaqCategory cat, int index) {
+    final bool isLeft = index % 2 == 0;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.95),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(isLeft ? 40 : 16),
+          topRight: Radius.circular(isLeft ? 16 : 40),
+          bottomLeft: Radius.circular(isLeft ? 16 : 40),
+          bottomRight: Radius.circular(isLeft ? 40 : 16),
+        ),
+        boxShadow: [BoxShadow(color: navy.withOpacity(0.08), blurRadius: 25, offset: const Offset(0, 10))],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FaceFaqDetailScreen(category: cat))),
+          borderRadius: BorderRadius.circular(40),
+          child: Padding(
+            padding: const EdgeInsets.all(22),
+            child: Row(
+              children: [
+                Container(
+                  width: 64, height: 64,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: cat.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(cat.icon, color: Colors.white, size: 28),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(cat.title, style: const TextStyle(color: Color(0xFF5D4037), fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -1)),
+                      const SizedBox(height: 6),
+                      Text("${cat.items.length} Knowledge Cells", style: const TextStyle(color: azure, fontSize: 12, fontWeight: FontWeight.w800)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded, color: navy.withOpacity(0.3), size: 16),
+              ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.all(60),
+      child: Column(
+        children: [
+          Icon(Icons.face_retouching_off_rounded, size: 90, color: azure.withOpacity(0.2)),
+          const SizedBox(height: 24),
+          const Text("Lost in Thought", textAlign: TextAlign.center, style: TextStyle(color: navy, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -1)),
+          const SizedBox(height: 10),
+          const Text("No matches found in our clinical facial repository.", textAlign: TextAlign.center, style: TextStyle(color: slate, fontSize: 15, fontWeight: FontWeight.w600)),
         ],
       ),
     );

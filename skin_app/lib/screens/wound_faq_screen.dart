@@ -3,16 +3,9 @@ import '../data/faq_data.dart';
 import '../data/wound_faq_data.dart';
 import 'wound_faq_detail_screen.dart';
 
-// Palette of card colors for categories (4 alternating colors)
-const List<List<Color>> _kCardPalettes = [
-  [Color(0xFF8CC7C4), Color(0xFF6AADAA)],   // Teal
-  [Color(0xFF2C687B), Color(0xFF1E4F5F)],   // Deep Teal
-  [Color(0xFFE07B54), Color(0xFFBF5F3C)],   // Warm Orange
-  [Color(0xFF5B8DB8), Color(0xFF3D6E99)],   // Calm Blue
-];
-
-// Emoji per category
-const List<String> _kCategoryEmojis = ['🩹', '📈', '⚠️', '🧰', '✨', '🥗'];
+// ═══════════════════════════════════════════════════════════════════════════
+// PREMIUM CLINICAL WOUND FAQ — Modern, Professional, Trusted
+// ═══════════════════════════════════════════════════════════════════════════
 
 class WoundFaqScreen extends StatefulWidget {
   const WoundFaqScreen({super.key});
@@ -21,24 +14,29 @@ class WoundFaqScreen extends StatefulWidget {
   State<WoundFaqScreen> createState() => _WoundFaqScreenState();
 }
 
-class _WoundFaqScreenState extends State<WoundFaqScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _WoundFaqScreenState extends State<WoundFaqScreen> with TickerProviderStateMixin {
+  late AnimationController _mainController;
   String _searchQuery = '';
   int _selectedCategoryIndex = -1;
+
+  // Modern Human-Centered Colors
+  static const Color primary  = Color(0xFF8A7650); // Tuscan Brown
+  static const Color sage     = Color(0xFF8E977D); // Sage
+  static const Color navy     = Color(0xFF0F172A); // Deep Slate
+  static const Color bg       = Color(0xFFF3E4C9); // Papaya Whip
+  static const Color slate    = Color(0xFF64748B); // A neutral grey for text/borders
+  static const Color surface  = Color(0xFFECE7D1); // Bone
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 700),
-      vsync: this,
-    )..forward();
+    _mainController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
+    _mainController.forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _mainController.dispose();
     super.dispose();
   }
 
@@ -48,18 +46,12 @@ class _WoundFaqScreenState extends State<WoundFaqScreen>
         : [woundFaqData[_selectedCategoryIndex]];
 
     if (_searchQuery.isNotEmpty) {
-      list = list
-          .map((cat) {
-            final items = cat.items
-                .where((i) =>
-                    i.question.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                    i.answer.toLowerCase().contains(_searchQuery.toLowerCase()))
-                .toList();
-            return FaqCategory(
-                title: cat.title, icon: cat.icon, gradient: cat.gradient, items: items);
-          })
-          .where((cat) => cat.items.isNotEmpty)
-          .toList();
+      list = list.map((cat) {
+        final items = cat.items.where((i) =>
+            i.question.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            i.answer.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+        return FaqCategory(title: cat.title, icon: cat.icon, gradient: cat.gradient, items: items);
+      }).where((cat) => cat.items.isNotEmpty).toList();
     }
     return list;
   }
@@ -67,189 +59,139 @@ class _WoundFaqScreenState extends State<WoundFaqScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F8F8),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeroHeader(),
-            const SizedBox(height: 12),
-            _buildSearchBar(),
-            const SizedBox(height: 10),
-            _buildCategoryChips(),
-            const SizedBox(height: 4),
-            Expanded(
-              child: _filtered.isEmpty
-                  ? _buildEmpty()
-                  : ListView.builder(
-                      physics: const ClampingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      itemCount: _filtered.length,
-                      itemBuilder: (ctx, i) {
-                        final realIndex = woundFaqData.indexOf(_filtered[i]);
-                        return _buildCategoryCard(_filtered[i], realIndex, i);
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeroHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF8CC7C4), Color(0xFF2C687B)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: bg,
+      body: Stack(
         children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white, size: 16),
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildPremiumHeader(),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _buildSearchBar(),
+                    _buildCategoryRow(),
+                    const SizedBox(height: 12),
+                  ],
                 ),
               ),
-              const SizedBox(width: 12),
-              const Text(
-                'Wound FAQs',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 20,
-                  letterSpacing: -0.3,
-                ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                sliver: _filtered.isEmpty
+                    ? SliverToBoxAdapter(child: _buildEmptyState())
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (ctx, i) => _buildExpandableCategoryCard(_filtered[i], i),
+                          childCount: _filtered.length,
+                        ),
+                      ),
               ),
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
-          const SizedBox(height: 10),
-          const Text(
-            '🩺 Your complete wound care knowledge base',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              _statPill('${woundFaqData.length}', 'Topics'),
-              const SizedBox(width: 8),
-              _statPill(
-                '${woundFaqData.fold(0, (s, c) => s + c.items.length)}',
-                'FAQs',
-              ),
-            ],
-          ),
+          _buildFloatingSummary(),
         ],
       ),
     );
   }
 
-  Widget _statPill(String count, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
+  Widget _buildPremiumHeader() {
+    return SliverAppBar(
+      expandedHeight: 240,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: primary,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+        onPressed: () => Navigator.pop(context),
       ),
-      child: Text(
-        '$count $label',
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: 11,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [navy, Color(0xFF1E293B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+            Positioned(right: -40, top: -40, child: Icon(Icons.masks_rounded, size: 200, color: Colors.white.withOpacity(0.05))),
+            Positioned(left: 24, bottom: 40, right: 24,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: primary, borderRadius: BorderRadius.circular(8)),
+                    child: const Text("CLINICAL ARCHIVE", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text("Wound Care FAQs", style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1)),
+                  const SizedBox(height: 6),
+                  Text("Trusted medical guidance for advanced healing.", style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3))
-          ],
-        ),
-        child: TextField(
-          onChanged: (v) => setState(() => _searchQuery = v),
-          style: const TextStyle(fontSize: 14, color: Color(0xFF2D3436)),
-          decoration: const InputDecoration(
-            hintText: 'Search wound care topics...',
-            hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 13.5),
-            prefixIcon: Icon(Icons.search_rounded, color: Color(0xFF8CC7C4), size: 22),
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: 14),
-          ),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: navy.withOpacity(0.06), blurRadius: 20, offset: const Offset(0, 8))],
+      ),
+      child: TextField(
+        onChanged: (v) => setState(() => _searchQuery = v),
+        decoration: InputDecoration(
+          hintText: "Search clinical topics...",
+          hintStyle: TextStyle(color: slate, fontSize: 14),
+          prefixIcon: const Icon(Icons.search_rounded, color: primary, size: 22),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+          suffixIcon: _searchQuery.isNotEmpty ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: () => setState(() => _searchQuery = '')) : null,
         ),
       ),
     );
   }
 
-  Widget _buildCategoryChips() {
+  Widget _buildCategoryRow() {
     return SizedBox(
-      height: 36,
+      height: 48,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: woundFaqData.length + 1,
         itemBuilder: (ctx, i) {
-          final selected = _selectedCategoryIndex == i - 1;
-          final label = i == 0 ? 'All' : woundFaqData[i - 1].title;
+          final isAll = i == 0;
+          final isSelected = _selectedCategoryIndex == i - 1;
+          final label = isAll ? "All Topics" : woundFaqData[i - 1].title;
+
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedCategoryIndex = i - 1),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  gradient: selected
-                      ? const LinearGradient(
-                          colors: [Color(0xFF8CC7C4), Color(0xFF2C687B)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        )
-                      : null,
-                  color: selected ? null : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: selected ? Colors.transparent : const Color(0xFFE2E8F0),
-                  ),
-                  boxShadow: selected
-                      ? [BoxShadow(color: const Color(0xFF8CC7C4).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))]
-                      : [],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: selected ? Colors.white : const Color(0xFF475569),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12.5,
-                  ),
-                ),
+            padding: const EdgeInsets.only(right: 12),
+            child: FilterChip(
+              label: Text(label),
+              selected: isSelected,
+              onSelected: (val) => setState(() => _selectedCategoryIndex = val ? i - 1 : -1),
+              backgroundColor: surface,
+              selectedColor: primary,
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : navy,
+                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                fontSize: 12,
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: isSelected ? Colors.transparent : slate.withOpacity(0.1))),
+              showCheckmark: false,
+              elevation: 0,
             ),
           );
         },
@@ -257,147 +199,107 @@ class _WoundFaqScreenState extends State<WoundFaqScreen>
     );
   }
 
-  Widget _buildCategoryCard(FaqCategory category, int realIndex, int animIndex) {
-    final palette = _kCardPalettes[realIndex % _kCardPalettes.length];
-    final emoji = _kCategoryEmojis[realIndex % _kCategoryEmojis.length];
-    final gradStart = palette[0];
-    final gradEnd = palette[1];
-
-    return FadeTransition(
-      opacity: CurvedAnimation(
-        parent: _controller,
-        curve: Interval((animIndex / 10).clamp(0.0, 1.0), 1.0, curve: Curves.easeOut),
+  Widget _buildExpandableCategoryCard(FaqCategory cat, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: slate.withOpacity(0.08)),
+        boxShadow: [BoxShadow(color: navy.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))],
       ),
-      child: GestureDetector(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => WoundFaqDetailScreen(category: category)),
-        ),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            gradient: LinearGradient(
-              colors: [gradStart, gradEnd],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: gradStart.withOpacity(0.35),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WoundFaqDetailScreen(category: cat))),
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 56, height: 56,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: cat.gradient),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: Icon(cat.icon, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(cat.title, style: const TextStyle(color: navy, fontSize: 16, fontWeight: FontWeight.w900)),
+                        const SizedBox(height: 4),
+                        Text("${cat.items.length} Medical Insights", style: TextStyle(color: slate, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios_rounded, color: slate, size: 14),
+                ],
               ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                // Big emoji circle
-                Container(
-                  width: 62,
-                  height: 62,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(emoji, style: const TextStyle(fontSize: 28)),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        category.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 17,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${category.items.length} clinical answers',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Preview chips
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: category.items
-                            .take(2)
-                            .map((item) => Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 9, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.18),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    item.question.length > 22
-                                        ? '${item.question.substring(0, 22)}…'
-                                        : item.question,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_forward_ios_rounded,
-                      color: Colors.white, size: 14),
-                ),
-              ],
             ),
           ),
-        ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              children: cat.items.take(2).map((item) => Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.circle, color: primary.withOpacity(0.3), size: 6),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(item.question, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: slate, fontSize: 13, fontWeight: FontWeight.w500))),
+                  ],
+                ),
+              )).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildEmpty() {
-    return Center(
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(40),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('🔍', style: TextStyle(fontSize: 48)),
-          const SizedBox(height: 16),
-          const Text(
-            'No results found',
-            style: TextStyle(
-              color: Color(0xFF64748B),
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Try a different search term',
-            style: TextStyle(color: Colors.grey[400], fontSize: 13),
-          ),
+          Icon(Icons.search_off_rounded, size: 80, color: primary.withOpacity(0.2)),
+          const SizedBox(height: 20),
+          const Text("No clinical data found", style: TextStyle(color: navy, fontSize: 18, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 8),
+          Text("Try searching with different medical terms.", textAlign: TextAlign.center, style: TextStyle(color: slate, fontSize: 14)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingSummary() {
+    return Positioned(
+      bottom: 24, left: 24, right: 24,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: BoxDecoration(
+          color: navy,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: navy.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                "Knowledge base contains ${woundFaqData.fold(0, (s, c) => s + c.items.length)} medical answers",
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+            ),
+            const Text("AI READY", style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
+          ],
+        ),
       ),
     );
   }

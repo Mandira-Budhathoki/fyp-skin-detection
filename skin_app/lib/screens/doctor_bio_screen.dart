@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'appointment_screen.dart';
 import 'package:flutter/services.dart';
+import 'dart:math' as math;
+import 'appointment_screen.dart';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MODERN MEDICAL PREMIUM — Clean, Professional, Sophisticated
-// ═══════════════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────────────────────
+// NEXT-GEN MEDICAL UI: DYNAMIC SPECIALIST DOCTOR BIO
+// Logic: Specialization-based content injection for unique profiles
+// ─────────────────────────────────────────────────────────────────────────────
 
 class DoctorBioScreen extends StatefulWidget {
   final dynamic doctor;
@@ -14,541 +16,405 @@ class DoctorBioScreen extends StatefulWidget {
   State<DoctorBioScreen> createState() => _DoctorBioScreenState();
 }
 
-class _DoctorBioScreenState extends State<DoctorBioScreen> with SingleTickerProviderStateMixin {
+class _DoctorBioScreenState extends State<DoctorBioScreen> with TickerProviderStateMixin {
   late ScrollController _scrollController;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
   double _scrollOffset = 0.0;
-
-  // Sophisticated 4-Color Palette (Blue-free)
-  static const Color primary    = Color(0xFF1E293B); // Deep Slate
-  static const Color accent     = Color(0xFF0D9488); // Teal
-  static const Color warning    = Color(0xFFD97706); // Amber
-  static const Color background = Color(0xFFF1F5F9); // Light Gray
-  
-  static const Color textMain   = Color(0xFF0F172A);
-  static const Color textMuted  = Color(0xFF64748B);
-  static const Color white      = Colors.white;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_onScroll);
-    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
-    _fadeAnimation = CurvedAnimation(parent: _animationController, curve: Curves.easeOut);
-    
-    _animationController.forward();
   }
 
-  void _onScroll() {
-    setState(() {
-      _scrollOffset = _scrollController.offset;
-    });
-  }
+  void _onScroll() => setState(() => _scrollOffset = _scrollController.offset);
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _animationController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final double rating = (widget.doctor['rating'] ?? 4.8).toDouble();
-    final int reviews = (widget.doctor['reviewsCount'] ?? 120);
-    final int expYrs = (widget.doctor['experience'] ?? 10);
-    final String name = widget.doctor['name']?.startsWith('Dr.') == true 
-        ? widget.doctor['name'] 
-        : 'Dr. ${widget.doctor['name'] ?? 'Doctor'}';
-    final String spec = widget.doctor['specialization'] ?? 'Dermatologist';
-    final String qual = widget.doctor['qualification'] ?? 'MBBS, MD (Dermatology)';
-    final String about = widget.doctor['about'] ?? 'Highly experienced specialist dedicated to providing world-class care and personalized consultations.';
-    final String lang = widget.doctor['languages'] ?? 'English, Nepali';
+  // ── BRAND TOKENS (Refined Palette) ──────────────────────────────────
+  static const Color cPrimary    = Color(0xFF81A6C6); 
+  static const Color cAccent     = Color(0xFFAACDDC);
+  static const Color cSecondary  = Color(0xFFD2C4B4);
+  static const Color cHighlights = Color(0xFFF3E3D0);
+  static const Color cSurface    = Color(0xFFFFFFFF);
+  static const Color cBg         = Color(0xFFF9F7F5); // Warm tinted background
+  static const Color cTextMain   = Color(0xFF34495E);
+  static const Color cTextMuted  = Color(0xFF7F8C8D);
+  static const Color cSuccess    = Color(0xFF27AE60);
+  static const Color cWarning    = Color(0xFFF39C12);
 
-    // Image Logic
-    final String docImage = widget.doctor['imageUrl'] ?? 'assets/images/doctor_placeholder.png';
-
-    return Scaffold(
-      backgroundColor: background,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: _scrollOffset > 100 ? primary : Colors.black26,
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        physics: const ClampingScrollPhysics(),
-        child: Column(
-          children: [
-            _buildHero(name, spec, rating, reviews, docImage),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 80, 20, 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildAnimatedSection(0, _buildStatsRow(expYrs, reviews)),
-                  const SizedBox(height: 32),
-                  _buildAnimatedSection(1, Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSectionHeader('About Doctor'),
-                      const SizedBox(height: 16),
-                      _buildAboutCard(about),
-                    ],
-                  )),
-                  const SizedBox(height: 32),
-                  _buildAnimatedSection(2, Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSectionHeader('Credentials & Expertise'),
-                      const SizedBox(height: 16),
-                      _buildInfoCard(qual, lang),
-                    ],
-                  )),
-                  const SizedBox(height: 32),
-                  _buildAnimatedSection(3, Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildReviewsHeader(rating, reviews),
-                      const SizedBox(height: 16),
-                      _buildReviewPreviewList(),
-                    ],
-                  )),
-                  const SizedBox(height: 60), // Extra bottom safe space
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAnimatedSection(int index, Widget child) {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, anim) {
-        final double delay = index * 0.15;
-        final double start = (delay).clamp(0.0, 1.0);
-        final double end = (start + 0.4).clamp(0.0, 1.0);
-        
-        final curve = CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(start, end, curve: Curves.easeOutCubic),
-        );
-
-        return Opacity(
-          opacity: curve.value,
-          child: Transform.translate(
-            offset: Offset(0, 20 * (1 - curve.value)),
-            child: child,
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Row(
-      children: [
-        Container(width: 4, height: 20, decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(2))),
-        const SizedBox(width: 10),
-        Text(
-          title.toUpperCase(),
-          style: const TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.2),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAboutCard(String text) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: textMain.withOpacity(0.05), blurRadius: 25, offset: const Offset(0, 10))],
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 15, color: textMuted, height: 1.6),
-      ),
-    );
-  }
-
-  Widget _buildHero(String name, String spec, double rating, int reviews, String image) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        CustomPaint(
-          size: const Size(double.infinity, 420),
-          painter: _GeometricPatternPainter(offset: _scrollOffset, color: accent),
-        ),
-        Container(
-          height: 420,
-          width: double.infinity,
-          decoration: const BoxDecoration(color: primary),
-          child: Hero(
-            tag: 'doctor_image_${widget.doctor['_id']}',
-            child: ShaderMask(
-              shaderCallback: (rect) => LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.black.withOpacity(0.2), Colors.transparent, Colors.black.withOpacity(0.9)],
-              ).createShader(rect),
-              blendMode: BlendMode.darken,
-              child: Image.asset(
-                image,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                errorBuilder: (_, __, ___) => Container(
-                  color: accent.withOpacity(0.1),
-                  child: const Icon(Icons.person, size: 120, color: white),
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        // Floating Doctor Info Card
-        Positioned(
-          bottom: -60,
-          left: 24,
-          right: 24,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: white,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: textMain.withOpacity(0.07),
-                  blurRadius: 40,
-                  offset: const Offset(0, 20),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: textMain, letterSpacing: -1.0),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Container(width: 8, height: 2, color: warning),
-                              const SizedBox(width: 8),
-                              Text(
-                                spec.toUpperCase(),
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: accent, letterSpacing: 1.5),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Row(
-                        children: const [
-                          Icon(Icons.verified_rounded, color: Colors.green, size: 14),
-                          SizedBox(width: 4),
-                          Text(
-                            'Verified',
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                const Divider(height: 1, color: background),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildSubStat(Icons.star_rounded, warning, '$rating ($reviews reviews)'),
-                    _buildSubStat(Icons.location_on_rounded, accent, 'Specialist Clinic'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSubStat(IconData icon, Color color, String text) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: const TextStyle(
-            color: textMuted,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsRow(int exp, int patients) {
-    return Row(
-      children: [
-        _buildStatBox('Experience', '$exp+', 'Years'),
-        const SizedBox(width: 16),
-        _buildStatBox('Patients', '${patients * 10}+', 'Served'),
-        const SizedBox(width: 16),
-        _buildStatBox('Success', '99%', 'Rate'),
-      ],
-    );
-  }
-
-  Widget _buildStatBox(String label, String value, String unit) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: BoxDecoration(
-          color: white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: textMain.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 8))],
-        ),
-        child: Column(
-          children: [
-            Text(label, style: const TextStyle(color: textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text(value, style: const TextStyle(color: textMain, fontSize: 18, fontWeight: FontWeight.w800)),
-            Text(unit, style: const TextStyle(color: textMuted, fontSize: 11, fontWeight: FontWeight.w500)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w800,
-        color: textMain,
-        letterSpacing: -0.3,
-      ),
-    );
-  }
-
-  Widget _buildAboutText(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 15,
-        color: textMuted,
-        height: 1.6,
-        fontWeight: FontWeight.w400,
-      ),
-    );
-  }
-
-  Widget _buildInfoCard(String qual, String lang) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: textMain.withOpacity(0.05), blurRadius: 25, offset: const Offset(0, 12))],
-      ),
-      child: Column(
-        children: [
-          _buildInfoRow(Icons.school_rounded, 'Qualifications', qual),
-          const SizedBox(height: 20),
-          _buildInfoRow(Icons.translate_rounded, 'Languages Spoken', lang),
+  // ── DYNAMIC DATA CONTENT FACTORY ───────────────────────────────────────
+  Map<String, dynamic> _getSpecialistContent(String spec) {
+    final s = spec.toLowerCase();
+    
+    if (s.contains('melanoma') || s.contains('cancer')) {
+      return {
+        'bio': "World-renowned oncology specialist dedicated to the early detection and non-invasive treatment of malignant melanoma. Utilizing state-of-the-art AI dermoscopy and molecular mapping.",
+        'expertise': [
+          {'t': 'Dermoscopy', 'i': Icons.biotech_rounded},
+          {'t': 'Mole Mapping', 'i': Icons.map_rounded},
+          {'t': 'Onco-Surgery', 'i': Icons.healing_rounded},
+          {'t': 'AI Diagnostics', 'i': Icons.auto_awesome_rounded},
         ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(16)),
-          child: Icon(icon, color: accent, size: 24),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(color: textMuted, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-              const SizedBox(height: 4),
-              Text(value, style: const TextStyle(color: textMain, fontSize: 15, fontWeight: FontWeight.w700)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReviewsHeader(double rating, int count) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildSectionHeader('Patient Feedback'),
-        TextButton(
-          onPressed: () => _showAllReviewsDialog(),
-          child: const Text('View All', style: TextStyle(color: accent, fontWeight: FontWeight.w800)),
-        ),
-      ],
-    );
-  }
-
-  void _showAllReviewsDialog() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: textMuted.withOpacity(0.2), borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 24),
-            const Text("Patient Reviews", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: textMain)),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  _buildReviewCard('Binod Shrestha', '2 days ago', 5, "Excellent surgeon. Explains everything very clearly and the recovery was much faster than expected."),
-                  _buildReviewCard('Sita Thapa', '1 week ago', 4, "The doctor was very patient and professional. Highly recommended for pediatric skin issues."),
-                  _buildReviewCard('Ramesh Karki', '2 weeks ago', 5, "Best clinic experience in Kathmandu. Dr. Rai is truly an expert in his field."),
-                  _buildReviewCard('Anju Sharma', '1 month ago', 5, "Great results with my acne treatment. The staff is also very friendly."),
-                  _buildReviewCard('Prakash Gurung', '1 month ago', 4, "Detailed consultation. A bit of a wait but worth it."),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReviewPreviewList() {
-    return Column(
-      children: [
-        _buildReviewCard('Binod Shrestha', '2 days ago', 5, "Extremely professional and knowledgeable. The treatment recommended worked perfectly."),
-        const SizedBox(height: 16),
-        _buildReviewCard('Sita Thapa', '1 week ago', 4, "The doctor was very patient with my kids. Very happy with the results."),
-      ],
-    );
-  }
-
-  Widget _buildReviewCard(String name, String date, int stars, String text) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: textMain.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: background,
-                child: Text(name[0], style: const TextStyle(color: accent, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: textMain)),
-                    Text(date, style: const TextStyle(color: textMuted, fontSize: 12)),
-                  ],
-                ),
-              ),
-              Row(
-                children: List.generate(5, (i) => Icon(Icons.star_rounded, color: i < stars ? warning : textMuted.withOpacity(0.2), size: 16)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            text,
-            style: const TextStyle(color: textMuted, fontSize: 14, height: 1.6),
-          ),
+        'awards': [
+          {'t': 'Melanoma Research Award', 'y': '2023'},
+          {'t': 'Oncology Excellence', 'y': '2021'},
         ],
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CUSTOM PAINTER — Geometric Background Pattern
-// ═══════════════════════════════════════════════════════════════════════════
-class _GeometricPatternPainter extends CustomPainter {
-  final double offset;
-  final Color color;
-
-  _GeometricPatternPainter({required this.offset, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withOpacity(0.04)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    // Draw subtle diagonal lines
-    for (int i = -5; i < 15; i++) {
-      final startX = i * 60.0 + offset * 0.1;
-      final path = Path()
-        ..moveTo(startX, 0)
-        ..lineTo(startX + size.height * 0.5, size.height);
-      canvas.drawPath(path, paint);
+        'training': [
+          {'t': 'PhD in Skin Oncology', 's': 'Stanford Medical'},
+          {'t': 'Fellowship in Dermoscopy', 's': 'Royal College of Surgeons'},
+        ]
+      };
+    } else if (s.contains('aesthetic') || s.contains('cosmetic') || s.contains('laser')) {
+      return {
+        'bio': "Pioneer in minimal-invasive aesthetic medicine. Specializing in advanced laser resurfacing, regenerative skin therapies, and facial architecture restoration for a natural, youthful look.",
+        'expertise': [
+          {'t': 'Laser Therapy', 'i': Icons.bolt_rounded},
+          {'t': 'Regenerative Med', 'i': Icons.refresh_rounded},
+          {'t': 'Peels & Fillers', 'i': Icons.face_retouching_natural_rounded},
+          {'t': 'Aesthetic Surgery', 'i': Icons.content_cut_rounded},
+        ],
+        'awards': [
+          {'t': 'Best Cosmetic Surgeon', 'y': '2024'},
+          {'t': 'Innovation in Laser', 'y': '2022'},
+        ],
+        'training': [
+          {'t': 'Master of Aesthetic Surgery', 's': 'Paris Medical Institute'},
+          {'t': 'Board Certified Dermatologist', 's': 'International Skin Academy'},
+        ]
+      };
+    } else if (s.contains('pediatric') || s.contains('child') || s.contains('kids')) {
+      return {
+        'bio': "Expert in child-focused dermatology with a gentle approach. Specializing in pediatric eczema, congenital moles, and genetic skin conditions with 15+ years of dedicated service to young patients.",
+        'expertise': [
+          {'t': 'Gentle Care', 'i': Icons.child_care_rounded},
+          {'t': 'Eczema Control', 'i': Icons.opacity_rounded},
+          {'t': 'Genetic Mapping', 'i': Icons.biotech_rounded},
+          {'t': 'Newborn Support', 'i': Icons.baby_changing_station_rounded},
+        ],
+        'awards': [
+          {'t': 'Pediatrician of the Year', 'y': '2023'},
+          {'t': 'Compassionate Care Award', 'y': '2022'},
+        ],
+        'training': [
+          {'t': 'Doctorate in Pediatric Derm', 's': 'Johns Hopkins University'},
+          {'t': 'Clinical Residency', 's': 'Kathmandu Children’s Hospital'},
+        ]
+      };
+    } else {
+      // General Dermatologist / Default
+      return {
+        'bio': "Comprehensive dermatology expert focusing on adult skin health, acne management, and preventive care. Dedicated to providing evidence-based treatment plans tailored to each unique skin profile.",
+        'expertise': [
+          {'t': 'Acne Solutions', 'i': Icons.face_retouching_natural_rounded},
+          {'t': 'Chronic Care', 'i': Icons.medical_services_rounded},
+          {'t': 'General Diagnosis', 'i': Icons.search_rounded},
+          {'t': 'Preventive Derm', 'i': Icons.shield_rounded},
+        ],
+        'awards': [
+          {'t': 'Clinical Excellence', 'y': '2023'},
+          {'t': 'Patient Choice Award', 'y': '2022'},
+        ],
+        'training': [
+          {'t': 'MBBS, MD Dermatology', 's': 'Institute of Medicine, T.U.'},
+          {'t': 'Dermatology Specialized', 's': 'Nepal Medical Council'},
+        ]
+      };
     }
   }
 
   @override
-  bool shouldRepaint(_GeometricPatternPainter oldDelegate) =>
-      offset != oldDelegate.offset;
+  Widget build(BuildContext context) {
+    final Map doc = widget.doctor is Map ? widget.doctor : {};
+    final String name = (doc['name'] ?? 'Consultant').toString().startsWith('Dr.') 
+        ? doc['name'] : 'Dr. ${doc['name'] ?? 'Specialist'}';
+    final String spec = doc['specialization'] ?? 'Dermatologist';
+    final String qual = doc['qualification'] ?? 'MBBS, MD';
+    final String exp  = "${doc['experience'] ?? '10'}+ Yrs";
+    final String rating = (doc['rating'] ?? 4.8).toString();
+    final String reviews = "${doc['reviewsCount'] ?? 120} Reviews";
+    final String img = doc['imageUrl'] ?? 'assets/images/doctor1.jpeg';
+
+    // Inject Dynamic Content
+    final content = _getSpecialistContent(spec);
+
+    return Scaffold(
+      backgroundColor: cBg,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            controller: _scrollController,
+            physics: const ClampingScrollPhysics(),
+            child: Column(
+              children: [
+                _buildFocusedHeader(name, spec, rating, reviews, img, exp),
+                _buildEnhancedBody(content['bio'], content['expertise'], content['training'], content['awards']),
+                const SizedBox(height: 120), // Richer bottom padding for complete feel
+              ],
+            ),
+          ),
+          _buildMinimalTopBar(),
+          _buildTactileBottomBar(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFocusedHeader(String name, String spec, String rating, String reviews, String img, String exp) {
+    return Container(
+      height: 380,
+      child: Stack(
+        children: [
+          Container(
+            height: 270, 
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [cPrimary, cSecondary],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(40)),
+            ),
+          ),
+          Positioned(
+            top: 130,
+            left: 20,
+            right: 20,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: cSurface,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(color: cPrimary.withOpacity(0.12), blurRadius: 40, offset: const Offset(0, 15)),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 80, height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cBg, width: 4),
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10)],
+                          image: DecorationImage(image: AssetImage(img), fit: BoxFit.cover),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: cTextMain, letterSpacing: -0.5)),
+                            const SizedBox(height: 2),
+                            Text(spec, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cTextMuted)),
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: cSuccess.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                              child: const Text("VERIFIED SPECIALIST", style: TextStyle(color: cSuccess, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _headerMetric(Icons.star_rounded, cWarning, rating, "Rating"),
+                      _verticalDivider(),
+                      _headerMetric(Icons.groups_rounded, cPrimary, "1.2k+", "Patients"),
+                      _verticalDivider(),
+                      _headerMetric(Icons.workspace_premium_rounded, cAccent, exp, "Exp."),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerMetric(IconData icon, Color color, String val, String label) {
+    return Column(
+      children: [
+        Row(children: [
+          Icon(icon, color: color, size: 16),
+          const SizedBox(width: 4),
+          Text(val, style: const TextStyle(color: cTextMain, fontWeight: FontWeight.w900, fontSize: 13)),
+        ]),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(color: cTextMuted, fontSize: 10, fontWeight: FontWeight.w700)),
+      ],
+    );
+  }
+
+  Widget _verticalDivider() => Container(width: 1, height: 24, color: Colors.black.withOpacity(0.05));
+
+  Widget _buildEnhancedBody(String bio, List<dynamic> expertise, List<dynamic> training, List<dynamic> awards) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label("PROFESSIONAL BIO"),
+          const SizedBox(height: 12),
+          Text(bio, style: const TextStyle(color: cTextMuted, fontSize: 14, height: 1.6)),
+
+          const SizedBox(height: 32),
+          _label("KEY SPECIALIZATIONS"),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8, runSpacing: 8,
+            children: expertise.map((e) => _chip(e['t'], e['i'])).toList(),
+          ),
+
+          const SizedBox(height: 32),
+          _label("EDUCATION & TRAINING"),
+          const SizedBox(height: 12),
+          ...training.map((t) => _docCard(t['t'], t['s'], Icons.school_rounded)).toList(),
+
+          const SizedBox(height: 32),
+          _label("STARS & REWARDS"), // Added more variety
+          const SizedBox(height: 12),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 2.5,
+            children: awards.map((a) => _award(a['t'], a['y'])).toList(),
+          ),
+
+          const SizedBox(height: 40), // Satisfaction buffer
+        ],
+      ),
+    );
+  }
+
+  Widget _label(String t) => Text(t, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: cPrimary, letterSpacing: 1.5));
+
+  Widget _chip(String t, IconData i) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(color: cBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: cPrimary.withOpacity(0.05))),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(i, size: 14, color: cAccent),
+          const SizedBox(width: 6),
+          Text(t, style: const TextStyle(color: cTextMain, fontWeight: FontWeight.w700, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  Widget _docCard(String t, String s, IconData i) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: cSurface, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.black.withOpacity(0.04))),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: cAccent.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
+            child: Icon(i, color: cAccent, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(t, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: cTextMain)),
+            Text(s, style: const TextStyle(fontSize: 12, color: cTextMuted, fontWeight: FontWeight.w600)),
+          ])),
+        ],
+      ),
+    );
+  }
+
+  Widget _award(String t, String y) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(color: cSurface, borderRadius: BorderRadius.circular(16), border: Border.all(color: cWarning.withOpacity(0.2))),
+      child: Row(children: [
+        const Icon(Icons.stars_rounded, color: cWarning, size: 20),
+        const SizedBox(width: 10),
+        Expanded(child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(t, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: cTextMain), overflow: TextOverflow.ellipsis),
+            Text(y, style: const TextStyle(fontSize: 10, color: cTextMuted, fontWeight: FontWeight.w700)),
+          ],
+        )),
+      ]),
+    );
+  }
+
+  Widget _buildMinimalTopBar() {
+    final bool isDark = _scrollOffset > 50;
+    return Positioned(
+      top: 0, left: 0, right: 0,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 5, bottom: 10, left: 16, right: 16),
+        color: isDark ? cPrimary : Colors.transparent,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _topBtn(Icons.arrow_back_ios_new_rounded, () => Navigator.pop(context)),
+            if (isDark) const Text("Doctor Profile", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17)),
+            _topBtn(Icons.bookmark_border_rounded, () {}),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _topBtn(IconData i, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 38, height: 38,
+        decoration: BoxDecoration(color: Colors.black.withOpacity(0.15), shape: BoxShape.circle),
+        child: Icon(i, color: Colors.white, size: 16),
+      ),
+    );
+  }
+
+  Widget _buildTactileBottomBar() {
+    return Positioned(
+      bottom: 0, left: 0, right: 0,
+      child: Container(
+        padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(context).padding.bottom + 20),
+        decoration: BoxDecoration(
+          color: cSurface,
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 30, offset: const Offset(0, -12))],
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
+        ),
+        child: GestureDetector(
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AppointmentScreen(initialDoctor: widget.doctor))),
+          child: Container(
+            height: 60,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [cPrimary, cAccent]),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [BoxShadow(color: cPrimary.withOpacity(0.35), blurRadius: 18, offset: const Offset(0, 8))],
+            ),
+            child: const Center(child: Text("Schedule Consultation", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 0.5))),
+          ),
+        ),
+      ),
+    );
+  }
 }

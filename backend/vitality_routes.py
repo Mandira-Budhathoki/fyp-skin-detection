@@ -11,9 +11,10 @@ def analyze_vitality():
         user_id = data.get('userId')
         height = float(data.get('height', 0))
         weight = float(data.get('weight', 0))
+        steps = int(data.get('steps', 0))
         sleep_hours = float(data.get('sleepHours', 0))
         water_intake = float(data.get('waterIntake', 0))
-        stress_level = int(data.get('stressLevel', 5)) # 1-10
+        sun_exposure = float(data.get('sunExposure', 2.0)) # in hours
 
         if not user_id:
             return jsonify({"error": "userId is required"}), 400
@@ -46,17 +47,23 @@ def analyze_vitality():
         if bmi_category == "Normal": vitality_score += 25
         if sleep_hours >= 7: vitality_score += 25
         if water_intake >= 2.5: vitality_score += 25
-        if stress_level < 4: vitality_score += 25
-        elif stress_level < 7: vitality_score += 15
+        if sun_exposure <= 2.0: vitality_score += 25
+        elif sun_exposure <= 4.0: vitality_score += 15
+
+        from datetime import datetime
+        custom_date = data.get('date')
+        ts = datetime.fromisoformat(custom_date.replace('Z', '+00:00')) if custom_date else datetime.utcnow()
 
         # Save to DB
         vitality_record = VitalityData(
             userId=user_id,
             height=height,
             weight=weight,
+            steps=steps,
             sleepHours=sleep_hours,
             waterIntake=water_intake,
-            stressLevel=stress_level
+            sunExposure=sun_exposure,
+            timestamp=ts
         )
         vitality_record.save()
 
@@ -74,6 +81,17 @@ def analyze_vitality():
                 f"Hydration: {water_analysis} (Target 2.5L+)"
             ]
         })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@vitality_bp.route('/api/vitality/history/<user_id>', methods=['GET'])
+def get_vitality_history(user_id):
+    try:
+        from datetime import datetime, timedelta
+        # Get data from the last 7 days
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        records = VitalityData.objects(userId=user_id, timestamp__gte=seven_days_ago).order_by('timestamp')
+        return jsonify([r.to_dict() for r in records])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

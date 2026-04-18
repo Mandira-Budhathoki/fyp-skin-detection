@@ -138,6 +138,75 @@ final List<FaqCategory> skinFaqData = [
       ),
     ],
   ),
+  FaqCategory(
+    title: "Melanoma & Moles",
+    icon: Icons.biotech_rounded,
+    gradient: [const Color(0xFF334d50), const Color(0xFFcbcaa5)],
+    items: [
+      FaqItem(
+        question: "What is the ABCDE rule?",
+        answer: "A: Asymmetry (two halves don't match), B: Border (irregular or scalloped), C: Color (multiple shades), D: Diameter (>6mm), E: Evolution (changing fast).",
+        icon: Icons.rule_rounded,
+      ),
+      FaqItem(
+        question: "Is melanoma curable?",
+        answer: "Yes, when detected early (Stage 1), the 5-year survival rate is 99%. Early detection through monthly self-exams and AI screening is critical.",
+        icon: Icons.health_and_safety_rounded,
+      ),
+      FaqItem(
+        question: "Sunscreen vs Melanoma?",
+        answer: "Consistent use of SPF 30+ broad-spectrum sunscreen reduces the risk of melanoma by approximately 50% by blocking harmful UV radiation.",
+        icon: Icons.wb_sunny_rounded,
+      ),
+      FaqItem(
+        question: "Risk factors for moles?",
+        answer: "Genetics, having over 50 moles, history of severe sunburns, and frequent tanning bed use significantly increase melanoma risk.",
+        icon: Icons.warning_rounded,
+      ),
+    ],
+  ),
+  FaqCategory(
+    title: "Wound Care & First Aid",
+    icon: Icons.healing_rounded,
+    gradient: [const Color(0xFF6A11CB), const Color(0xFF2575FC)],
+    items: [
+      FaqItem(
+        question: "Signs of infection?",
+        answer: "Watch for increased redness (erythema), spreading warmth, swelling (edema), pus/drainage, and systemic symptoms like fever or chills.",
+        icon: Icons.contact_emergency_rounded,
+      ),
+      FaqItem(
+        question: "Proper cleaning steps?",
+        answer: "Wash hands first. Rinse with clean water or saline. Do not use hydrogen peroxide or alcohol on open wounds as they damage healthy tissue.",
+        icon: Icons.clean_hands_rounded,
+      ),
+      FaqItem(
+        question: "Dry vs Moist healing?",
+        answer: "Modern clinical practice favors moist wound healing. Using an antibacterial ointment and a bandage keeps the area hydrated and speeds up cell repair.",
+        icon: Icons.water_drop_rounded,
+      ),
+      FaqItem(
+        question: "When to get stitches?",
+        answer: "Seek professional help if the wound is deeper than 1/4 inch, has gaping edges, shows fat/muscle, or won't stop bleeding after 15 mins of pressure.",
+        icon: Icons.straighten_rounded,
+      ),
+      FaqItem(
+        question: "Preventing scar tissue?",
+        answer: "Keep the wound covered and moist. Once healed, use silicone gel sheets and protect the area from SUNLIGHT (UV) for at least 6 months using SPF.",
+        icon: Icons.history_edu_rounded,
+      ),
+      FaqItem(
+        question: "Burn first aid?",
+        answer: "Immediately run cool (not cold) tap water over the burn for 20 mins. Never use ice, butter, or ointments on a fresh, blistering burn.",
+        icon: Icons.whatshot_rounded,
+      ),
+      FaqItem(
+        question: "Tetanus shots?",
+        answer: "For dirty or deep wounds, a tetanus booster is recommended if your last shot was more than 5 years ago. For clean minor wounds, 10 years is standard.",
+        icon: Icons.vaccines_rounded,
+      ),
+    ],
+  ),
 ];
 
 

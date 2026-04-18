@@ -39,7 +39,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   }
 
   static const Color background = Color(0xFFF6F4E8); // Cream
-  static const Color accent     = Color(0xFFDC9B9B); // Rose (Primary Action)
+  static const Color accent     = Color(0xFF008080); // Teal (Primary Action)
   static const Color secondary  = Color(0xFFC0E1D2); // Seafoam (Badges)
   static const Color warning    = Color(0xFFE2A96F); 
   

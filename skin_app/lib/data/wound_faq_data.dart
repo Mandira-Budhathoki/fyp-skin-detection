@@ -4,8 +4,8 @@ import 'faq_data.dart'; // Import models
 final List<FaqCategory> woundFaqData = [
   FaqCategory(
     title: "Wound Basics",
-    icon: Icons.healing_rounded,
-    gradient: [const Color(0xFF334155), const Color(0xFF475569)], // Slate Medical
+    icon: Icons.history_edu_rounded,
+    gradient: [const Color(0xFF8A7650), const Color(0xFFA98B76)], 
     items: [
       FaqItem(
         question: "What is an acute wound?",
@@ -31,8 +31,8 @@ final List<FaqCategory> woundFaqData = [
   ),
   FaqCategory(
     title: "Healing Journey",
-    icon: Icons.trending_up_rounded,
-    gradient: [const Color(0xFF0D9488), const Color(0xFF0F766E)], // Professional Teal
+    icon: Icons.auto_awesome_motion_rounded,
+    gradient: [const Color(0xFF8E977D), const Color(0xFFBABF94)], 
     items: [
       FaqItem(
         question: "Stages of healing?",
@@ -58,8 +58,8 @@ final List<FaqCategory> woundFaqData = [
   ),
   FaqCategory(
     title: "Infection Alerts",
-    icon: Icons.warning_rounded,
-    gradient: [const Color(0xFF991B1B), const Color(0xFF7F1D1D)], // Medical Alert Red
+    icon: Icons.notification_important_rounded,
+    gradient: [const Color(0xFFA98B76), const Color(0xFF8A7650)], 
     items: [
       FaqItem(
         question: "Signs of infection?",
@@ -76,12 +76,17 @@ final List<FaqCategory> woundFaqData = [
         answer: "See a professional if the wound won't stop bleeding, is very deep, contains debris you can't remove, or shows signs of infection.",
         icon: Icons.local_hospital_rounded,
       ),
+      FaqItem(
+        question: "Bacterial resistance?",
+        answer: "Overuse of over-the-counter antibiotic ointments can sometimes lead to resistance. If a wound isn't improving, a doctor may need to swab it for specific cultures.",
+        icon: Icons.biotech_rounded,
+      ),
     ],
   ),
   FaqCategory(
     title: "First Aid Essentials",
     icon: Icons.medical_services_rounded,
-    gradient: [const Color(0xFF2563EB), const Color(0xFF1D4ED8)], // Hospital Blue
+    gradient: [const Color(0xFFDBCEA5), const Color(0xFFECE7D1)], 
     items: [
       FaqItem(
         question: "How to clean a wound?",
@@ -92,6 +97,11 @@ final List<FaqCategory> woundFaqData = [
         question: "Use Hydrogen Peroxide?",
         answer: "Actually, most doctors advise against it! Peroxide can damage healthy tissue and slow healing. Plain water or saline is usually best.",
         icon: Icons.cancel_outlined,
+      ),
+      FaqItem(
+        question: "Stopping the bleed?",
+        answer: "Apply firm, steady pressure with a clean cloth or gauze for a full 5-10 minutes without lifting it to check. Elevate the area above heart level if possible.",
+        icon: Icons.pan_tool_rounded,
       ),
       FaqItem(
         question: "Covered or Uncovered?",
@@ -106,9 +116,53 @@ final List<FaqCategory> woundFaqData = [
     ],
   ),
   FaqCategory(
+    title: "Post-Surgical Care",
+    icon: Icons.content_paste_search_rounded,
+    gradient: [const Color(0xFFBFA28C), const Color(0xFFF3E4C9)], 
+    items: [
+      FaqItem(
+        question: "Managing surgical sutures?",
+        answer: "Keep sutures dry for the first 24-48 hours unless told otherwise. Don't pick at scabs around the stitches, as this can cause them to pull or scar.",
+        icon: Icons.architecture_rounded,
+      ),
+      FaqItem(
+        question: "What is wound dehiscence?",
+        answer: "Dehiscence is when a surgical incision reopens. If you see the edges separating or abnormal fluid leaking, contact your surgeon immediately.",
+        icon: Icons.open_in_full_rounded,
+      ),
+      FaqItem(
+        question: "When to shower?",
+        answer: "Most surgeons allow showering after 48 hours, but no soaking in tubs or pools until the stitches are removed and the skin is fully closed.",
+        icon: Icons.shower_rounded,
+      ),
+    ],
+  ),
+  FaqCategory(
+    title: "Specialty & Chronic Wounds",
+    icon: Icons.biotech_rounded,
+    gradient: [const Color(0xFF8A7650), const Color(0xFFBFA28C)], 
+    items: [
+      FaqItem(
+        question: "Diabetic foot ulcers?",
+        answer: "Diabetes can cause poor circulation and nerve damage (neuropathy), making foot wounds slow to heal and prone to severe infection. Daily foot checks are vital.",
+        icon: Icons.wheelchair_pickup_rounded,
+      ),
+      FaqItem(
+        question: "Pressure injuries (Sores)?",
+        answer: "Caused by prolonged pressure on the skin, often over bony areas. Frequent repositioning (every 2 hours) and pressure-relieving cushions are key for prevention.",
+        icon: Icons.airline_seat_recline_extra_rounded,
+      ),
+      FaqItem(
+        question: "What is slough?",
+        answer: "Slough is dead tissue that appears yellow/white/tan in a wound. It must often be removed (debrided) by a professional for healing to occur.",
+        icon: Icons.layers_clear_rounded,
+      ),
+    ],
+  ),
+  FaqCategory(
     title: "Scar Management",
     icon: Icons.auto_fix_high_rounded,
-    gradient: [const Color(0xFF4B5563), const Color(0xFF374151)], // Neutral Slate
+    gradient: [const Color(0xFFBABF94), const Color(0xFF8E977D)], 
     items: [
       FaqItem(
         question: "Preventing scars?",
@@ -130,7 +184,7 @@ final List<FaqCategory> woundFaqData = [
   FaqCategory(
     title: "Nutrition & Recovery",
     icon: Icons.restaurant_rounded,
-    gradient: [const Color(0xFF15803D), const Color(0xFF166534)], // Wellness Green
+    gradient: [const Color(0xFFDBCEA5), const Color(0xFFF3E4C9)], 
     items: [
       FaqItem(
         question: "Protein for healing?",

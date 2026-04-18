@@ -1,173 +1,114 @@
 import 'package:flutter/material.dart';
 import '../data/faq_data.dart';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// PREMIUM CLINICAL DETAIL — Deep Knowledge Exploration (Human Palette)
+// ═══════════════════════════════════════════════════════════════════════════
+
 class WoundFaqDetailScreen extends StatelessWidget {
   final FaqCategory category;
 
   const WoundFaqDetailScreen({super.key, required this.category});
 
+  static const Color primary  = Color(0xFF8A7650);
+  static const Color navy     = Color(0xFF0F172A);
+  static const Color slate    = Color(0xFF64748B);
+  static const Color bg       = Color(0xFFF3E4C9);
+  static const Color surface  = Color(0xFFECE7D1);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F8F8),
+      backgroundColor: bg,
       body: CustomScrollView(
-        physics: const ClampingScrollPhysics(),
+        physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverAppBar(
-            expandedHeight: 170.0,
-            floating: false,
-            pinned: true,
-            elevation: 0,
-            backgroundColor: const Color(0xFF2C687B),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
-              onPressed: () => Navigator.pop(context),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                category.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 17,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              centerTitle: true,
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF8CC7C4), Color(0xFF2C687B)],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: -20,
-                    bottom: -20,
-                    child: Icon(
-                      category.icon,
-                      size: 140,
-                      color: Colors.white.withOpacity(0.08),
-                    ),
-                  ),
-                  Positioned(
-                    left: 20,
-                    top: 60,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${category.items.length} Questions',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _buildSliverHeader(context),
           SliverPadding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final item = category.items[index];
-                  return _buildFaqItemCard(context, item, index);
-                },
+                (ctx, i) => _buildFaqItemTile(category.items[i], i),
                 childCount: category.items.length,
               ),
             ),
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: 60)),
         ],
       ),
     );
   }
 
-  Widget _buildFaqItemCard(BuildContext context, FaqItem item, int index) {
-    // Alternating accent colors for visual interest
-    final accents = [
-      const Color(0xFF8CC7C4),
-      const Color(0xFF2C687B),
-      const Color(0xFFE07B54),
-      const Color(0xFF5B8DB8),
-    ];
-    final accent = accents[index % accents.length];
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+  Widget _buildSliverHeader(BuildContext context) {
+    return SliverAppBar(
+      expandedHeight: 200,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: navy,
+      leading: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
+            child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
           ),
-        ],
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
-          splashColor: Colors.transparent,
         ),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-          leading: Container(
-            padding: const EdgeInsets.all(11),
-            decoration: BoxDecoration(
-              color: accent.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(item.icon, color: accent, size: 22),
-          ),
-          title: Text(
-            item.question,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 14.5,
-              color: Color(0xFF1E293B),
-              letterSpacing: -0.2,
-            ),
-          ),
-          iconColor: accent,
-          collapsedIconColor: const Color(0xFF94A3B8),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        title: Text(category.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: -0.2)),
+        background: Stack(
+          fit: StackFit.expand,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+            Container(decoration: BoxDecoration(gradient: LinearGradient(colors: category.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight))),
+            Positioned(right: -30, bottom: -30, child: Icon(category.icon, size: 160, color: Colors.white.withOpacity(0.1))),
+            Center(
               child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [accent.withOpacity(0.06), accent.withOpacity(0.02)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: accent.withOpacity(0.1)),
-                ),
-                child: Text(
-                  item.answer,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    color: Color(0xFF475569),
-                    height: 1.65,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                margin: const EdgeInsets.only(top: 40),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(20)),
+                child: Text("${category.items.length} Clinical Answers", style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w900)),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildFaqItemTile(FaqItem item, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: slate.withOpacity(0.08)),
+        boxShadow: [BoxShadow(color: navy.withOpacity(0.02), blurRadius: 15, offset: const Offset(0, 5))],
+      ),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: primary.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
+          child: Icon(item.icon, color: primary, size: 22),
+        ),
+        title: Text(item.question, style: const TextStyle(color: navy, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: -0.3)),
+        iconColor: primary,
+        collapsedIconColor: slate,
+        shape: const RoundedRectangleBorder(side: BorderSide.none),
+        childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        expandedAlignment: Alignment.topLeft,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16), border: Border.all(color: slate.withOpacity(0.05))),
+            child: Text(
+              item.answer,
+              style: const TextStyle(color: slate, fontSize: 14, height: 1.6, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
       ),
     );
   }

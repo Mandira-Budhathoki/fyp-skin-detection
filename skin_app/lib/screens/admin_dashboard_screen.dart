@@ -23,8 +23,8 @@ class _C {
   static const users    = Color(0xFF34EFA8);
   static const usersD   = Color(0xFF06402A);
 
-  static const doctors  = Color(0xFFFF6B6B);
-  static const doctorsD = Color(0xFF4A1010);
+  static const doctors  = Color(0xFF2196F3); // Clear Blue
+  static const doctorsD = Color(0xFF0D47A1); // Deep Blue
 
   static const live    = Color(0xFF22D3A5);
   static const danger  = Color(0xFFFF4D4D);
@@ -54,6 +54,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   List<dynamic> _allAppointments = [];
   List<dynamic> _users = [];
   List<dynamic> _doctors = [];
+  List<dynamic> _quizQuestions = [];
   int _selectedIndex = 0;
 
   // ── NEW ANIMATION CONTROLLERS ───────────────
@@ -118,10 +119,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       final appts = await ApiService.getAllAppointments(token);
       final users = await ApiService.getUsers(token);
       final doctors = await ApiService.getAllDoctorsAdmin(token);
+      final quizQs = await ApiService.getQuizQuestions(null);
       setState(() {
         _allAppointments = appts;
         _users = users;
         _doctors = doctors;
+        _quizQuestions = quizQs;
         _isLoading = false;
       });
       _entryCtrl.forward(from: 0);
@@ -211,14 +214,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(children: [
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         _buildHeader(),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         ScaleTransition(
                             scale: _entryAnim, child: _buildLiveCard()),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 20),
                         _buildSectionGrid(),
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 20),
                       ]),
                     ),
                   ),
@@ -536,11 +539,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         _SectionCard(
           index: 0,
           icon: Icons.pending_actions_rounded,
-          title: 'Pending',
+          title: 'Appointment Pendings',
           count: pendingCount,
           color: _C.pending,
           darkColor: _C.pendingD,
-          hint: 'Click Pending to see\npending requests',
+          hint: 'Review incoming\nbooking requests',
           emoji: '⏳',
           onTap: _openSection,
         ),
@@ -548,11 +551,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         _SectionCard(
           index: 1,
           icon: Icons.history_rounded,
-          title: 'History',
+          title: 'Appointment History',
           count: historyCount,
           color: _C.history,
           darkColor: _C.historyD,
-          hint: 'Check history for\nfurther info',
+          hint: 'Browse completed\npatient sessions',
           emoji: '📋',
           onTap: _openSection,
         ),
@@ -562,11 +565,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         _SectionCard(
           index: 2,
           icon: Icons.people_rounded,
-          title: 'Users',
+          title: 'Check Users',
           count: _users.length,
           color: _C.users,
           darkColor: _C.usersD,
-          hint: 'See users to view\nnumber of users',
+          hint: 'Monitor active\nuser registrations',
           emoji: '👥',
           onTap: _openSection,
         ),
@@ -574,11 +577,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         _SectionCard(
           index: 3,
           icon: Icons.medical_services_rounded,
-          title: 'Doctors',
+          title: 'Assigned Doctors',
           count: _doctors.length,
           color: _C.doctors,
           darkColor: _C.doctorsD,
-          hint: 'Doctors to check\ntheir availability',
+          hint: 'Manage medical\nstaff & rosters',
           emoji: '🩺',
           onTap: _openSection,
         ),
@@ -588,11 +591,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         _SectionCard(
           index: 4,
           icon: Icons.quiz_rounded,
-          title: 'Quiz',
-          count: 0, // Dynamic loading if needed
+          title: 'Update Quiz',
+          count: _quizQuestions.length,
           color: _C.quiz,
           darkColor: _C.quizD,
-          hint: 'Manage quiz\nquestions & bank',
+          hint: 'Modify questions\n& clinical bank',
           emoji: '📝',
           onTap: _openSection,
         ),
@@ -1077,30 +1080,133 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
     if (_quizQuestions.isEmpty) return const Center(child: Text("No custom questions found", style: TextStyle(color: _C.w30)));
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       itemCount: _quizQuestions.length,
       itemBuilder: (context, index) {
         final q = _quizQuestions[index];
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: _C.card, borderRadius: BorderRadius.circular(20), border: Border.all(color: _C.quiz.withOpacity(0.1))),
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: _C.card, 
+            borderRadius: BorderRadius.circular(24), 
+            border: Border.all(color: _C.quiz.withOpacity(0.15)),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))],
+          ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: _C.quiz.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                child: Text(q['category'] ?? 'General', style: const TextStyle(color: _C.quiz, fontSize: 10, fontWeight: FontWeight.bold)),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(color: _C.quiz.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+                child: Text(q['category'] ?? 'General', style: const TextStyle(color: _C.quiz, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
               ),
-              IconButton(icon: const Icon(Icons.delete_outline_rounded, color: _C.danger, size: 20), onPressed: () => _deleteQuizQ(q['id'] ?? q['_id'])),
+              Row(children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_note_rounded, color: _C.history, size: 24), 
+                  onPressed: () => _showEditQuizDialog(q)
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded, color: _C.danger, size: 20), 
+                  onPressed: () => _deleteQuizQ(q['id'] ?? q['_id'])
+                ),
+              ]),
             ]),
-            const SizedBox(height: 8),
-            Text(q['question'] ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            const SizedBox(height: 8),
-            Text("Correct: ${q['options'][q['correctIndex']]}", style: const TextStyle(color: _C.users, fontSize: 11)),
+            const SizedBox(height: 12),
+            Text(q['question'] ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: -0.5)),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8, runSpacing: 8,
+              children: (q['options'] as List).asMap().entries.map((entry) {
+                final isCorrect = entry.key == q['correctIndex'];
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isCorrect ? _C.users.withOpacity(0.1) : _C.w06,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: isCorrect ? _C.users.withOpacity(0.3) : _C.w10),
+                  ),
+                  child: Text(entry.value, style: TextStyle(color: isCorrect ? _C.users : _C.w70, fontSize: 12, fontWeight: isCorrect ? FontWeight.bold : FontWeight.normal)),
+                );
+              }).toList(),
+            ),
           ]),
         );
       },
+    );
+  }
+
+  void _showEditQuizDialog(dynamic q) {
+    final qCtrl = TextEditingController(text: q['question']);
+    final options = (q['options'] as List).map((o) => TextEditingController(text: o.toString())).toList();
+    while (options.length < 4) options.add(TextEditingController(text: 'N/A'));
+    final expCtrl = TextEditingController(text: q['explanation'] ?? '');
+    String category = q['category'] ?? 'Skin Care';
+    int correct = q['correctIndex'] ?? 0;
+
+    final cats = ['Skin Care', 'Wound Care', 'Melanoma', 'Nutrition', 'UV & Sun Safety'];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setM) => Container(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom + 24, left: 24, right: 24, top: 24),
+          decoration: const BoxDecoration(color: _C.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+          child: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: _C.w10, borderRadius: BorderRadius.circular(2)))),
+              const SizedBox(height: 20),
+              const Center(child: Text('Edit Question', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900))),
+              const SizedBox(height: 24),
+              const Text("Category", style: TextStyle(color: _C.w70, fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(color: _C.w06, borderRadius: BorderRadius.circular(14)),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: category, dropdownColor: _C.surface, isExpanded: true,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: _C.quiz),
+                    items: cats.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(color: Colors.white, fontSize: 14)))).toList(),
+                    onChanged: (v) => setM(() => category = v!),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _customField(qCtrl, 'Question', Icons.help_outline),
+              _customField(options[0], 'Option 1', Icons.circle_outlined),
+              _customField(options[1], 'Option 2', Icons.circle_outlined),
+              _customField(options[2], 'Option 3', Icons.circle_outlined),
+              _customField(options[3], 'Option 4', Icons.circle_outlined),
+              _customField(expCtrl, 'Explanation', Icons.info_outline),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                const Text("Correct Index:", style: TextStyle(color: _C.w70, fontSize: 13, fontWeight: FontWeight.bold)),
+                DropdownButton<int>(
+                  value: correct, dropdownColor: _C.surface, items: [0, 1, 2, 3].map((i) => DropdownMenuItem(value: i, child: Text('Option ${i+1}', style: const TextStyle(color: Colors.white, fontSize: 13)))).toList(),
+                  onChanged: (v) => setM(() => correct = v!),
+                ),
+              ]),
+              const SizedBox(height: 32),
+              SizedBox(width: double.infinity, height: 54, child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: _C.history, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                onPressed: () async {
+                  final res = await ApiService.updateQuizQuestion(q['id'] ?? q['_id'], {
+                    'category': category,
+                    'question': qCtrl.text,
+                    'options': options.map((c) => c.text).toList(),
+                    'correctIndex': correct,
+                    'explanation': expCtrl.text
+                  });
+                  if (res['success']) { Navigator.pop(ctx); _loadQuizQuestions(); }
+                },
+                child: const Text('UPDATE QUESTION', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+              )),
+              const SizedBox(height: 12),
+            ]),
+          ),
+        ),
+      ),
     );
   }
   void _showAddQuizDialog() {
@@ -1579,7 +1685,7 @@ class _AdminDetailPageState extends State<_AdminDetailPage>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isActive 
-                      ? [const Color(0xFFBD00FF), const Color(0xFF6A00FF)] 
+                      ? [const Color(0xFF00D1FF), const Color(0xFF007BFF)] 
                       : [const Color(0xFF64748B), const Color(0xFF334155)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -1769,97 +1875,103 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Material(
-        color: darkColor,
-        borderRadius: BorderRadius.circular(26),
-        child: InkWell(
-          onTap: () => onTap(index),
-          borderRadius: BorderRadius.circular(26),
-          splashColor: color.withOpacity(0.2),
-          highlightColor: color.withOpacity(0.1),
-          child: Container(
-            height: 190,
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(26),
-              border: Border.all(
-                  color: color.withOpacity(0.25), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                    color: color.withOpacity(0.18),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8))
-              ],
-            ),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-              Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
-                  children: [
-                Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: Icon(icon, color: color, size: 16),
-                ),
-                Text(emoji,
-                    style: const TextStyle(fontSize: 18)),
-              ]),
-              const SizedBox(height: 8),
-              Text('$count',
-                  style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      height: 1,
-                      shadows: [
-                        Shadow(
-                            color: color.withOpacity(0.5),
-                            blurRadius: 12)
-                      ])),
-              Text(title,
-                  style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
-              const SizedBox(height: 4),
-              SizedBox(
-                height: 26,
-                child: _TypewriterText(
-                    text: hint,
-                    color: color.withOpacity(0.75)),
+      child: AspectRatio(
+        aspectRatio: 0.85,
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.circular(50),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 10),
               ),
-              const Spacer(),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                        color: color.withOpacity(0.3)),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 2,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: darkColor,
+            borderRadius: BorderRadius.circular(50),
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.vibrate();
+                onTap(index);
+              },
+              borderRadius: BorderRadius.circular(50),
+              splashColor: color.withOpacity(0.5),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(50),
+                  border: Border.all(
+                    color: color.withOpacity(0.4), 
+                    width: 3.5,
                   ),
-                  child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                    Text('Open',
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withOpacity(0.15),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.25),
+                    ],
+                  ),
+                ),
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                   Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: color.withOpacity(0.3), width: 2),
+                        boxShadow: [
+                          BoxShadow(color: color.withOpacity(0.3), blurRadius: 12, spreadRadius: 1)
+                        ]
+                      ),
+                      child: Icon(icon, color: color, size: 24),
+                    ),
+                  const SizedBox(height: 12),
+                  Text('$count',
+                     style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        height: 1,
+                        shadows: [
+                          Shadow(color: color.withOpacity(0.8), blurRadius: 15)
+                        ])),
+                  const SizedBox(height: 4),
+                  Text(title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: -0.2)),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Text('MANAGE',
                         style: TextStyle(
-                            fontSize: 9,
-                            color: color,
-                            fontWeight: FontWeight.w800)),
-                    const SizedBox(width: 3),
-                    Icon(Icons.arrow_forward_rounded,
-                        size: 10, color: color),
-                  ]),
-                ),
+                            fontSize: 9, 
+                            color: color, 
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2)),
+                  ),
+                ]),
               ),
-            ]),
+            ),
           ),
         ),
       ),
@@ -1941,7 +2053,7 @@ class _StatusToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     // Standard Azure/Slate theme
     final themeColor = isActive 
-        ? (activeLabel == 'ACTIVE' ? const Color(0xFF00D1FF) : const Color(0xFFBD00FF))
+        ? (activeLabel == 'ACTIVE' ? const Color(0xFF2196F3) : const Color(0xFFBD00FF))
         : const Color(0xFF94A3B8);
 
     return GestureDetector(
