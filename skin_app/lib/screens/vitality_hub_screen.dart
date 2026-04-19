@@ -185,11 +185,11 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
                   children: [
                     // ── Section header ──
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
                       child: const Center(
                         child: Text(
                           'Interactive Health Tools',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF1B263B), letterSpacing: 0.5),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF1B263B), letterSpacing: 0.5),
                         ),
                       ),
                     ),
@@ -254,7 +254,7 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(20, safeTop + 10, 20, 24),
+            padding: EdgeInsets.fromLTRB(20, safeTop + 10, 20, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -272,7 +272,7 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
                     const SizedBox(width: 40), // Balances the row
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 
                 // Interactive Welcome Card
                 Material(
@@ -282,7 +282,7 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
                     onTap: () {},
                     borderRadius: BorderRadius.circular(20),
                     child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -310,7 +310,7 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
                               Icon(Icons.touch_app_rounded, color: navy.withOpacity(0.3), size: 20),
                             ],
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                           Text(
                             'Explore your wellness journey! Use these 6 interactive tools to measure your BMI, track daily vitality, test your knowledge, and read medical insights.',
                             style: TextStyle(fontSize: 12, color: navy.withOpacity(0.8), height: 1.5, fontWeight: FontWeight.w500),

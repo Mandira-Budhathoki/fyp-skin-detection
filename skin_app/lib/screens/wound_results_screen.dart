@@ -20,7 +20,7 @@ class _T {
   static const textMuted = Color(0xFF94A3B8);
 
   static const cyan      = Color(0xFF8CC7C4); // User Requested
-  static const purple    = Color(0xFF2C687B); // User Requested
+  static const blue      = Color(0xFF1E3A8A); // Premium Royal Blue
   static const critical  = Color(0xFFBE123C); // Deep Clinical Red
   static const safe      = Color(0xFF10B981); // Emerald Green
 }
@@ -34,6 +34,11 @@ class WoundResultsScreen extends StatefulWidget {
 }
 
 class _WoundResultsScreenState extends State<WoundResultsScreen> with TickerProviderStateMixin {
+  late final Map<String, dynamic> _prim;
+  late final Map<String, dynamic>? _sec;
+  late final String _agreement;
+  late final bool _showSpecialist;
+
   late final String _prediction;
   late final double _confidence;
   late final String _message;
@@ -43,16 +48,69 @@ class _WoundResultsScreenState extends State<WoundResultsScreen> with TickerProv
   late final AnimationController _entryCtrl;
   late final Animation<double> _fade;
 
+  // Translation Map for Secondary Terms (Enriched Content)
+  final Map<String, Map<String, String>> _specialistLexicon = {
+    'arterial_ulcer': {
+      'medical': 'Arterial Ulcer',
+      'simple': 'Circulation Sore',
+      'desc': 'A deep-tissue sore caused by narrowed arteries, which significantly reduces the flow of oxygen-rich blood to the skin and prevents natural healing.',
+      'advice': '1. Keep the affected limb warm to encourage blood flow.\n2. Do NOT use tight compression unless specifically told by a doctor.\n3. Avoid long periods of sitting or leg crossing.\n4. Seek urgent surgical review to check blood pressure in the limb.'
+    },
+    'venous_ulcer': {
+      'medical': 'Venous Ulcer',
+      'simple': 'Vein-related Sore',
+      'desc': 'A skin sore that occurs when blood pools in the lower leg veins due to valve issues, causing high pressure and leakage into the surrounding tissue.',
+      'advice': '1. Elevate your legs above heart level for 30 minutes, 3 times a day.\n2. Walk regularly to keep blood moving, but avoid standing still.\n3. If skin is dry, apply a gentle moisturizer to surrounding areas.\n4. Clinical compression therapy is usually the primary treatment.'
+    },
+    'diabetic_ulcer': {
+      'medical': 'Diabetic Ulcer',
+      'simple': 'Diabetic Foot/Skin Sore',
+      'desc': 'A complex sore occurring in diabetic patients, often due to a combination of high blood sugar, nerve damage (neuropathy), and poor circulation.',
+      'advice': '1. NEVER walk barefoot; always wear protective socks and shoes.\n2. Clean the area with mild soap and dry carefully between toes.\n3. Check blood glucose levels twice daily to ensure optimal healing.\n4. Have a podiatrist inspect the wound for signs of bone infection.'
+    },
+    'pressure_ulcer': {
+      'medical': 'Pressure Ulcer',
+      'simple': 'Bedsore',
+      'desc': 'Localized damage to the skin and underlying soft tissue, usually over a bony prominent area, resulting from prolonged pressure or friction.',
+      'advice': '1. Use specialized air-cushions or foam pads to redistribute weight.\n2. Reposition your body at least every 2 hours (off-loading).\n3. Keep the skin as clean and dry as possible to prevent further breakdown.\n4. Ensure high protein intake to support tissue regeneration.'
+    },
+    'surgical_wound': {
+      'medical': 'Surgical Wound',
+      'simple': 'Clinical Site',
+      'desc': 'A precise incision made by a healthcare professional during an operation, currently in the process of healing and cellular reconstruction.',
+      'advice': '1. Keep the primary dressing dry; avoid direct showering unless waterproofed.\n2. Do not pull at any visible sutures or staples.\n3. Watch for "Dehiscence" (edges opening up) or foul-smelling discharge.\n4. Follow your surgeon\'s specific post-op cleaning schedule strictly.'
+    },
+    'traumatic_wound': {
+      'medical': 'Traumatic Wound',
+      'simple': 'Accidental Injury',
+      'desc': 'A sudden, non-surgical injury caused by external force, potentially involving jagged edges, debris exposure, or deep tissue bruising.',
+      'advice': '1. Ensure all dirt and debris are gently irrigated out with saline.\n2. Apply a thin layer of antibiotic ointment for the first 3 days.\n3. Keep the area protected with sterile gauze to prevent secondary trauma.\n4. Monitor for "Spreading Redness"—a key sign of bacterial cellulitis.'
+    },
+  };
+
   @override
   void initState() {
     super.initState();
-    _prediction  = widget.results['prediction'] ?? 'Unknown Lesion';
-    _confidence  = (widget.results['confidence'] ?? 0.0).toDouble();
+    final ensemble = widget.results['ensemble'] as Map<String, dynamic>?;
+    _prim = ensemble?['primary'] as Map<String, dynamic>? ?? {
+      'label': widget.results['prediction'] ?? 'Unknown Lesion',
+      'score': (widget.results['confidence'] ?? 0.0).toDouble()
+    };
+    _sec = ensemble?['secondary'] as Map<String, dynamic>?;
+    _agreement = widget.results['agreement'] ?? 'Primary Scan';
+
+    _prediction  = _prim['label'] ?? 'Unknown Lesion';
+    _confidence  = (_prim['score'] ?? 0.0).toDouble();
     _message     = widget.results['message'] ?? '';
     _imageFile   = widget.results['imageFile'] as File?;
     _isEmergency = _prediction.toLowerCase().contains('bleeding') || 
                    _prediction.toLowerCase().contains('deep') || 
                    _prediction.toLowerCase().contains('infected');
+
+    // Smart Visibility: Show if secondary is a high-risk category with decent score
+    final sLabel = _sec?['label']?.toString().toLowerCase() ?? '';
+    final sScore = (_sec?['score'] ?? 0.0).toDouble();
+    _showSpecialist = sScore > 45 && sLabel != 'normal_skin';
 
     _entryCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
     _fade = CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut);
@@ -83,10 +141,18 @@ class _WoundResultsScreenState extends State<WoundResultsScreen> with TickerProv
               _buildHeroImageSection(),
               const SizedBox(height: 24),
               _buildPathologyCard(),
+              if (_showSpecialist) ...[
+                const SizedBox(height: 16),
+                _buildVerificationCard(),
+              ],
               const SizedBox(height: 16),
               _buildInfectionWatchCard(),
               const SizedBox(height: 16),
               _buildDoctorPrescribedProtocol(),
+              if (_showSpecialist) ...[
+                const SizedBox(height: 16),
+                _buildSpecialistAdviceCard(),
+              ],
               const SizedBox(height: 24),
               _buildClinicalFooter(),
               const SizedBox(height: 40),
@@ -294,7 +360,7 @@ class _WoundResultsScreenState extends State<WoundResultsScreen> with TickerProv
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Expanded(child: Text("PRIMARY DIAGNOSIS", style: TextStyle(color: _T.textMuted, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2))),
+              const Expanded(child: Text("PRIMARY SCAN FINDING", style: TextStyle(color: _T.textMuted, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2))),
               _buildUrgencyBadge(),
             ],
           ),
@@ -308,6 +374,142 @@ class _WoundResultsScreenState extends State<WoundResultsScreen> with TickerProv
           Text(
             _message.isNotEmpty ? _message : "Automated analysis detected wound tissue with characteristic features. Monitor wound boundaries and tissue response daily for optimal healing.",
             style: const TextStyle(color: _T.textSub, fontSize: 13, height: 1.5, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerificationCard() {
+    final sLabelKey = _sec!['label'].toString().toLowerCase();
+    final sLabelDisplay = sLabelKey.replaceAll('_', ' ');
+    final bool theyAgree = _prediction.toLowerCase() == sLabelDisplay;
+    
+    // Get clinical friendly term
+    final Map<String, String>? lexicon = _specialistLexicon[sLabelKey];
+    final String friendlyName = lexicon?['simple'] ?? sLabelDisplay.toUpperCase();
+    final String friendlyDesc = lexicon?['desc'] ?? "A medical-level tissue pattern was detected.";
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _T.cyan.withOpacity(0.3)),
+        boxShadow: [BoxShadow(color: _T.cyan.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(theyAgree ? Icons.verified_user_rounded : Icons.biotech_rounded, color: _T.cyan, size: 20),
+              const SizedBox(width: 10),
+              const Text("CLINICAL CROSS-CHECK", style: TextStyle(color: _T.textHeader, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+              const Spacer(),
+              if (theyAgree)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: _T.safe.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                  child: const Text("DOUBLE-CHECKED", style: TextStyle(color: _T.safe, fontSize: 8, fontWeight: FontWeight.w900)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _verificationRow("Main Specialist", _prediction, _confidence),
+          const SizedBox(height: 12),
+          _verificationRow("Secondary Review", "${lexicon?['medical'] ?? friendlyName} (${lexicon?['simple'] ?? ''})", _sec!['score']),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: _T.bg, borderRadius: BorderRadius.circular(12)),
+            child: Text(
+              friendlyDesc,
+              style: TextStyle(color: _T.textSub, fontSize: 11, fontWeight: FontWeight.w600, height: 1.4),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            theyAgree 
+                ? "Both AI models found the same pattern. This increases our confidence in the identification."
+                : "Different features were detected by our secondary model. We have provided a balanced result.",
+            style: TextStyle(color: _T.textMuted, fontSize: 10.5, fontStyle: FontStyle.italic, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _verificationRow(String specialist, String label, double score) {
+    return Row(
+      children: [
+        Container(
+          width: 32, height: 32,
+          decoration: BoxDecoration(color: _T.bg, shape: BoxShape.circle),
+          child: Center(child: Text(specialist[0], style: const TextStyle(color: _T.cyan, fontSize: 12, fontWeight: FontWeight.bold))),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(specialist, style: const TextStyle(color: _T.textSub, fontSize: 10, fontWeight: FontWeight.w800)),
+              Text(label, style: const TextStyle(color: _T.textHeader, fontSize: 12, fontWeight: FontWeight.w900, overflow: TextOverflow.ellipsis)),
+            ],
+          ),
+        ),
+        Text("${score.toStringAsFixed(1)}%", style: const TextStyle(color: _T.cyan, fontWeight: FontWeight.w900, fontSize: 13)),
+      ],
+    );
+  }
+
+  Widget _buildSpecialistAdviceCard() {
+    final Map<String, String>? lexicon = _specialistLexicon[_sec!['label'].toString().toLowerCase()];
+    if (lexicon == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [_T.blue, _T.blue.withOpacity(0.8)]),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [BoxShadow(color: _T.blue.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.stars_rounded, color: Colors.white, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "SPECIALIST ADVICE: ${lexicon['medical']!.toUpperCase()} (${lexicon['simple']!.toUpperCase()})",
+                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            lexicon['advice']!,
+            style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.6, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline_rounded, color: Colors.white70, size: 16),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "This is specialized advice based on the Secondary Review. Priority: High.",
+                    style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
