@@ -269,8 +269,6 @@ class _WoundResultsScreenState extends State<WoundResultsScreen> with TickerProv
               ),
               child: Row(
                 children: [
-                  Text(_woundInfo['emoji'], style: const TextStyle(fontSize: 16)),
-                  const SizedBox(width: 8),
                   const Text("AI ANALYSIS COMPLETE", style: TextStyle(color: _T.textHeader, fontWeight: FontWeight.w900, fontSize: 11)),
                 ],
               ),

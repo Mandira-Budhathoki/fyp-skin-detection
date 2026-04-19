@@ -16,11 +16,11 @@ class _FaceFaqScreenState extends State<FaceFaqScreen> with TickerProviderStateM
   String _searchQuery = '';
   int _selectedCategoryIndex = -1;
 
-  // New 'Organic Earth' Palette (Sage, Cognac, Sand, Parchment)
-  static const Color navy     = Color(0xFFB87C4C); // Cognac
-  static const Color azure    = Color(0xFFA8BBA3); // Sage
-  static const Color slate    = Color(0xFFC4A484); // Sand
-  static const Color bg       = Color(0xFFF7F1DE); // Parchment
+  // Premium 'Au' Gold & Earth Palette
+  static const Color navy     = Color(0xFF8B7355); // Rich Earth
+  static const Color azure    = Color(0xFFC5A059); // Au Gold
+  static const Color slate    = Color(0xFF9E8E77); // Muted Gold
+  static const Color bg       = Color(0xFFFBF9F4); // Cream Paper
   static const Color surface  = Colors.white;
 
   @override
@@ -61,32 +61,34 @@ class _FaceFaqScreenState extends State<FaceFaqScreen> with TickerProviderStateM
           // Dynamic Pulsating Background (Twists & Turns)
           Positioned.fill(child: _buildDynamicBackground()),
           
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              _buildModernSliverHeader(),
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    _buildNeoSearchBar(),
-                    _buildScrollableCategories(),
-                    const SizedBox(height: 24),
-                  ],
+          Positioned.fill(
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                _buildModernSliverHeader(),
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      _buildNeoSearchBar(),
+                      _buildScrollableCategories(),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: _filtered.isEmpty
-                    ? SliverToBoxAdapter(child: _buildEmptyState())
-                    : SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (ctx, i) => _buildTwistedFaceCard(_filtered[i], i),
-                          childCount: _filtered.length,
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: _filtered.isEmpty
+                      ? SliverToBoxAdapter(child: _buildEmptyState())
+                      : SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (ctx, i) => _buildTwistedFaceCard(_filtered[i], i),
+                            childCount: _filtered.length,
+                          ),
                         ),
-                      ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
-            ],
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 120)),
+              ],
+            ),
           ),
         ],
       ),
@@ -102,12 +104,12 @@ class _FaceFaqScreenState extends State<FaceFaqScreen> with TickerProviderStateM
             Positioned(
               top: -100 + (_mainController.value * 50),
               right: -50 + (_mainController.value * 30),
-              child: _blurCircle(azure.withOpacity(0.15), 350),
+              child: _blurCircle(azure.withOpacity(0.12), 350),
             ),
             Positioned(
               bottom: 100 - (_mainController.value * 40),
               left: -80 + (_mainController.value * 20),
-              child: _blurCircle(navy.withOpacity(0.1), 400),
+              child: _blurCircle(navy.withOpacity(0.08), 400),
             ),
           ],
         );
@@ -119,7 +121,7 @@ class _FaceFaqScreenState extends State<FaceFaqScreen> with TickerProviderStateM
 
   Widget _buildModernSliverHeader() {
     return SliverAppBar(
-      expandedHeight: 280,
+      expandedHeight: 240,
       pinned: true,
       elevation: 0,
       backgroundColor: navy,
@@ -137,27 +139,40 @@ class _FaceFaqScreenState extends State<FaceFaqScreen> with TickerProviderStateM
         background: Stack(
           fit: StackFit.expand,
           children: [
-            Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFB87C4C), Color(0xFFC4A484)], begin: Alignment.bottomRight, end: Alignment.topLeft))),
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [navy, Color(0xFF5D4D37)], 
+                  begin: Alignment.bottomRight, 
+                  end: Alignment.topLeft
+                )
+              )
+            ),
             Positioned(
               right: -40, top: -20,
               child: Transform.rotate(
                 angle: -0.2,
-                child: Container(width: 200, height: 350, decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(80))),
+                child: Container(width: 200, height: 350, decoration: BoxDecoration(color: azure.withOpacity(0.05), borderRadius: BorderRadius.circular(80))),
               ),
             ),
-            Positioned(left: 24, bottom: 50, right: 24,
+            Positioned(left: 24, bottom: 40, right: 24,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(30), border: Border.all(color: Colors.white30)),
-                    child: const Text("FACIAL SCIENCE", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2)),
+                    decoration: BoxDecoration(color: azure.withOpacity(0.3), borderRadius: BorderRadius.circular(30), border: Border.all(color: azure.withOpacity(0.5))),
+                    child: const Text("GOLD CLINICAL", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2)),
                   ),
                   const SizedBox(height: 16),
-                  const Text("Intelligent\nCosmetology", style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.w900, height: 1.0, letterSpacing: -2)),
+                  const Flexible(
+                    child: Text(
+                      "Premium Facial\nArchive", 
+                      style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: -1.2)
+                    ),
+                  ),
                   const SizedBox(height: 10),
-                  Text("Clinical wisdom for the modern face.", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text("Trusted wisdom for natural beauty.", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
@@ -169,21 +184,21 @@ class _FaceFaqScreenState extends State<FaceFaqScreen> with TickerProviderStateM
 
   Widget _buildNeoSearchBar() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, -30, 20, 20),
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: slate.withOpacity(0.2)),
-        boxShadow: [BoxShadow(color: navy.withOpacity(0.12), blurRadius: 30, offset: const Offset(0, 15))],
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: azure.withOpacity(0.2)),
+        boxShadow: [BoxShadow(color: navy.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 8))],
       ),
       child: TextField(
         onChanged: (v) => setState(() => _searchQuery = v),
         decoration: InputDecoration(
-          hintText: "Explore face health reports...",
-          hintStyle: const TextStyle(color: Color(0xFFA8BBA3), fontSize: 15, fontWeight: FontWeight.w600),
-          prefixIcon: const Icon(Icons.search_rounded, color: navy, size: 26),
+          hintText: "Search premium health reports...",
+          hintStyle: TextStyle(color: slate.withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.w600),
+          prefixIcon: const Icon(Icons.search_rounded, color: azure, size: 24),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 22),
+          contentPadding: const EdgeInsets.symmetric(vertical: 18),
         ),
       ),
     );

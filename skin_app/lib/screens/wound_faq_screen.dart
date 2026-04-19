@@ -89,7 +89,6 @@ class _WoundFaqScreenState extends State<WoundFaqScreen> with TickerProviderStat
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
-          _buildFloatingSummary(),
         ],
       ),
     );
@@ -277,30 +276,5 @@ class _WoundFaqScreenState extends State<WoundFaqScreen> with TickerProviderStat
     );
   }
 
-  Widget _buildFloatingSummary() {
-    return Positioned(
-      bottom: 24, left: 24, right: 24,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        decoration: BoxDecoration(
-          color: navy,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: navy.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                "Knowledge base contains ${woundFaqData.fold(0, (s, c) => s + c.items.length)} medical answers",
-                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
-              ),
-            ),
-            const Text("AI READY", style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
-          ],
-        ),
-      ),
-    );
-  }
+
 }

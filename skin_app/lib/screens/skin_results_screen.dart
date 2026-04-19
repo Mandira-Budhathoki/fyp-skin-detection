@@ -255,8 +255,6 @@ class _SkinResultsScreenState extends State<SkinResultsScreen> with TickerProvid
         Row(
           children: [
             Expanded(child: _secondaryAct("AI CHAT", Icons.forum_rounded, () => Navigator.pushNamed(context, '/chatbot'))),
-            const SizedBox(width: 12),
-            Expanded(child: _secondaryAct("SAVE REPORT", Icons.ios_share_rounded, () {})),
           ],
         ),
       ],

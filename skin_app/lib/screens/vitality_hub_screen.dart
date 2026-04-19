@@ -184,12 +184,12 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
                 child: Column(
                   children: [
                     // ── Section header ──
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(20, 24, 20, 16),
-                      child: Center(
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                      child: const Center(
                         child: Text(
                           'Interactive Health Tools',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: navy, letterSpacing: 0.5),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF1B263B), letterSpacing: 0.5),
                         ),
                       ),
                     ),
@@ -218,7 +218,7 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
                     // ── Quick stats row (Benchmarks) ──
                     _buildQuickStats(),
 
-                    SizedBox(height: safeBottom + 30),
+                    SizedBox(height: safeBottom + 10),
                   ],
                 ),
               ),
@@ -386,7 +386,6 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
       {'icon': Icons.water_drop_outlined, 'tip': 'Drink a glass of water right now — hydration directly improves skin elasticity.'},
       {'icon': Icons.wb_sunny_outlined, 'tip': 'Apply SPF 30+ every morning, even on cloudy days — UV causes 80% of skin aging.'},
       {'icon': Icons.restaurant_menu_rounded, 'tip': 'Add avocado or salmon to today\'s meal for omega-3s that reduce skin inflammation.'},
-      {'icon': Icons.bedtime_outlined, 'tip': 'Aim for 7-9 hours tonight — sleep is when your skin repairs at the cellular level.'},
       {'icon': Icons.self_improvement_rounded, 'tip': 'A 10-minute mindfulness session can lower cortisol (skin stress hormone) by 20%.'},
     ];
     final tip = tips[DateTime.now().minute % tips.length];
@@ -427,12 +426,11 @@ class _VitalityHubScreenState extends State<VitalityHubScreen>
     final stats = [
       {'label': 'BMI Range', 'value': '18.5 – 24.9', 'sub': 'Healthy target', 'color': teal, 'icon': Icons.fitness_center_rounded},
       {'label': 'Daily Water', 'value': '2 – 3 Liters', 'sub': 'Recommended', 'color': blue, 'icon': Icons.local_drink_rounded},
-      {'label': 'Sleep Goal', 'value': '7 – 9 Hours', 'sub': 'Per night', 'color': purple, 'icon': Icons.nights_stay_rounded},
       {'label': 'SPF Daily', 'value': 'SPF 30+', 'sub': 'Broad spectrum', 'color': gold, 'icon': Icons.shield_outlined},
     ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

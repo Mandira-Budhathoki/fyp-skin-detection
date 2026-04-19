@@ -374,7 +374,7 @@ class _DoctorBioScreenState extends State<DoctorBioScreen> with TickerProviderSt
           children: [
             _topBtn(Icons.arrow_back_ios_new_rounded, () => Navigator.pop(context)),
             if (isDark) const Text("Doctor Profile", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17)),
-            _topBtn(Icons.bookmark_border_rounded, () {}),
+            const SizedBox(width: 38), // Maintain layout balance
           ],
         ),
       ),
